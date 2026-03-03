@@ -55,5 +55,5 @@ chart_data = pd.DataFrame({
 })
 st.line_chart(chart_data.set_index('회차'))
 
-st.caption("본 프로그램은 통계적 재미를 위한 것이며, 당첨을 보장하지 않습니다.") 
+st.caption("본 프로그램은 통계적 재미를 위한 것이며, 당첨을 보장하지 않습니다.")
 
