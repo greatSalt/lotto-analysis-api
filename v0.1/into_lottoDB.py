@@ -31,3 +31,24 @@ def save_to_gsheet(conn, sheet_url, new_data):
     conn.update(spreadsheet=sheet_url, data=df)
     
     return df
+
+def get_recent_data(conn, sheet_url, count=0):
+    try:
+        # 1. 데이터 읽기 (캐시 무시)
+        df = conn.read(spreadsheet=sheet_url, ttl=0)
+        
+        if df.empty:
+            return pd.DataFrame()
+
+        # 2. 회차순으로 정렬 (최신이 위로 오게)
+        if 'round' in df.columns:
+            df = df.sort_values(by='round', ascending=False)
+        
+        # 3. 인자(count)에 따라 데이터 자르기
+        if count > 0:
+            df = df.head(count) # 최근 count개만 가져옴
+            
+        return df
+    except Exception as e:
+        st.error(f"데이터 로드 실패: {e}")
+        return pd.DataFrame()

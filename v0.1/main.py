@@ -78,6 +78,20 @@ if menu == "데이터 입력":
 # --- 2. 크레이지 번호 추출 화면 ---
 elif menu == "크레이지 번호 추출":
     st.title("🔥 크레이지 번호 추출기")
+    # 1. 분석 범위 선택 UI 추가 (사이드바 또는 메인화면)
+    analyze_count = st.sidebar.number_input("분석할 최근 회차수 (0=전체)", min_value=0, value=10, step=5)
+    
+    # 2. 수정된 함수 호출 (입력받은 analyze_count 전달)
+    df = get_recent_data(conn, SHEET_URL, count=analyze_count)
+    
+    if df.empty:
+        st.warning("데이터가 없거나 불러오지 못했습니다.")
+    else:
+        label = f"최근 {len(df)}회차" if analyze_count > 0 else "전체 회차"
+        st.write(f"📊 {label} 데이터를 바탕으로 분석 중입니다.")
+        
+        # 추출 로직 시작
+        if st.button("🚀 크레이지 조합 생성"):
 
 if st.button("✨ 분석 번호 추출하기"):
     with st.spinner('데이터 알고리즘 가동 중...'):
