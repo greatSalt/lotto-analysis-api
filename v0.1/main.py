@@ -7,7 +7,7 @@ from streamlit_gsheets import GSheetsConnection
 from into_lottoDB import save_to_gsheet  # 커스텀 모듈 임포트
 
 # 설정 및 연결
-st.set_page_config(page_title="로또 분석 프로 v0.2", layout="centered")
+st.set_page_config(page_title="로또 분석 프로 v0.1", layout="centered")
 conn = st.connection("gsheets", type=GSheetsConnection)
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1q8P3SClxNSYsAXwBgk3__y44XxZwI_FTj-eE9uQeVHE/edit?gid=0#gid=0"
 
@@ -37,36 +37,47 @@ def generate_lotto_numbers(strategy):
 # 4. 메인 화면 구성
 st.write(f"현재 선택된 전략: **{analysis_type}**")
 
+# 사이드바 메뉴 만들기
+st.sidebar.title("🎮 메뉴 선택")
+menu = st.sidebar.radio("원하는 기능을 선택하세요", ["데이터 입력", "크레이지 번호 추출"])
+
+# --- 1. 데이터 입력 화면 ---
+if menu == "데이터 입력":
+    st.title("📥 로또 데이터 입력")
+    st.info("최신 회차의 당첨 번호를 입력하고 시트에 저장하세요.")
 # 입력 UI 부분
-with st.form("lotto_input_form", clear_on_submit=True):
-    col_drw = st.number_input("회차 입력", min_value=1, step=1)
-    
-    c = st.columns(6)
-    n1 = c[0].number_input("No1", 1, 45)
-    n2 = c[1].number_input("No2", 1, 45)
-    n3 = c[2].number_input("No3", 1, 45)
-    n4 = c[3].number_input("No4", 1, 45)
-    n5 = c[4].number_input("No5", 1, 45)
-    n6 = c[5].number_input("No6", 1, 45)
-    # 보너스 번호 (한 줄 아래 별도로 배치)
-    st.write("보너스 번호")
-    bonus = st.number_input("Bonus", 1, 45)
-    
-    if st.form_submit_button("DB 저장하기"):
-        # 데이터 묶기
-        data_to_save = {
-            "round": int(col_drw),
-            "n1": n1, "n2": n2, "n3": n3,
-            "n4": n4, "n5": n5, "n6": n6,
-            "bonus": bonus  # 보너스 번호 추가!
-        }
+    with st.form("lotto_input_form", clear_on_submit=True):
+        col_drw = st.number_input("회차 입력", min_value=1, step=1)
         
-        # 모듈 함수 호출
-        updated_df = save_to_gsheet(conn, SHEET_URL, data_to_save)
+        c = st.columns(6)
+        n1 = c[0].number_input("No1", 1, 45)
+        n2 = c[1].number_input("No2", 1, 45)
+        n3 = c[2].number_input("No3", 1, 45)
+        n4 = c[3].number_input("No4", 1, 45)
+        n5 = c[4].number_input("No5", 1, 45)
+        n6 = c[5].number_input("No6", 1, 45)
+        # 보너스 번호 (한 줄 아래 별도로 배치)
+        st.write("보너스 번호")
+        bonus = st.number_input("Bonus", 1, 45)
         
-        st.success(f"{col_drw}회차 데이터가 최신순으로 저장되었습니다!")
-        st.balloons()
-        st.dataframe(updated_df.head(5)) # 상위 5개(최신순) 확인
+        if st.form_submit_button("DB 저장하기"):
+            # 데이터 묶기
+            data_to_save = {
+                "round": int(col_drw),
+                "n1": n1, "n2": n2, "n3": n3,
+                "n4": n4, "n5": n5, "n6": n6,
+                "bonus": bonus  # 보너스 번호 추가!
+            }
+            
+            # 모듈 함수 호출
+            updated_df = save_to_gsheet(conn, SHEET_URL, data_to_save)
+            
+            st.success(f"{col_drw}회차 데이터가 최신순으로 저장되었습니다!")
+            st.balloons()
+            st.dataframe(updated_df.head(5)) # 상위 5개(최신순) 확인
+# --- 2. 크레이지 번호 추출 화면 ---
+elif menu == "크레이지 번호 추출":
+    st.title("🔥 크레이지 번호 추출기")
 
 if st.button("✨ 분석 번호 추출하기"):
     with st.spinner('데이터 알고리즘 가동 중...'):
