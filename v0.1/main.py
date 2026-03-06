@@ -48,13 +48,17 @@ with st.form("lotto_input_form", clear_on_submit=True):
     n4 = c[3].number_input("No4", 1, 45)
     n5 = c[4].number_input("No5", 1, 45)
     n6 = c[5].number_input("No6", 1, 45)
+    # 보너스 번호 (한 줄 아래 별도로 배치)
+    st.write("보너스 번호")
+    bonus = st.number_input("Bonus", 1, 45)
     
     if st.form_submit_button("DB 저장하기"):
         # 데이터 묶기
         data_to_save = {
             "drwNo": int(col_drw),
             "num1": n1, "num2": n2, "num3": n3,
-            "num4": n4, "num5": n5, "num6": n6
+            "num4": n4, "num5": n5, "num6": n6,
+            "bonus": bonus  # 보너스 번호 추가!
         }
         
         # 모듈 함수 호출
