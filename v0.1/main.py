@@ -5,6 +5,7 @@ import datetime
 
 from streamlit_gsheets import GSheetsConnection
 from into_lottoDB import save_to_gsheet  # 커스텀 모듈 임포트
+from into_lottoDB import get_recent_data  # 커스텀 모듈 임포트
 
 # 설정 및 연결
 st.set_page_config(page_title="로또 분석 프로 v0.1", layout="centered")
