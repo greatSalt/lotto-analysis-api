@@ -9,7 +9,7 @@ from into_lottoDB import save_to_gsheet  # 커스텀 모듈 임포트
 # 설정 및 연결
 st.set_page_config(page_title="로또 분석 프로 v0.2", layout="centered")
 conn = st.connection("gsheets", type=GSheetsConnection)
-SHEET_URL = "https://docs.google.com/spreadsheets/d/본인의_시트_ID/edit"
+SHEET_URL = "https://docs.google.com/spreadsheets/d/1q8P3SClxNSYsAXwBgk3__y44XxZwI_FTj-eE9uQeVHE/edit?gid=0#gid=0"
 
 st.title("🎰 로또 당첨 패턴 분석기")
 st.subheader("데이터 기반 번호 생성 시스템")
