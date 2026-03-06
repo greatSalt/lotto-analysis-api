@@ -3,8 +3,13 @@ import pandas as pd
 import random
 import datetime
 
-# 1. 페이지 설정 (앱의 첫인상)
-st.set_page_config(page_title="로또 분석 프로 v1.0", layout="centered")
+from streamlit_gsheets import GSheetsConnection
+from into_lottoDB import save_to_gsheet  # 커스텀 모듈 임포트
+
+# 설정 및 연결
+st.set_page_config(page_title="로또 분석 프로 v0.2", layout="centered")
+conn = st.connection("gsheets", type=GSheetsConnection)
+SHEET_URL = "https://docs.google.com/spreadsheets/d/본인의_시트_ID/edit"
 
 st.title("🎰 로또 당첨 패턴 분석기")
 st.subheader("데이터 기반 번호 생성 시스템")
@@ -31,6 +36,33 @@ def generate_lotto_numbers(strategy):
 
 # 4. 메인 화면 구성
 st.write(f"현재 선택된 전략: **{analysis_type}**")
+
+# 입력 UI 부분
+with st.form("lotto_input_form", clear_on_submit=True):
+    col_drw = st.number_input("회차 입력", min_value=1, step=1)
+    
+    c = st.columns(6)
+    n1 = c[0].number_input("No1", 1, 45)
+    n2 = c[1].number_input("No2", 1, 45)
+    n3 = c[2].number_input("No3", 1, 45)
+    n4 = c[3].number_input("No4", 1, 45)
+    n5 = c[4].number_input("No5", 1, 45)
+    n6 = c[5].number_input("No6", 1, 45)
+    
+    if st.form_submit_button("DB 저장하기"):
+        # 데이터 묶기
+        data_to_save = {
+            "drwNo": int(col_drw),
+            "num1": n1, "num2": n2, "num3": n3,
+            "num4": n4, "num5": n5, "num6": n6
+        }
+        
+        # 모듈 함수 호출
+        updated_df = save_to_gsheet(conn, SHEET_URL, data_to_save)
+        
+        st.success(f"{col_drw}회차 데이터가 최신순으로 저장되었습니다!")
+        st.balloons()
+        st.dataframe(updated_df.head(5)) # 상위 5개(최신순) 확인
 
 if st.button("✨ 분석 번호 추출하기"):
     with st.spinner('데이터 알고리즘 가동 중...'):
