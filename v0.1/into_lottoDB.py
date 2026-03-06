@@ -19,12 +19,12 @@ def save_to_gsheet(conn, sheet_url, new_data):
     if not df.empty:
         df = pd.concat([df, new_df], ignore_index=True)
         # 회차(drwNo)가 중복되면 마지막에 입력한 것으로 유지
-        df = df.drop_duplicates(['drwNo'], keep='last')
+        df = df.drop_duplicates(['round'], keep='last')
     else:
         df = new_df
 
     # 4. 회차(drwNo) 기준 내림차순 정렬 (최신순)
-    df = df.sort_values(by='drwNo', ascending=False)
+    df = df.sort_values(by='round', ascending=False)
 
     # 5. 구글 시트 업데이트
     conn.update(spreadsheet=sheet_url, data=df)

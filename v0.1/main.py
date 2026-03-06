@@ -55,9 +55,9 @@ with st.form("lotto_input_form", clear_on_submit=True):
     if st.form_submit_button("DB 저장하기"):
         # 데이터 묶기
         data_to_save = {
-            "drwNo": int(col_drw),
-            "num1": n1, "num2": n2, "num3": n3,
-            "num4": n4, "num5": n5, "num6": n6,
+            "round": int(col_drw),
+            "n1": n1, "n2": n2, "n3": n3,
+            "n4": n4, "n5": n5, "n6": n6,
             "bonus": bonus  # 보너스 번호 추가!
         }
         
