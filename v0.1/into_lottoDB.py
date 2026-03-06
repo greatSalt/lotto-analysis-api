@@ -8,8 +8,8 @@ def save_to_gsheet(conn, sheet_url, new_data):
     try:
         # 1. 기존 데이터 불러오기
         df = conn.read(spreadsheet=sheet_url, ttl=0)
-    except:
-      st.warning(f"기존 데이터를 읽지 못했습니다: {e}")
+    except Exception as e:
+        st.warning(f"기존 데이터를 읽지 못했습니다: {e}")
         # 시트가 비어있을 경우 대비
         df = pd.DataFrame()
 
