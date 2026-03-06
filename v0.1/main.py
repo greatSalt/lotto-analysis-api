@@ -91,7 +91,7 @@ elif menu == "크레이지 번호 추출":
         st.write(f"📊 {label} 데이터를 바탕으로 분석 중입니다.")
         
         # 추출 로직 시작
-        if st.button("🚀 크레이지 조합 생성"):
+        #if st.button("🚀 크레이지 조합 생성"):
 
 if st.button("✨ 분석 번호 추출하기"):
     with st.spinner('데이터 알고리즘 가동 중...'):
