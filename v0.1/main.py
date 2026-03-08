@@ -93,7 +93,8 @@ elif menu == "크레이지 번호 추출":
     if not df.empty:
         # 최근 회차수 가져오기
         latest_round = df['round'].max()
-        st.title(f"🔥 {latest_round}회차 기준 크레이지 리포트")
+        earliest_round = df['round'].min()  # 가장 오래된 회차(범위의 시작)
+        st.title(f"🔥 {earliest_round}회 ~ {latest_round}회 분석 결과")
         
         # 2. 분석 함수 호출
         analysis_df = get_crazy_analysis(df)
