@@ -78,50 +78,47 @@ if menu == "데이터 입력":
             st.dataframe(updated_df.head(5)) # 상위 5개(최신순) 확인
 # --- 2. 크레이지 번호 추출 화면 ---
 elif menu == "크레이지 번호 추출":
-    st.title("🔥 크레이지 번호 분석 리포트")
-    
-    # 1. 분석 범위 선택 (사이드바)
-    analyze_count = st.sidebar.number_input("분석할 최근 회차수 (0=전체)", min_value=0, value=0)
+    # 1. 시트에서 데이터 가져오기 (전체 혹은 사이드바 설정값)
+    analyze_count = st.sidebar.number_input("분석 범위(최근 N회차, 0=전체)", min_value=0, value=0)
     df = get_recent_data(conn, SHEET_URL, count=analyze_count)
     
     if not df.empty:
-        # 2. crazyLogic 호출 및 데이터 가공
+        # 최근 회차수 가져오기
+        latest_round = df['round'].max()
+        st.title(f"🔥 {latest_round}회차 기준 크레이지 리포트")
+        
+        # 2. 분석 함수 호출
         analysis_df = get_crazy_analysis(df)
         
-        # 3. 요청하신 컬럼명으로 변경 및 정렬
-        # '번호' 컬럼을 'No.'로 표시하기 위해 복사 및 정리
+        # 3. 데이터 가공 및 정렬
+        # crazyLogic의 결과: ["번호", "현재연속", "과거최대", "확률"]
         display_df = analysis_df.copy()
         display_df.columns = ["번호", "현재연속출현횟수", "최대연속출현횟수", "연속출현확률"]
         
-        # 인덱스를 'No.'로 활용하거나 새로운 컬럼 추가
-        display_df['No.'] = range(1, len(display_df) + 1)
-        
-        # 컬럼 순서 재배치
-        display_df = display_df[["No.", "번호", "현재연속출현횟수", "최대연속출현횟수", "연속출현확률"]]
-        
-        # 4. 정렬 기준: 연속출현확률, 내림차순
+        # 확률 기준 내림차순 정렬 (순위를 매기기 전 필수 단계)
         display_df = display_df.sort_values(by="연속출현확률", ascending=False)
+        
+        # 4. 'No.'를 '순위'로 설정 (1등부터 45등까지)
+        display_df.insert(0, 'No.', range(1, len(display_df) + 1))
 
         # 5. 화면 출력
-        st.subheader(f"📊 분석 결과 (최근 {len(df)}회차 기준)")
-        st.info("💡 '연속출현확률'은 현재 기세가 과거의 기록에 얼마나 근접했는지를 나타냅니다.")
+        st.subheader(f"📊 분석 결과 (최근 {len(df)}개 데이터 분석 완료)")
         
-        # 스타일링된 테이블 출력
         st.dataframe(
             display_df,
             use_container_width=True,
-            hide_index=True,  # 기본 인덱스 숨기기
+            hide_index=True,
             column_config={
-                "연속출현확률": st.column_config.NumberColumn(format="%.1f %%"),
-                "번호": st.column_config.NumberColumn(format="%d"),
+                "No.": st.column_config.NumberColumn("순위", help="확률에 따른 순위"),
+                "번호": st.column_config.NumberColumn("로또번호"),
+                "연속출현확률": st.column_config.NumberColumn(format="%.1f %%")
             }
         )
-
-        # 상위 1~6위 강조 표시 (옵션)
+        
+        # 6. 상위 순위(1~6위) 번호 추천
         st.divider()
-        st.subheader("🌟 오늘의 크레이지 추천 조합 (Top 6)")
-        top_6_list = display_df.head(6)["번호"].tolist()
-        st.success(f"추천 번호: {sorted(top_6_list)}")
+        top_6_rank = display_df.head(6)["번호"].tolist()
+        st.success(f"✅ 현재 기세가 가장 뜨거운 순위 1~6위 번호: {sorted(top_6_rank)}")
 
 if st.button("✨ 분석 번호 추출하기"):
     with st.spinner('데이터 알고리즘 가동 중...'):
