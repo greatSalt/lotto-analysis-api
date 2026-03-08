@@ -5,6 +5,7 @@ import datetime
 
 from streamlit_gsheets import GSheetsConnection
 from into_lottoDB import save_to_gsheet, get_recent_data
+from crazyLogic import get_crazy_analysis
 
 # 설정 및 연결
 st.set_page_config(page_title="로또 분석 프로 v0.1", layout="centered")
