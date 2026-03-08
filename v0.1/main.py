@@ -86,7 +86,7 @@ elif menu == "크레이지 번호 추출":
     
     if not df.empty:
         # 2. crazyLogic 호출 및 데이터 가공
-        analysis_df = crazyLogic.get_crazy_analysis(df)
+        analysis_df = get_crazy_analysis(df)
         
         # 3. 요청하신 컬럼명으로 변경 및 정렬
         # '번호' 컬럼을 'No.'로 표시하기 위해 복사 및 정리
