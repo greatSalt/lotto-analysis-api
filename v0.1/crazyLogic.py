@@ -1,3 +1,5 @@
+import pandas as pd
+
 def get_crazy_analysis(df):
     if df.empty:
         return pd.DataFrame()
