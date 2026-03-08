@@ -79,7 +79,15 @@ if menu == "데이터 입력":
 # --- 2. 크레이지 번호 추출 화면 ---
 elif menu == "크레이지 번호 추출":
     # 1. 시트에서 데이터 가져오기 (전체 혹은 사이드바 설정값)
-    analyze_count = st.sidebar.number_input("분석 범위(최근 N회차, 0=전체)", min_value=0, value=0)
+    col_config = st.columns([2, 3]) # 보기 좋게 칸 나누기
+    with col_config[0]:
+        analyze_count = st.number_input(
+            "분석할 최근 회차 범위를 입력하세요 (0=전체)", 
+            min_value=0, 
+            value=30,  # 디폴트 값 30 설정
+            step=5
+        )
+    
     df = get_recent_data(conn, SHEET_URL, count=analyze_count)
     
     if not df.empty:
