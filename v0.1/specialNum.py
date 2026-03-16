@@ -5,7 +5,7 @@ def analyze_specific_number(df, target_num):
     특정 번호의 출현 빈도, 연속성, 미출현 기간을 분석합니다.
     """
     if df.empty:
-        return None
+        return None 
 
     # 회차순 정렬 (과거 -> 현재)
     df_sorted = df.sort_values(by='round', ascending=True)
