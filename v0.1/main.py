@@ -57,7 +57,7 @@ elif menu == "크레이지 번호 추출":
     with col_config[0]:
         analyze_count = st.number_input(
             "분석할 최근 회차 범위를 입력하세요 (0=전체)", 
-            min_value=0, value=30, step=5
+            min_value=0, value=30, step=5, key="crazy_range"
         )
     
     df = get_recent_data(conn, SHEET_URL, count=analyze_count)
@@ -105,27 +105,38 @@ elif menu == "크레이지 번호 추출":
         else:
             st.warning("선택한 범위 내에 현재 연속 출현 중인 번호가 없습니다.")
 
-# --- 3. 특정 번호 분석 화면 (새로 통합된 부분) ---
+# --- 3. 특정 번호 분석 화면 ---
 elif menu == "특정 번호 분석":
     st.title("🔍 특정 번호 심층 분석")
-    st.info("시트에 저장된 전체 데이터를 바탕으로 특정 번호의 '족보'를 파헤칩니다.")
     
-    # 번호 선택
-    target_num = st.number_input("분석할 번호를 입력하세요 (1~45)", 1, 45, value=1)
+    # 분석 범위 및 번호 선택 UI (한 줄 배치)
+    col_ui = st.columns([1, 1, 2])
+    with col_ui[0]:
+        target_num = st.number_input("분석할 번호 (1~45)", 1, 45, value=1)
+    with col_ui[1]:
+        analyze_count = st.number_input("분석 회차 범위 (0=전체)", min_value=0, value=50, step=10, key="special_range")
     
-    # 전체 데이터 로드
-    df = get_recent_data(conn, SHEET_URL, count=0)
+    # 데이터 로드 (입력받은 범위 적용)
+    df = get_recent_data(conn, SHEET_URL, count=analyze_count)
     
     if not df.empty:
+        # 회차 범위 계산
+        latest_round = df['round'].max()
+        earliest_round = df['round'].min()
+        actual_count = len(df)
+        
         res = analyze_specific_number(df, target_num) 
         
         if res:
+            st.subheader(f"📑 {target_num}번 분석 리포트 ({earliest_round}회 ~ {latest_round}회)")
+            st.info(f"선택하신 최근 {actual_count}개 회차 데이터를 바탕으로 분석한 결과입니다.")
+            
             # 주요 지표 상단 배치
             m1, m2, m3, m4 = st.columns(4)
-            m1.metric("총 출현 횟수", f"{res['총출현횟수']}회")
+            m1.metric("범위 내 출현 횟수", f"{res['총출현횟수']}회")
             m2.metric("현재 연속 기록", f"{res['현재연속출현']}회")
             m3.metric("과거 최대 연속", f"{res['최대연속출현']}회")
-            m4.metric("미출현 기간", f"{res['현재미출현기간']}회차")
+            m4.metric("현재 미출현 기간", f"{res['현재미출현기간']}회차")
             
             st.divider()
             
@@ -139,12 +150,18 @@ elif menu == "특정 번호 분석":
                 else:
                     st.warning(f"🧊 {target_num}번은 현재 {res['현재미출현기간']}회차 동안 출현하지 않았습니다.")
                 
-                st.write(f"**마지막 출현 회차:** {res['최근출현회차']}회")
+                if res['최근출현회차'] > 0:
+                    st.write(f"**마지막 출현 회차:** {res['최근출현회차']}회")
+                else:
+                    st.write("**해당 범위 내 출현 기록이 없습니다.**")
             
             with col_b:
                 st.subheader("📅 최근 출현 기록 (최신순)")
-                st.write(res['출현기록'][:20]) # 최근 20개만 표시
-                st.caption("최대 20개까지만 표시됩니다.")
+                if res['출현기록']:
+                    st.write(res['출현기록'][:20]) # 최근 20개만 표시
+                    st.caption("최대 20개까지만 표시됩니다.")
+                else:
+                    st.write("기록 없음")
 
 st.sidebar.divider()
 st.sidebar.caption("본 프로그램은 통계적 재미를 위한 것이며, 당첨을 보장하지 않습니다.")
