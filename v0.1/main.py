@@ -117,7 +117,7 @@ elif menu == "특정 번호 분석":
     df = get_recent_data(conn, SHEET_URL, count=0)
     
     if not df.empty:
-        res = specialNum.analyze_specific_number(df, target_num)
+        res = analyze_specific_number(df, target_num) 
         
         if res:
             # 주요 지표 상단 배치
