@@ -2,8 +2,8 @@ import streamlit as st
 import pandas as pd
 import random
 import datetime
-import specialNum # 특정 번호 분석 모듈
 
+from specialNum import analyze_specific_number
 from streamlit_gsheets import GSheetsConnection
 from into_lottoDB import save_to_gsheet, get_recent_data
 from crazyLogic import get_crazy_analysis
