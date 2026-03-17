@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import random
 import datetime
+import coldNum
 
 from specialNum import analyze_specific_number
 from streamlit_gsheets import GSheetsConnection
@@ -15,7 +16,7 @@ SHEET_URL = "https://docs.google.com/spreadsheets/d/1q8P3SClxNSYsAXwBgk3__y44XxZ
 
 # 사이드바 메뉴 구성
 st.sidebar.title("🎮 메뉴 선택")
-menu = st.sidebar.radio("원하는 기능을 선택하세요", ["데이터 입력", "크레이지 번호 추출", "특정 번호 분석"])
+menu = st.sidebar.radio("원하는 기능을 선택하세요", ["데이터 입력", "크레이지 번호 추출", "콜드 번호 추출", "특정 번호 분석"])
 
 # --- 1. 데이터 입력 화면 ---
 if menu == "데이터 입력":
@@ -163,5 +164,38 @@ elif menu == "특정 번호 분석":
                 else:
                     st.write("기록 없음")
 
+# --- 4. 콜드 번호 추출 화면 ---
+elif menu == "콜드 번호 추출":
+    st.title("🧊 콜드 번호 분석 리포트")
+    st.info("오랫동안 출현하지 않아 통계적 반등이 기대되는 번호들을 분석합니다.")
+    
+    # 데이터는 전체 데이터를 사용하는 것이 미출현 기간 계산에 정확합니다.
+    df = get_recent_data(conn, SHEET_URL, count=0)
+    
+    if not df.empty:
+        cold_df = coldNum.get_cold_analysis(df)
+        
+        # 현재 미출현 기간이 긴 순서로 정렬 (Top 10)
+        display_cold = cold_df.sort_values(by="현재미출현", ascending=False).head(15)
+        display_cold.insert(0, '순위', range(1, len(display_cold) + 1))
+        
+        st.subheader("📊 장기 미출현 번호 TOP 15")
+        st.dataframe(
+            display_cold,
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                "콜드지수": st.column_config.NumberColumn("반등 임계점", format="%.1f %%")
+            }
+        )
+        
+        st.divider()
+        st.markdown("""
+        ### 💡 콜드 번호 활용 팁
+        * **반등 임계점:** 해당 번호의 과거 최대 미출현 기록에 얼마나 근접했는지를 나타냅니다. 
+        * **전략:** 100%에 가까운 번호는 조만간 출현할 확률이 통계적으로 높아진 상태입니다.
+        * **조합:** 크레이지 번호(Hot) 4개 + 콜드 번호(Cold) 2개 조합을 추천합니다.
+        """)
+        
 st.sidebar.divider()
 st.sidebar.caption("본 프로그램은 통계적 재미를 위한 것이며, 당첨을 보장하지 않습니다.")
