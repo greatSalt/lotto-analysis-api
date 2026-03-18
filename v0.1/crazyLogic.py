@@ -21,7 +21,7 @@ def get_crazy_analysis(df):
             else: break
         
         # 현재 안 나오고 있는 번호는 분석 대상에서 제외
-        if curr_streak == 0: continue 
+        #if curr_streak == 0: continue 
 
         # --- [B] 역대 최대 연속 출현(Max) 계산 ---
         streaks = []
