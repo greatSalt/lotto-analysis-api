@@ -73,55 +73,57 @@ elif menu == "크레이지 번호 추출":
         analysis_df = get_crazy_analysis(df)
         
         if not analysis_df.empty:
-            display_df = analysis_df.copy()
-            display_df.columns = ["번호", "현재연속출현횟수", "최대연속출현횟수", "연속출현확률"]
-            display_df = display_df.sort_values(by="연속출현확률", ascending=False)
-            display_df.insert(0, 'No.', range(1, len(display_df) + 1))
+            # 통합 점수 기준 정렬 및 데이터 가공
+            display_df = analysis_df.sort_values(by="통합크레이지점수", ascending=False)
+            display_df.insert(0, '순위', range(1, len(display_df) + 1))
 
-            st.write(f"📊 최근 {actual_round_count}개 회차 데이터를 기반으로 분석을 완료했습니다.")
+            st.write(f"📊 최근 {actual_round_count}개 회차 데이터를 기반으로 통합 에너지를 분석했습니다.")
             
             st.dataframe(
                 display_df,
                 use_container_width=True,
                 hide_index=True,
                 column_config={
-                    "No.": st.column_config.NumberColumn("순위"),
+                    "순위": st.column_config.NumberColumn("순위"),
                     "번호": st.column_config.NumberColumn("로또번호"),
-                    "연속출현확률": st.column_config.NumberColumn(format="%.1f %%")
+                    "연속점수": st.column_config.ProgressColumn("연속 에너지", min_value=0, max_value=100, format="%.1f"),
+                    "징검다리점수": st.column_config.ProgressColumn("징검다리 탄성", min_value=0, max_value=100, format="%.1f"),
+                    "통합크레이지점수": st.column_config.NumberColumn("최종 점수", format="%.1f 🔥")
                 }
             )
             
             st.divider()
             top_6_rank = display_df.head(6)["번호"].tolist()
-            st.success(f"✅ 현재 기세 기준 추천 조합(순위 1~6위): {sorted(top_6_rank)}")
+            st.success(f"✅ 통합 크레이지 추천 조합(1~6위): {sorted(top_6_rank)}")
 
-            st.markdown(f"""
-            ---
-            ### 📘 크레이지 분석 공식 가이드
-            이 리포트는 **현재 기세가 살아있는 번호**만을 대상으로 분석합니다.
-            
-            1. **분석 대상:** 현재 연속으로 출현 중인 번호만 표시 (현재 연속출현횟수 0회인 번호 제외)
-            2. **연속출현확률 공식:** $$ \\frac{{\\text{{과거 최대 연속출현}} - \\text{{현재 연속출현}}}}{{\\text{{과거 최대 연속출현}}}} \\times 100 $$
-            """)
+            # --- 공식 가이드 설명 추가 ---
+            with st.expander("📘 크레이지 통합 점수 공식 가이드 (필독)"):
+                st.markdown("### **Total Score = (연속 지수 × 0.6) + (징검다리 지수 × 0.4)**")
+                c1, c2 = st.columns(2)
+                with c1:
+                    st.info("#### 🏃‍♂️ 연속 지수 (Streak)")
+                    st.latex(r"S_{streak} = \frac{(Max - Curr + 1)}{Max} \times 100")
+                    st.write("과거 기록 경신 여력을 측정합니다. 점수가 높을수록 현재 기세가 과거 기록 대비 더 뻗어나갈 가능성이 큼을 의미합니다.")
+                with c2:
+                    st.info("#### 🌉 징검다리 지수 (Bridge)")
+                    st.latex(r"S_{bridge} = \frac{\text{Count in 10 rounds}}{5} \times 100")
+                    st.write("최근 10회 내 출현 빈도를 측정합니다. 잠시 쉬더라도 금방 다시 튀어나오는 탄성을 점수화합니다.")
         else:
-            st.warning("선택한 범위 내에 현재 연속 출현 중인 번호가 없습니다.")
+            st.warning("선택한 범위 내에 분석 대상이 되는 번호가 없습니다.")
 
 # --- 3. 특정 번호 분석 화면 ---
 elif menu == "특정 번호 분석":
     st.title("🔍 특정 번호 심층 분석")
     
-    # 분석 범위 및 번호 선택 UI (한 줄 배치)
     col_ui = st.columns([1, 1, 2])
     with col_ui[0]:
         target_num = st.number_input("분석할 번호 (1~45)", 1, 45, value=1)
     with col_ui[1]:
         analyze_count = st.number_input("분석 회차 범위 (0=전체)", min_value=0, value=50, step=10, key="special_range")
     
-    # 데이터 로드 (입력받은 범위 적용)
     df = get_recent_data(conn, SHEET_URL, count=analyze_count)
     
     if not df.empty:
-        # 회차 범위 계산
         latest_round = df['round'].max()
         earliest_round = df['round'].min()
         actual_count = len(df)
@@ -132,7 +134,6 @@ elif menu == "특정 번호 분석":
             st.subheader(f"📑 {target_num}번 분석 리포트 ({earliest_round}회 ~ {latest_round}회)")
             st.info(f"선택하신 최근 {actual_count}개 회차 데이터를 바탕으로 분석한 결과입니다.")
             
-            # 주요 지표 상단 배치
             m1, m2, m3, m4 = st.columns(4)
             m1.metric("범위 내 출현 횟수", f"{res['총출현횟수']}회")
             m2.metric("현재 연속 기록", f"{res['현재연속출현']}회")
@@ -140,10 +141,7 @@ elif menu == "특정 번호 분석":
             m4.metric("현재 미출현 기간", f"{res['현재미출현기간']}회차")
             
             st.divider()
-            
-            # 상세 분석 섹션
             col_a, col_b = st.columns(2)
-            
             with col_a:
                 st.subheader("🚩 상태 진단")
                 if res['현재연속출현'] > 0:
@@ -155,11 +153,10 @@ elif menu == "특정 번호 분석":
                     st.write(f"**마지막 출현 회차:** {res['최근출현회차']}회")
                 else:
                     st.write("**해당 범위 내 출현 기록이 없습니다.**")
-            
             with col_b:
                 st.subheader("📅 최근 출현 기록 (최신순)")
                 if res['출현기록']:
-                    st.write(res['출현기록'][:20]) # 최근 20개만 표시
+                    st.write(res['출현기록'][:20]) 
                     st.caption("최대 20개까지만 표시됩니다.")
                 else:
                     st.write("기록 없음")
@@ -169,13 +166,10 @@ elif menu == "콜드 번호 추출":
     st.title("🧊 콜드 번호 분석 리포트")
     st.info("오랫동안 출현하지 않아 통계적 반등이 기대되는 번호들을 분석합니다.")
     
-    # 데이터는 전체 데이터를 사용하는 것이 미출현 기간 계산에 정확합니다.
     df = get_recent_data(conn, SHEET_URL, count=0)
     
     if not df.empty:
         cold_df = coldNum.get_cold_analysis(df)
-        
-        # 현재 미출현 기간이 긴 순서로 정렬 (Top 10)
         display_cold = cold_df.sort_values(by="현재미출현", ascending=False).head(15)
         display_cold.insert(0, '순위', range(1, len(display_cold) + 1))
         
