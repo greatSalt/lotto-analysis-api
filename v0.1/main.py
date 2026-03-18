@@ -37,19 +37,26 @@ elif menu == "크레이지 번호 추출":
     if not df.empty:
         analysis_df = get_crazy_analysis(df)
         if not analysis_df.empty:
+            # 통합 점수 기준 정렬
             display_df = analysis_df.sort_values(by="통합크레이지점수", ascending=False)
             display_df.insert(0, '순위', range(1, len(display_df) + 1))
             
+            # --- [핵심 수정] 데이터 테이블 구성: 숫자 중심, 그림 배제 ---
+            st.write("### 데이터 기반 분석 결과 (숫자 중심)")
             st.dataframe(display_df, use_container_width=True, hide_index=True,
                 column_config={
-                    "연속점수": st.column_config.ProgressColumn("기세(연속)", min_value=0, max_value=100, format="%.1f"),
-                    "징검다리점수": st.column_config.ProgressColumn("탄성(리듬)", min_value=0, max_value=100, format="%.1f"),
-                    "통합크레이지점수": st.column_config.NumberColumn("최종 점수", format="%.1f 🔥")
+                    "순위": st.column_config.NumberColumn("순위"),
+                    "번호": st.column_config.NumberColumn("로또번호"),
+                    "현재연속": st.column_config.NumberColumn("현재 연속 (Curr)"),
+                    "최대연속": st.column_config.NumberColumn("최대 연속 (Max)"),
+                    "연속점수": st.column_config.NumberColumn("기세 점수 (60%)", format="%.1f"),
+                    "징검다리점수": st.column_config.NumberColumn("탄성 점수 (40%)", format="%.1f"),
+                    "통합크레이지점수": st.column_config.NumberColumn("최종 점수", format="%.1f")
                 })
 
             st.divider()
             
-            # --- 공식 및 수치 해석 가이드 섹션 ---
+            # --- 공식 및 수치 해석 가이드 섹션 (기존 유지) ---
             st.subheader("📝 점수 산출 공식 및 수치 해석")
             st.markdown("### **최종 점수 = (기세 점수 × 0.6) + (탄성 점수 × 0.4)**")
             
@@ -111,7 +118,14 @@ elif menu == "콜드 번호 추출":
     df = get_recent_data(conn, SHEET_URL, count=0)
     if not df.empty:
         cold_df = coldNum.get_cold_analysis(df)
-        st.dataframe(cold_df.sort_values("현재미출현", ascending=False).head(15), use_container_width=True)
+        st.dataframe(cold_df.sort_values("현재미출현", ascending=False).head(15), use_container_width=True, hide_index=True,
+            column_config={
+                "순위": st.column_config.NumberColumn("순위"),
+                "번호": st.column_config.NumberColumn("로또번호"),
+                "현재미출현": st.column_config.NumberColumn("미출현 기간"),
+                "최대미출현": st.column_config.NumberColumn("과거 최대 미출현"),
+                "콜드지수": st.column_config.NumberColumn("반등 임계점 (%)", format="%.1f")
+            })
 
 st.sidebar.divider()
 st.sidebar.caption("v0.1 - 데이터 기반 통계 분석 시스템")
