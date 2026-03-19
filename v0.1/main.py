@@ -152,7 +152,7 @@ elif menu == "특정 번호 분석":
         target_num = st.number_input("분석할 번호", 1, 45, 1)
     with col2:
         # 분석 범위 입력 추가 (기본 100회차, 최대 500회차까지 확장 가능)
-        deep_analyze_count = st.number_input("심층 분석 범위(최근 회차)", 10, 500, 100)
+        deep_analyze_count = st.number_input("심층 분석 범위(최근 회차)", 10, 500, 30)
     
     st.divider()
 
@@ -173,9 +173,32 @@ elif menu == "특정 번호 분석":
 
 elif menu == "콜드 번호 추출":
     st.title("🧊 콜드 번호 리포트")
+    
+    # 데이터 호출
     df = get_recent_data(conn, SHEET_URL, count=0)
-    cold_df = coldNum.get_cold_analysis(df)
-    st.dataframe(cold_df.sort_values("현재미출현", ascending=False).head(15), use_container_width=True)
+    
+    if not df.empty:
+        cold_df = coldNum.get_cold_analysis(df)
+        
+        # 1. 미출현 회차순으로 정렬 후 상위 15개 추출
+        display_cold = cold_df.sort_values("현재미출현", ascending=False).head(15).copy()
+        
+        # 2. 인덱스를 1부터 15까지 새로 부여 (No. 표시용)
+        display_cold.index = range(1, len(display_cold) + 1)
+        
+        # 3. 데이터프레임 출력 (인덱스 이름을 'No.'로 지정)
+        st.dataframe(
+            display_cold, 
+            use_container_width=True,
+            column_config={
+                "index": st.column_config.NumberColumn("No.", format="%d")
+            }
+        )
+        
+        st.info("💡 '현재미출현' 수치가 높을수록 오랫동안 나오지 않은 '차갑게 식은' 번호들입니다.")
+    else:
+        st.error("데이터를 불러올 수 없습니다.")
+
 
 st.sidebar.divider()
 st.sidebar.caption("v0.1 - 통계 분석 시스템")
