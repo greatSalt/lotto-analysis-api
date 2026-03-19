@@ -44,27 +44,34 @@ def display_sidebar_picks(conn, sheet_url):
         st.divider()
 
 def get_highlight_style(row):
-    """표의 스타일 결정 (색상 및 굵은 글씨)"""
+    """표의 스타일 결정 (미리 계산된 스킵 주기에 따른 하이라이트)"""
     base_style = ''
     
-    # 1. 스킵 주기 분석 (노란색: 임계점 / 빨간색: 응축 / 파란색: 미출현)
     try:
-        # 데이터에 컬럼이 있는지 확인 후 계산
+        # 1. 노란색 (임계점 도달): 직전스킵과 평균스킵의 차이가 1 이내
         if '직전스킵' in row and '평균스킵' in row:
             skip_diff = abs(row['직전스킵'] - row['평균스킵'])
+            
             if skip_diff <= 1:
-                base_style = 'background-color: #F1C40F; color: black;' # 진한 노랑
+                # 노란색 배경 + 검정 글자 (가독성 최상)
+                base_style = 'background-color: #FFD700; color: #000000;' 
+            
+            # 2. 빨간색 (에너지 응축): 평균보다 더 오랫동안 안 나왔을 때
             elif row['직전스킵'] > row['평균스킵']:
-                base_style = 'background-color: #E74C3C; color: white;' # 진한 빨강
-        
+                base_style = 'background-color: #FF4B4B; color: #FFFFFF;' 
+
+        # 3. 파란색 (방금 출현): 현재 연속 0회 (최근 회차 당첨)
         if '현재연속' in row and row['현재연속'] == 0:
-            base_style = 'background-color: #3498DB; color: white;' # 진한 파랑
-    except:
+            base_style = 'background-color: #1E90FF; color: #FFFFFF;'
+            
+    except Exception:
         pass
 
-    # 2. [핵심] 내가 저장한 번호는 아주 굵게 표시 (사이드바 번호와 동기화)
+    # 4. [핵심] 사용자 저장 번호 강조 (테두리와 폰트 굵기 강화)
     if 'my_saved_picks' in st.session_state:
         if row['번호'] in st.session_state.my_saved_picks:
-            base_style += ' font-weight: 900; font-size: 1.1em; border: 2px solid #2C3E50;'
+            # 글자를 아주 굵게 하고, 테두리를 진하게 둘러서 '내 번호'임을 명시
+            base_style += ' font-weight: 900; font-size: 1.15em; border: 3px solid #000000;'
     
+    # 해당 행의 모든 열에 동일한 스타일 적용
     return [base_style] * len(row)
