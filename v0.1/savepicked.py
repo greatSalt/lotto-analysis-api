@@ -1,43 +1,50 @@
 import streamlit as st
+import pandas as pd
+from streamlit_gsheets import GSheetsConnection
 
-def init_saved_picks():
-    """세션 상태 초기화"""
+# 시트 URL은 main.py의 설정을 그대로 사용하거나 환경변수에서 가져옵니다.
+SHEET_URL = st.secrets["connections"]["gsheets"]["spreadsheet"]
+
+def init_saved_picks(conn):
+    """앱 시작 시 구글 시트에서 저장된 번호를 불러오기"""
     if 'my_saved_picks' not in st.session_state:
-        st.session_state.my_saved_picks = []
+        try:
+            # 'SavedPicks' 시트에서 데이터 읽기
+            df = conn.read(spreadsheet=SHEET_URL, worksheet="SavedPicks", ttl=0)
+            if not df.empty:
+                st.session_state.my_saved_picks = df['번호'].tolist()
+            else:
+                st.session_state.my_saved_picks = []
+        except Exception:
+            # 시트가 없거나 오류 시 빈 리스트로 초기화
+            st.session_state.my_saved_picks = []
 
-def display_sidebar_picks():
-    """사이드바에 저장된 번호를 항상 표시"""
+def save_picks_to_sheets(conn, new_picks):
+    """구글 시트에 번호 영구 저장"""
+    df = pd.DataFrame({"번호": new_picks})
+    try:
+        # 'SavedPicks' 시트에 덮어쓰기
+        conn.update(spreadsheet=SHEET_URL, worksheet="SavedPicks", data=df)
+        st.session_state.my_saved_picks = new_picks
+        st.toast("✅ 구글 시트에 안전하게 저장되었습니다!")
+    except Exception as e:
+        st.error(f"저장 실패: {e}")
+
+def display_sidebar_picks(conn):
+    """사이드바 표시 및 관리"""
     with st.sidebar:
         st.divider()
-        st.markdown("### 🎯 My Lucky Picks")
+        st.markdown("### 🎯 My Lucky Picks (Synced)")
         
         if st.session_state.my_saved_picks:
-            # 번호를 보기 좋게 나열 (배지 스타일 느낌으로)
             picks = sorted(st.session_state.my_saved_picks)
-            cols = st.columns(3) # 3열로 배치해서 깔끔하게 표시
+            cols = st.columns(3)
             for i, num in enumerate(picks):
                 cols[i % 3].info(f"**{num}**")
             
-            if st.button("🔄 Reset Picks", use_container_width=True):
-                st.session_state.my_saved_picks = []
+            if st.button("🔄 Reset & Sync", use_container_width=True):
+                save_picks_to_sheets(conn, []) # 시트 비우기
                 st.rerun()
         else:
-            st.caption("No numbers selected yet.")
+            st.caption("저장된 번호가 없습니다.")
         st.divider()
-
-def get_highlight_style(row):
-    """표의 스타일 결정 (동일 유지)"""
-    base_style = ''
-    skip_diff = abs(row['직전스킵'] - row['평균스킵'])
-    
-    if skip_diff <= 1:
-        base_style = 'background-color: #F1C40F; color: black;'
-    elif row['직전스킵'] > row['평균스킵']:
-        base_style = 'background-color: #E74C3C; color: white;'
-    elif row['현재연속'] == 0:
-        base_style = 'background-color: #3498DB; color: white;'
-
-    if row['번호'] in st.session_state.my_saved_picks:
-        base_style += ' font-weight: 900; font-size: 1.1em; border: 2.5px solid #2C3E50;'
-    
-    return [base_style] * len(row)
