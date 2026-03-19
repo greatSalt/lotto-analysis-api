@@ -44,34 +44,32 @@ def display_sidebar_picks(conn, sheet_url):
         st.divider()
 
 def get_highlight_style(row):
-    """표의 스타일 결정 (미리 계산된 스킵 주기에 따른 하이라이트)"""
+    """표의 스타일 결정 (노란색 임계점 우선 적용)"""
     base_style = ''
     
     try:
-        # 1. 노란색 (임계점 도달): 직전스킵과 평균스킵의 차이가 1 이내
+        # 1. 우선순위 1: 노란색 (임계점 도달) - 가장 중요함
         if '직전스킵' in row and '평균스킵' in row:
             skip_diff = abs(row['직전스킵'] - row['평균스킵'])
-            
             if skip_diff <= 1:
-                # 노란색 배경 + 검정 글자 (가독성 최상)
-                base_style = 'background-color: #FFD700; color: #000000;' 
+                base_style = 'background-color: #FFD700; color: #000000;' # 노랑
             
-            # 2. 빨간색 (에너지 응축): 평균보다 더 오랫동안 안 나왔을 때
+            # 2. 우선순위 2: 빨간색 (에너지 응축) - 노란색이 아닐 때만 적용
             elif row['직전스킵'] > row['평균스킵']:
-                base_style = 'background-color: #FF4B4B; color: #FFFFFF;' 
+                base_style = 'background-color: #FF4B4B; color: #FFFFFF;' # 빨강
 
-        # 3. 파란색 (방금 출현): 현재 연속 0회 (최근 회차 당첨)
-        if '현재연속' in row and row['현재연속'] == 0:
-            base_style = 'background-color: #1E90FF; color: #FFFFFF;'
+        # 3. 우선순위 3: 파란색 (방금 출현) - 노랑/빨강이 모두 아닐 때만 적용
+        # 이렇게 else/elif 구조를 타야 노란색이 파란색에 먹히지 않습니다.
+        if base_style == '' and '현재연속' in row and row['현재연속'] == 0:
+            base_style = 'background-color: #1E90FF; color: #FFFFFF;' # 파랑
             
     except Exception:
         pass
 
-    # 4. [핵심] 사용자 저장 번호 강조 (테두리와 폰트 굵기 강화)
+    # 4. [핵심] 내 번호 강조 (어떤 배경색 위에서도 굵게 표시)
     if 'my_saved_picks' in st.session_state:
         if row['번호'] in st.session_state.my_saved_picks:
-            # 글자를 아주 굵게 하고, 테두리를 진하게 둘러서 '내 번호'임을 명시
-            base_style += ' font-weight: 900; font-size: 1.15em; border: 3px solid #000000;'
+            # !important를 추가하여 테두리가 다른 스타일에 밀리지 않게 강조
+            base_style += ' font-weight: 900; font-size: 1.15em; border: 2.5px solid #000000 !important;'
     
-    # 해당 행의 모든 열에 동일한 스타일 적용
     return [base_style] * len(row)
