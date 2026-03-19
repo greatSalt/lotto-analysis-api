@@ -13,7 +13,7 @@ conn = st.connection("gsheets", type=GSheetsConnection)
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1q8P3SClxNSYsAXwBgk3__y44XxZwI_FTj-eE9uQeVHE/edit?gid=0#gid=0"
 
 # 1. 초기화 및 사이드바 표시 (최상단)
-init_saved_picks(conn)
+init_saved_picks(conn, SHEET_URL)
 
 st.sidebar.title("🎮 메뉴 선택")
 # 사이드바 메뉴 선택 아래에 바로 배치
@@ -79,7 +79,7 @@ elif menu == "크레이지 번호 추출":
             if st.button("💾 선택 번호 저장"):
                 # 체크된 행에서 번호만 추출하여 세션 저장
                 new_picks = edited_df[edited_df['선택'] == True]['번호'].tolist()
-                save_picks_to_sheets(conn, new_picks) # 영구 저장 실행
+                save_picks_to_sheets(conn, SHEET_URL, new_picks) # 영구 저장 실행
                 st.toast("주요 번호가 저장되었습니다!")
                 st.rerun()
 
