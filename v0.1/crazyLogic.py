@@ -19,7 +19,7 @@ def get_crazy_analysis(df):
             if app: curr_streak += 1
             else: break
         
-        if curr_streak == 0: continue 
+        #if curr_streak == 0: continue 
 
         # --- [B] 역대 최대 연속 출현(Max) 계산 ---
         streaks = []
