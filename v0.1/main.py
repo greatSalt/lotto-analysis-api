@@ -32,7 +32,7 @@ if menu == "데이터 입력":
             data_to_save = {"round": int(col_drw), "n1": n1, "n2": n2, "n3": n3, "n4": n4, "n5": n5, "n6": n6, "bonus": bonus}
             save_to_gsheet(conn, SHEET_URL, data_to_save)
             st.success("데이터 저장 완료")
-
+            
 elif menu == "크레이지 번호 추출":
     st.title("🔥 크레이지 번호 분석 리포트")
     
@@ -45,41 +45,43 @@ elif menu == "크레이지 번호 추출":
     if not df.empty:
         analysis_df = get_crazy_analysis(df)
         if not analysis_df.empty:
-            # 기본 정렬 및 데이터 가공
-            display_df = analysis_df.sort_values(by="통합크레이지점수", ascending=False)
+            # 1. 기본 정렬
+            display_df = analysis_df.sort_values(by="통합크레이지점수", ascending=False).copy()
             
-            # 체크박스 상태 반영 (저장된 번호는 체크된 상태로 시작)
+            # 2. [추가] 순번(No.) 컬럼 생성 (1부터 시작)
+            display_df.insert(0, 'No.', range(1, len(display_df) + 1))
+            
+            # 3. 체크박스 상태 반영
             display_df['선택'] = display_df['번호'].apply(lambda x: x in st.session_state.my_saved_picks)
             
-            # 컬럼 순서 조정
-            cols = ['선택', '번호', '현재연속', '최대연속', '평균스킵', '직전스킵', '연속점수', '징검다리점수', '통합크레이지점수']
+            # 4. 컬럼 순서 조정 (No.를 가장 앞으로, 그 다음 선택)
+            cols = ['No.', '선택', '번호', '현재연속', '최대연속', '평균스킵', '직전스킵', '연속점수', '징검다리점수', '통합크레이지점수']
             display_df = display_df[cols]
 
-            # --- [2] 스타일 적용 (savepicked.py의 굵은 글씨 + 배경색 로직) ---
+            # 5. 스타일 적용
             styled_df = display_df.style.apply(get_highlight_style, axis=1)
 
-            # --- [3] 데이터 에디터 (체크박스 및 굵은 글씨 출력) ---
+            # 6. 데이터 에디터 출력
             edited_df = st.data_editor(
                 styled_df,
-                hide_index=True,
+                hide_index=True, # 기존의 0부터 시작하는 인덱스는 숨김
                 use_container_width=True,
                 column_config={
+                    "No.": st.column_config.NumberColumn("No.", format="%d"),
                     "선택": st.column_config.CheckboxColumn("선택", default=False),
                     "번호": st.column_config.NumberColumn("번호"),
                     "평균스킵": st.column_config.NumberColumn("평균스킵", format="%.1f"),
-                    "직전스킵": st.column_config.NumberColumn("직전스킵"),
                     "연속점수": st.column_config.NumberColumn("기세점수", format="%.1f"),
                     "징검다리점수": st.column_config.NumberColumn("탄성점수", format="%.1f"),
                     "통합크레이지점수": st.column_config.NumberColumn("최종점수", format="%.1f")
                 },
-                disabled=[c for c in display_df.columns if c != '선택'] # 선택 열만 수정 가능
+                disabled=[c for c in display_df.columns if c != '선택']
             )
 
-            # --- [4] 적용 버튼 및 데이터 저장 ---
+            # 7. 적용 버튼 및 데이터 저장
             if st.button("💾 선택 번호 저장"):
-                # 체크된 행에서 번호만 추출하여 세션 저장
                 new_picks = edited_df[edited_df['선택'] == True]['번호'].tolist()
-                save_picks_to_sheets(conn, SHEET_URL, new_picks) # 영구 저장 실행
+                save_picks_to_sheets(conn, SHEET_URL, new_picks)
                 st.toast("주요 번호가 저장되었습니다!")
                 st.rerun()
 
