@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 import coldNum
-from savepicked import init_saved_picks, display_top_picks, get_highlight_style
+from savepicked import init_saved_picks, display_sidebar_picks, get_highlight_style
 from specialNum import analyze_specific_number
 from streamlit_gsheets import GSheetsConnection
 from into_lottoDB import save_to_gsheet, get_recent_data
@@ -12,9 +12,15 @@ st.set_page_config(page_title="로또 분석 프로 v0.1", layout="wide")
 conn = st.connection("gsheets", type=GSheetsConnection)
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1q8P3SClxNSYsAXwBgk3__y44XxZwI_FTj-eE9uQeVHE/edit?gid=0#gid=0"
 
-st.sidebar.title("🎮 메뉴 선택")
-menu = st.sidebar.radio("기능 선택", ["데이터 입력", "크레이지 번호 추출", "콜드 번호 추출", "특정 번호 분석"])
+# 1. 초기화 및 사이드바 표시 (최상단)
+init_saved_picks()
 
+st.sidebar.title("🎮 메뉴 선택")
+# 사이드바 메뉴 선택 아래에 바로 배치
+with st.sidebar:
+    menu = st.sidebar.radio("기능 선택", ["데이터 입력", "크레이지 번호 추출", "콜드 번호 추출", "특정 번호 분석"])
+    display_sidebar_picks() # 👈 어떤 메뉴에서든 내 번호가 보임
+    
 if menu == "데이터 입력":
     st.title("🎰 로또 데이터 입력")
     with st.form("lotto_input_form", clear_on_submit=True):
@@ -29,10 +35,6 @@ if menu == "데이터 입력":
 
 elif menu == "크레이지 번호 추출":
     st.title("🔥 크레이지 번호 분석 리포트")
-
-    # --- [1] 세션 상태 및 상단 고정바 표시 (savepicked.py 기능) ---
-    init_saved_picks()  # 세션 초기화
-    display_top_picks() # 상단에 저장된 주요 번호 표시
     
     st.divider()
 
@@ -74,7 +76,7 @@ elif menu == "크레이지 번호 추출":
             )
 
             # --- [4] 적용 버튼 및 데이터 저장 ---
-            if st.button("💾 선택 번호 저장 및 상단 고정"):
+            if st.button("💾 선택 번호 저장"):
                 # 체크된 행에서 번호만 추출하여 세션 저장
                 new_picks = edited_df[edited_df['선택'] == True]['번호'].tolist()
                 st.session_state.my_saved_picks = new_picks
