@@ -65,7 +65,7 @@ elif menu == "크레이지 번호 추출":
                     "번호": st.column_config.NumberColumn("번호"),
                     "현재연속": st.column_config.NumberColumn("현재(Curr)"),
                     "최대연속": st.column_config.NumberColumn("최대(Max)"),
-                    "평균스킵": st.column_config.NumberColumn("평균스킵"),
+                    "평균스킵": st.column_config.NumberColumn("평균스킵", format="%.1f"),
                     "직전스킵": st.column_config.NumberColumn("직전스킵"),
                     "연속점수": st.column_config.NumberColumn("기세점수", format="%.1f"),
                     "징검다리점수": st.column_config.NumberColumn("탄성점수", format="%.1f"),
