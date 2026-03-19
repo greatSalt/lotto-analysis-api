@@ -19,7 +19,7 @@ st.sidebar.title("🎮 메뉴 선택")
 # 사이드바 메뉴 선택 아래에 바로 배치
 with st.sidebar:
     menu = st.sidebar.radio("기능 선택", ["데이터 입력", "크레이지 번호 추출", "콜드 번호 추출", "특정 번호 분석"])
-    display_sidebar_picks(conn) # 👈 어떤 메뉴에서든 내 번호가 보임
+    display_sidebar_picks(conn, SHEET_URL) # 👈 어떤 메뉴에서든 내 번호가 보임
     
 if menu == "데이터 입력":
     st.title("🎰 로또 데이터 입력")
