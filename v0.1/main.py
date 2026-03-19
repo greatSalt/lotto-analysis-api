@@ -27,7 +27,7 @@ if menu == "데이터 입력":
 
 elif menu == "크레이지 번호 추출":
     st.title("🔥 크레이지 번호 분석 리포트")
-    # 스킵 주기의 정확도를 위해 기본 분석 범위를 50회 정도로 추천합니다.
+    # 스킵 주기의 정확도를 위해 분석 범위를 50회 정도로 설정하는 것을 추천합니다.
     analyze_count = st.number_input("분석 범위(최근 회차)", 10, 100, 50)
     df = get_recent_data(conn, SHEET_URL, count=analyze_count)
     
@@ -38,17 +38,22 @@ elif menu == "크레이지 번호 추출":
             display_df = analysis_df.sort_values(by="통합크레이지점수", ascending=False)
             display_df.insert(0, '순위', range(1, len(display_df) + 1))
             
-            # --- [핵심 추가] 직관적 색상 강조 로직 ---
+            # --- [핵심 수정] 진하고 선명한 색상 강조 로직 (가독성 확보) ---
             def highlight_independence(row):
-                # 1. 독립적 반등 (직전스킵 > 평균스킵) -> 옅은 빨강 (에너지 응축)
+                # 기본 스타일 (변경 없음)
+                styles = [''] * len(row)
+                
+                # 1. 독립적 반등 (직전스킵 > 평균스킵) -> 진한 빨강 배경 + 하얀 글씨
                 if row['직전스킵'] > row['평균스킵']:
-                    return ['background-color: rgba(255, 75, 75, 0.2)'] * len(row)
-                # 2. 현재 미출현 중(Curr=0) -> 옅은 파랑 (콜드 후보)
-                if row['현재연속'] == 0:
-                    return ['background-color: rgba(75, 75, 255, 0.1)'] * len(row)
-                return [''] * len(row)
+                    styles = ['background-color: #E74C3C; color: white; font-weight: bold;'] * len(row)
+                
+                # 2. 현재 미출현 중(Curr=0) -> 진한 파랑 배경 + 하얀 글씨 (1번 조건과 겹치면 파랑이 우선 적용됨)
+                elif row['현재연속'] == 0:
+                    styles = ['background-color: #3498DB; color: white; font-weight: bold;'] * len(row)
+                    
+                return styles
 
-            # 스타일 적용
+            # 스타일 적용 (그림 배제, 오직 진한 색상으로만 강조)
             styled_df = display_df.style.apply(highlight_independence, axis=1)
 
             # 숫자 중심의 데이터 테이블 (스킵 주기 컬럼 추가)
@@ -66,13 +71,13 @@ elif menu == "크레이지 번호 추출":
                 })
 
             st.markdown("""
-            * 🔴 **옅은 빨간색:** 직전스킵 > 평균스킵 (**독립적 반등/에너지 응축**)
-            * 🔵 **옅은 파란색:** 현재 미출현 중 (**잠재적 콜드/반등 대기 번호**)
+            * 🔴 **진한 빨간색:** 직전스킵 > 평균스킵 (**독립적 반등/에너지 응축**)
+            * 🔵 **진한 파란색:** 현재 미출현 중 (**잠재적 콜드/반등 대기 번호**)
             """)
 
             st.divider()
             
-            # --- [원본 보존] 공식 및 수치 해석 섹션 ---
+            # --- [원본 보존] 공식 및 수치 해석 섹션 (동일 유지) ---
             st.subheader("📝 점수 산출 공식 및 수치 해석")
             col_left, col_right = st.columns(2)
             
@@ -80,12 +85,10 @@ elif menu == "크레이지 번호 추출":
                 st.info("#### 🏃‍♂️ 기세 지수 (Streak Score)")
                 st.latex(r"S_{streak} = \frac{(Max - Curr)}{Max} \times 100")
                 st.markdown("""
-                * **Max:** 해당 번호의 역대 최대 연속 출현 횟수
-                * **Curr:** 현재 진행 중인 연속 출현 횟수
+                * **Max:** 해당 번호의 역대 최대 연속 출현 횟수 / **Curr:** 현재 연속 출현 횟수
                 * **해석:** 과거 기록 대비 현재 얼마나 더 나올 여력이 있는지 측정합니다.
                 """)
                 
-                # 스킵 주기 해석 추가
                 st.success("#### ⏳ 독립적 스킵 주기 (Skip Interval)")
                 st.markdown("""
                 * **직전스킵 > 평균스킵:** 번호가 평소보다 충분히 쉬고 스스로의 리듬으로 튀어나온 상태입니다.
@@ -99,7 +102,6 @@ elif menu == "크레이지 번호 추출":
                 st.info("3. **최근성 보너스:**")
                 st.latex(r"(마지막\ 출현\ 위치 + 1) \times 10")
                 st.markdown("* **해석:** 최근 10회 내에서 번호가 얼마나 규칙적인 리듬을 유지하는지 측정합니다.")
-
 
 elif menu == "특정 번호 분석":
     st.title("🔍 번호 심층 분석")
