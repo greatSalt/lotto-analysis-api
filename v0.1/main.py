@@ -118,31 +118,22 @@ elif menu == "크레이지 번호 추출":
             
             with c1:
                 st.warning("#### 🟡 노란색 (임계점 도달)")
-                # 절대값 기호를 사용한 임계점 공식
-                st.latex(r"|Skip_{curr} - Skip_{avg}| \le 1")
-                st.markdown("""
-                - **상태:** 고유 리듬 도달
-                - **해석:** 번호가 자신의 평균 주기 근처에 도달하여 **반등 확률이 가장 높은** 최적의 타이밍입니다.
-                """)
-
+                st.latex(r"|Skip_{last} - Skip_{avg}| \le 1")
+                st.markdown("- **의미:** 자기 주기 회귀")
+                st.caption("평균 주기만큼 쉬고 반등을 준비하는 최적 타이밍")
+            
             with c2:
                 st.error("#### 🔴 빨간색 (에너지 응축)")
-                # 평균 초과 공식
-                st.latex(r"Skip_{curr} > Skip_{avg}")
-                st.markdown("""
-                - **상태:** 통계적 회귀 임박
-                - **해석:** 평균보다 훨씬 긴 시간 동안 미출현하여 **에너지가 극도로 응축**된 상태입니다.
-                """)
-
-            with c3:
-                st.info("#### 🔵 파란색 (최근 기세)")
-                # 연속 출현 지표
-                st.latex(r"Streak_{curr} = 0")
-                st.markdown("""
-                - **상태:** 핫 넘버 (Hot Number)
-                - **해석:** 방금 막 당첨되어 **출현 기세가 살아있는** 번호입니다. 연쇄 출현 흐름을 포착합니다.
-                """)
+                st.latex(r"Skip_{last} > Skip_{avg}")
+                st.markdown("- **의미:** 평균 초과 미출현")
+                st.caption("평소보다 오래 침묵하여 에너지가 과응축된 상태")
             
+            with c3:
+                st.info("#### 🔵 파란색 (미출현/콜드)")
+                st.latex(r"Streak_{curr} = 0")
+                st.markdown("- **의미:** 연속 출현 중단")
+                st.caption("최근 당첨 번호에서 빠져 흐름이 멈춘 상태")
+
             st.caption("※ 모든 수치는 사용자님의 '분석 범위' 설정에 따라 실시간으로 재계산됩니다.")
 
 elif menu == "특정 번호 분석":
