@@ -145,11 +145,31 @@ elif menu == "크레이지 번호 추출":
 
 elif menu == "특정 번호 분석":
     st.title("🔍 번호 심층 분석")
-    target_num = st.number_input("번호", 1, 45, 1)
-    df = get_recent_data(conn, SHEET_URL, count=50)
-    res = analyze_specific_number(df, target_num)
-    if res:
-        st.write(res)
+    
+    # 입력 UI: 번호와 분석 범위를 나란히 배치
+    col1, col2 = st.columns(2)
+    with col1:
+        target_num = st.number_input("분석할 번호", 1, 45, 1)
+    with col2:
+        # 분석 범위 입력 추가 (기본 100회차, 최대 500회차까지 확장 가능)
+        deep_analyze_count = st.number_input("심층 분석 범위(최근 회차)", 10, 500, 100)
+    
+    st.divider()
+
+    # 설정된 범위(deep_analyze_count)만큼 데이터 호출
+    df = get_recent_data(conn, SHEET_URL, count=deep_analyze_count)
+    
+    if not df.empty:
+        # 심층 분석 실행
+        res = analyze_specific_number(df, target_num)
+        
+        if res:
+            st.write(res)
+            # 현재 분석 기준 회차 표시
+            st.caption(f"※ 최근 {deep_analyze_count}회차 데이터를 기반으로 분석된 결과입니다.")
+    else:
+        st.error("데이터를 불러오지 못했습니다. 구글 시트 연결 상태를 확인하세요.")
+
 
 elif menu == "콜드 번호 추출":
     st.title("🧊 콜드 번호 리포트")
