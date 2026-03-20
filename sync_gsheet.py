@@ -7,7 +7,7 @@ def sync_data():
     # 1. 경로 및 설정
     scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
     # 경로가 './key/...'인지 다시 한번 확인하세요!
-    creds_file = './key/lotto-project-489404-a267ebd6b49d.json' 
+    creds_file = './v0.1/key/lotto-project-489404-a267ebd6b49d.json' 
     
     if not os.path.exists(creds_file):
         print(f"❌ 파일 없음: {creds_file}")
