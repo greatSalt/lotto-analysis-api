@@ -123,13 +123,16 @@ elif menu == "크레이지 번호 추출":
 
             st.divider()
 
-            # 중단: 세부 점수 및 최종 통합 공식
-            st.subheader("🧪 종합 점수 산출 방식 (Total Scoring)")
-            
-            # 최종 점수 공식 강조
+            # 최종 점수 공식 업데이트
             st.success("#### 🏆 최종 통합 크레이지 점수 (Total Score)")
-            st.latex(r"Total = (S_{streak} \times 0.6) + (S_{bridge} \times 0.4)")
-            st.markdown("> **기세 지수($60\%$)와 탄성 지수($40\%$)를 가중치 결합하여 산출한 최종 분석값입니다.**")
+            st.latex(r"Total = (S_{streak} \times 0.4) + (S_{bridge} \times 0.3) + (S_{energy} \times 0.3) + Bonus_{rate}")
+            st.markdown("""
+            **핵심 산출 근거:**
+            1. **기세(40%):** 과거 폭발력 대비 현재 응축도
+            2. **탄성(30%):** 최근 출현 리듬의 규칙성 
+            3. **에너지(30%):** 평균 주기 대비 현재 미출현 기간 (**에너지 지수 반영**)
+            4. **보너스:** 최근 출현율(Rate)에 따른 미세 조정
+            """)
 
             col_mid1, col_mid2 = st.columns(2)
             with col_mid1:

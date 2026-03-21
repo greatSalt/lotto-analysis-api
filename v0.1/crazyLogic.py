@@ -53,25 +53,34 @@ def get_crazy_analysis(df):
         energy_index = current_skip / avg_skip if avg_skip > 0 else 0
         is_critical = energy_index >= 1.0
 
-        # --- [D] 점수 산출 로직 (기존 유지) ---
-        streak_score = ((max_streak - curr_streak) / max_streak) * 100
-        streak_score = max(0, min(100, streak_score))
-
+        # --- [D] 최종 통합 점수 산출 (모든 분석 데이터 반영) ---
+        
+        # 1. 기세 점수 (40%): 최대 연속 대비 현재 비축량
+        streak_score = max(0, min(100, ((max_streak - curr_streak) / max_streak) * 100))
+        
+        # 2. 탄성 점수 (30%): 최근 10회 출현 리듬의 규칙성
         recent_10 = appearances_bool[-10:]
         indices = [i for i, val in enumerate(recent_10) if val]
-        
         if len(indices) >= 2:
             gaps = [indices[i] - indices[i-1] - 1 for i in range(1, len(indices))]
             avg_gap = sum(gaps) / len(gaps)
             elasticity = max(0, 100 - (abs(1.0 - avg_gap) * 40))
-            recency_bonus = (indices[-1] + 1) * 10 
-            bridge_score = (elasticity * 0.7) + (recency_bonus * 0.3)
+            bridge_score = min(100, elasticity)
         else:
-            bridge_score = sum(recent_10) * 20 
-        
-        bridge_score = min(100, max(0, bridge_score))
-        total_score = (streak_score * 0.6) + (bridge_score * 0.4)
+            bridge_score = min(100, sum(recent_10) * 20)
 
+        # 3. 에너지 가점 (30%): 현재스킵 / 평균스킵 (Energy Index 활용)
+        # 에너지 지수가 1.0(임계점)일 때 70점, 1.5 이상일 때 100점에 수렴하도록 설계
+        energy_score = min(100, energy_index * 70) 
+
+        # 4. 출현율 보너스 (Bonus): 최근 기세가 너무 죽어있으면 감점, 좋으면 가점
+        # (출현율이 평균 13%보다 높으면 최대 10점 가산)
+        rate_bonus = (occurrence_rate - 13.3) * 0.5
+
+        # [최종 통합 점수] = (기세*0.4) + (탄성*0.3) + (에너지*0.3) + 출현보너스
+        total_score = (streak_score * 0.4) + (bridge_score * 0.3) + (energy_score * 0.3) + rate_bonus
+        total_score = max(0, min(100, total_score)) # 0~100점 사이로 고정
+        
         # --- [E] 결과 수집 (출현수, 출현율 포함) ---
         results.append({
             "번호": num,
