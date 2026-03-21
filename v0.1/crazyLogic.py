@@ -85,6 +85,8 @@ def get_crazy_analysis(df):
             "현재스킵": current_skip,
             "에너지지수": round(energy_index, 2),
             "임계점": "🔥도달" if is_critical else "⏳충전",
+            "연속점수": round(streak_score, 1),
+            "징검다리점수": round(bridge_score, 1),
             "통합크레이지점수": round(total_score, 1)
         })
 
