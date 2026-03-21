@@ -96,81 +96,73 @@ elif menu == "크레이지 번호 추출":
 
             st.divider()
             
-            # --- [5] 공식 및 수치 해석 섹션 (원본 보존) ---
-            st.subheader("📝 점수 산출 공식 및 수치 해석")
-            col_left, col_right = st.columns(2)
+            # --- [5] 공식 및 수치 해석 섹션 (통합 최종본) ---
+            st.divider()
+            st.subheader("📝 크레이지 분석 리포트 공식 가이드")
             
-            with col_left:
-                st.info("#### 🏃‍♂️ 기세 지수 (Streak Score)")
+            # 상단: 주요 지표 (양적 분석 & 에너지)
+            col_top1, col_top2 = st.columns(2)
+            
+            with col_top1:
+                st.info("#### 📊 최근 출현 지표 (Quantity)")
+                st.latex(r"Rate = \frac{Count_{range}}{Range} \times 100")
+                st.markdown(f"""
+                * **출현수:** 최근 **{analyze_count}회** 중 해당 번호가 당첨된 횟수
+                * **출현율:** 분석 범위 내 실제 등장 확률 (%)
+                * **해석:** 최근 흐름에서 번호가 얼마나 활발히 움직이는지 측정합니다.
+                """)
+
+            with col_top2:
+                st.warning("#### 🔥 에너지 임계점 (Energy Index)")
+                st.latex(r"Energy = \frac{Skip_{curr} (현재스킵)}{Skip_{avg} (평균주기)}")
+                st.markdown("""
+                * **1.0 미만:** 에너지 축적 단계 (기다림 필요)
+                * **1.0 이상:** **평균 주기 돌파!** 통계적 반등 임계점 도달 🔥
+                * **1.5 이상:** 과냉각 상태. 폭발 가능성이 매우 높은 구간
+                """)
+
+            st.divider()
+
+            # 중단: 점수 산출 공식 (질적 분석)
+            st.subheader("🧪 세부 점수 산출 방식")
+            col_mid1, col_mid2 = st.columns(2)
+
+            with col_mid1:
+                st.success("#### 🏃‍♂️ 기세 지수 (Streak Score)")
                 st.latex(r"S_{streak} = \frac{(Max - Curr)}{Max} \times 100")
                 st.markdown("* **Max:** 역대 최대 연속 출현 / **Curr:** 현재 연속 출현")
-                
-                st.success("#### ⏳ 독립적 스킵 주기 (Skip Interval)")
-                st.markdown("""
-                * **차이 1 이내(노란색):** 번호가 자신의 평균 리듬에 정확히 도달했습니다.
-                * **저장된 번호:** 표에서 **아주 굵은 글씨**와 테두리로 강조됩니다.
-                """)
-            
-            with col_right:
-                st.info("#### 🌉 징검다리 탄성 (Bridge Elasticity)")
-                st.markdown("1. **평균 간격($Gap_{avg}$):** 최근 10회 중 출현 사이 평균 간격")
-                st.latex(r"100 - (|1.0 - Gap_{avg}| \times 40)") 
-                st.markdown("* **해석:** 최근 10회 내에서 번호가 얼마나 규칙적인 리듬을 유지하는지 측정합니다.")
-            
+                st.caption("과거의 폭발력 대비 현재 얼마나 힘을 비축했는지 수치화합니다.")
+
+            with col_mid2:
+                st.success("#### 🌉 징검다리 탄성 (Bridge Elasticity)")
+                st.latex(r"100 - (|1.0 - Gap_{avg}| \times 40)")
+                st.markdown("* **Gap_avg:** 최근 10회 출현 사이의 평균 간격")
+                st.caption("출현 리듬이 얼마나 규칙적인지 측정하여 탄성을 계산합니다.")
+
             st.divider()
-            
-            # --- [5] 공식 및 수치 해석 섹션 (색상별 정밀 가이드) ---
-            st.subheader("📝 색상별 전략 및 공식 해석")
-            
-            # 3개의 컬럼으로 나누어 시각적으로 배치
+
+            # 하단: 색상별 전략 가이드
+            st.subheader("💡 데이터 기반 전략 가이드")
             c1, c2, c3 = st.columns(3)
-            
+
             with c1:
-                st.warning("#### 🟡 노란색 (임계점 도달)")
+                st.warning("#### 🟡 노란색 (주기 회귀)")
                 st.latex(r"|Skip_{last} - Skip_{avg}| \le 1")
-                st.markdown("- **의미:** 자기 주기 회귀")
-                st.caption("평균 주기만큼 쉬고 반등을 준비하는 최적 타이밍")
+                st.markdown("**평균 주기 도달:** 번호가 자신의 원래 리듬을 찾고 반등을 준비하는 타이밍")
             
             with c2:
-                st.error("#### 🔴 빨간색 (에너지 응축)")
+                st.error("#### 🔴 빨간색 (에너지 과포화)")
                 st.latex(r"Skip_{last} > Skip_{avg}")
-                st.markdown("- **의미:** 평균 초과 미출현")
-                st.caption("평소보다 오래 침묵하여 에너지가 과응축된 상태")
+                st.markdown("**평균 초과 미출현:** 평소보다 오래 침묵하여 에너지가 과응축된 고확률 상태")
             
             with c3:
-                st.info("#### 🔵 파란색 (미출현/콜드)")
+                st.info("#### 🔵 파란색 (흐름 일시중지)")
                 st.latex(r"Streak_{curr} = 0")
-                st.markdown("- **의미:** 연속 출현 중단")
-                st.caption("최근 당첨 번호에서 빠져 흐름이 멈춘 상태")
+                st.markdown("**미출현 상태:** 최근 연속 당첨 흐름이 끊겨 다시 에너지를 모으는 중")
 
-            st.divider()
-            st.subheader("📝 에너지 지수 전략 및 공식 해석")
-            
-            # 컨테이너를 사용하여 깔끔하게 배치
-            with st.container():
-                st.warning("#### 🟡 에너지 임계점 도달 (Critical Threshold)")
-                # 공식 출력
-                st.latex(r"Energy\ Index = \frac{Skip_{curr} (현재스킵)}{Skip_{avg} (평균스킵)} \ge 1.0")
-                
-                col_info1, col_info2 = st.columns(2)
-                with col_info1:
-                    st.markdown("""
-                    **🎯 수치의 의미**
-                    * **1.0 미만:** 아직 에너지가 축적되는 단계 (기다림 필요)
-                    * **1.0 이상:** **평균 주기를 돌파!** 통계적 반등 임계점 도달 🔥
-                    * **1.5 이상:** 과냉각 상태. 출현 확률이 매우 높은 '폭발' 직전 구간
-                    """)
-                
-                with col_info2:
-                    st.info("""
-                    **💡 분석 가이드 (예: 17번 번호)**
-                    직전스킵이 아무리 짧았어도, **현재스킵(5)**이 **평균스킵(4.5)**을 넘어섰다면 
-                    에너지 지수는 **1.11**이 되어 '나올 차례'가 되었음을 증명합니다.
-                    """)
-                
-                st.caption("※ 이 지수는 '과거의 운'이 아닌 '현재의 대기 상태'를 수치화한 독립적 지표입니다.")
-
-            st.caption("※ 모든 수치는 사용자님의 '분석 범위' 설정에 따라 실시간으로 재계산됩니다.")
+            # 하단 팁
+            st.info(f"💡 **분석 팁:** **17번**처럼 '출현율'은 낮지만 '에너지 지수'가 **1.0**을 넘었다면, 통계적 회귀에 의한 **반등 가능성**이 매우 높습니다.")
+            st.caption(f"※ 모든 수치는 사용자님이 설정하신 '분석 범위({analyze_count}회)'에 따라 실시간으로 재계산됩니다.")
 
 elif menu == "특정 번호 분석":
     st.title("🔍 번호 심층 분석")
