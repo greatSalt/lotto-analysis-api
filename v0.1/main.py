@@ -96,7 +96,7 @@ elif menu == "크레이지 번호 추출":
 
             st.divider()
             
-            # --- [5] 공식 및 수치 해석 섹션 (통합 최종본) ---
+            # --- [5] 공식 및 수치 해석 섹션 (최종 통합본) ---
             st.divider()
             st.subheader("📝 크레이지 분석 리포트 공식 가이드")
             
@@ -123,21 +123,24 @@ elif menu == "크레이지 번호 추출":
 
             st.divider()
 
-            # 중단: 점수 산출 공식 (질적 분석)
-            st.subheader("🧪 세부 점수 산출 방식")
-            col_mid1, col_mid2 = st.columns(2)
+            # 중단: 세부 점수 및 최종 통합 공식
+            st.subheader("🧪 종합 점수 산출 방식 (Total Scoring)")
+            
+            # 최종 점수 공식 강조
+            st.success("#### 🏆 최종 통합 크레이지 점수 (Total Score)")
+            st.latex(r"Total = (S_{streak} \times 0.6) + (S_{bridge} \times 0.4)")
+            st.markdown("> **기세 지수($60\%$)와 탄성 지수($40\%$)를 가중치 결합하여 산출한 최종 분석값입니다.**")
 
+            col_mid1, col_mid2 = st.columns(2)
             with col_mid1:
-                st.success("#### 🏃‍♂️ 기세 지수 (Streak Score)")
+                st.info("#### 🏃‍♂️ 1. 기세 지수 (Streak Score)")
                 st.latex(r"S_{streak} = \frac{(Max - Curr)}{Max} \times 100")
-                st.markdown("* **Max:** 역대 최대 연속 출현 / **Curr:** 현재 연속 출현")
-                st.caption("과거의 폭발력 대비 현재 얼마나 힘을 비축했는지 수치화합니다.")
+                st.caption("과거 최대 폭발력(Max) 대비 현재 비축량(Curr)을 수치화합니다.")
 
             with col_mid2:
-                st.success("#### 🌉 징검다리 탄성 (Bridge Elasticity)")
-                st.latex(r"100 - (|1.0 - Gap_{avg}| \times 40)")
-                st.markdown("* **Gap_avg:** 최근 10회 출현 사이의 평균 간격")
-                st.caption("출현 리듬이 얼마나 규칙적인지 측정하여 탄성을 계산합니다.")
+                st.info("#### 🌉 2. 징검다리 탄성 (Bridge Elasticity)")
+                st.latex(r"S_{bridge} = 100 - (|1.0 - Gap_{avg}| \times 40)")
+                st.caption("최근 10회 출현 간격이 얼마나 규칙적인지(리듬) 측정합니다.")
 
             st.divider()
 
@@ -160,9 +163,10 @@ elif menu == "크레이지 번호 추출":
                 st.latex(r"Streak_{curr} = 0")
                 st.markdown("**미출현 상태:** 최근 연속 당첨 흐름이 끊겨 다시 에너지를 모으는 중")
 
-            # 하단 팁
-            st.info(f"💡 **분석 팁:** **17번**처럼 '출현율'은 낮지만 '에너지 지수'가 **1.0**을 넘었다면, 통계적 회귀에 의한 **반등 가능성**이 매우 높습니다.")
-            st.caption(f"※ 모든 수치는 사용자님이 설정하신 '분석 범위({analyze_count}회)'에 따라 실시간으로 재계산됩니다.")
+            # 하단 분석 팁
+            st.info(f"💡 **분석 팁:** **17번**처럼 '출현율'은 낮아도 '에너지 지수'가 **1.0** 이상이면서 **최종 점수**가 높다면, 통계적 확률이 극대화된 **A급 후보**로 분류합니다.")
+            st.caption(f"※ 모든 수치는 분석 범위({analyze_count}회) 설정에 따라 실시간 반영됩니다.")
+
 
 elif menu == "특정 번호 분석":
     st.title("🔍 번호 심층 분석")
