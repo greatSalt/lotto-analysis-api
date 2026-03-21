@@ -55,7 +55,7 @@ elif menu == "크레이지 번호 추출":
             display_df['선택'] = display_df['번호'].apply(lambda x: x in st.session_state.my_saved_picks)
             
             # 4. 컬럼 순서 조정 (No.를 가장 앞으로, 그 다음 선택)
-            cols = ['No.', '선택', '번호', '현재연속', '최대연속', '평균스킵', '직전스킵', '연속점수', '징검다리점수', '통합크레이지점수']
+            cols = ['No.', '선택', '번호', '현재연속', '최대연속', '평균스킵', '직전스킵', "현재스킵", "에너지지수", "임계점", '연속점수', '징검다리점수', '통합크레이지점수']
             display_df = display_df[cols]
 
             # 5. 스타일 적용
@@ -71,10 +71,15 @@ elif menu == "크레이지 번호 추출":
                     "선택": st.column_config.CheckboxColumn("선택", default=False),
                     "번호": st.column_config.NumberColumn("번호"),
                     "평균스킵": st.column_config.NumberColumn("평균스킵", format="%.1f"),
+                    "직전스킵": st.column_config.NumberColumn("직전스킵", format="%d"),
+                    "현재스킵": st.column_config.NumberColumn("현재스킵", format="%d"), # ✅ 추가
+                    "에너지지수": st.column_config.NumberColumn("에너지", format="%.2f"), # ✅ 추가
+                    "임계점": st.column_config.TextColumn("상태"), # ✅ 추가 (🔥 표시용)
                     "연속점수": st.column_config.NumberColumn("기세점수", format="%.1f"),
                     "징검다리점수": st.column_config.NumberColumn("탄성점수", format="%.1f"),
                     "통합크레이지점수": st.column_config.NumberColumn("최종점수", format="%.1f")
                 },
+
                 disabled=[c for c in display_df.columns if c != '선택']
             )
 
@@ -133,6 +138,33 @@ elif menu == "크레이지 번호 추출":
                 st.latex(r"Streak_{curr} = 0")
                 st.markdown("- **의미:** 연속 출현 중단")
                 st.caption("최근 당첨 번호에서 빠져 흐름이 멈춘 상태")
+
+            st.divider()
+            st.subheader("📝 에너지 지수 전략 및 공식 해석")
+            
+            # 컨테이너를 사용하여 깔끔하게 배치
+            with st.container():
+                st.warning("#### 🟡 에너지 임계점 도달 (Critical Threshold)")
+                # 공식 출력
+                st.latex(r"Energy\ Index = \frac{Skip_{curr} (현재스킵)}{Skip_{avg} (평균스킵)} \ge 1.0")
+                
+                col_info1, col_info2 = st.columns(2)
+                with col_info1:
+                    st.markdown("""
+                    **🎯 수치의 의미**
+                    * **1.0 미만:** 아직 에너지가 축적되는 단계 (기다림 필요)
+                    * **1.0 이상:** **평균 주기를 돌파!** 통계적 반등 임계점 도달 🔥
+                    * **1.5 이상:** 과냉각 상태. 출현 확률이 매우 높은 '폭발' 직전 구간
+                    """)
+                
+                with col_info2:
+                    st.info("""
+                    **💡 분석 가이드 (예: 17번 번호)**
+                    직전스킵이 아무리 짧았어도, **현재스킵(5)**이 **평균스킵(4.5)**을 넘어섰다면 
+                    에너지 지수는 **1.11**이 되어 '나올 차례'가 되었음을 증명합니다.
+                    """)
+                
+                st.caption("※ 이 지수는 '과거의 운'이 아닌 '현재의 대기 상태'를 수치화한 독립적 지표입니다.")
 
             st.caption("※ 모든 수치는 사용자님의 '분석 범위' 설정에 따라 실시간으로 재계산됩니다.")
 
