@@ -55,7 +55,7 @@ elif menu == "크레이지 번호 추출":
             display_df['선택'] = display_df['번호'].apply(lambda x: x in st.session_state.my_saved_picks)
             
             # 4. 컬럼 순서 조정 (No.를 가장 앞으로, 그 다음 선택)
-            cols = ['No.', '선택', '번호', '현재연속', '최대연속', '연속점수', '징검다리점수', '평균스킵', '직전스킵', "현재스킵", "에너지지수", "임계점", '통합크레이지점수']
+            cols = ['No.', '선택', '번호', '출현수', '출현율', '현재연속', '최대연속', '연속점수', '징검다리점수', '평균스킵', '직전스킵', "현재스킵", "에너지지수", "임계점", '통합크레이지점수']
             display_df = display_df[cols]
 
             # 5. 스타일 적용
@@ -70,13 +70,17 @@ elif menu == "크레이지 번호 추출":
                     "No.": st.column_config.NumberColumn("No.", format="%d"),
                     "선택": st.column_config.CheckboxColumn("선택", default=False),
                     "번호": st.column_config.NumberColumn("번호"),
+                    "출현수": st.column_config.NumberColumn("출현수"),
+                    "출현율": st.column_config.NumberColumn("출현율", format="%.1f"),
+                    "현재연속": st.column_config.NumberColumn("현재연속"),
+                    "최대연속": st.column_config.NumberColumn("최대연속"),
+                    "연속점수": st.column_config.NumberColumn("기세점수", format="%.1f"),
+                    "징검다리점수": st.column_config.NumberColumn("탄성점수", format="%.1f"),
                     "평균스킵": st.column_config.NumberColumn("평균스킵", format="%.1f"),
                     "직전스킵": st.column_config.NumberColumn("직전스킵", format="%d"),
                     "현재스킵": st.column_config.NumberColumn("현재스킵", format="%d"), # ✅ 추가
                     "에너지지수": st.column_config.NumberColumn("에너지", format="%.2f"), # ✅ 추가
                     "임계점": st.column_config.TextColumn("상태"), # ✅ 추가 (🔥 표시용)
-                    "연속점수": st.column_config.NumberColumn("기세점수", format="%.1f"),
-                    "징검다리점수": st.column_config.NumberColumn("탄성점수", format="%.1f"),
                     "통합크레이지점수": st.column_config.NumberColumn("최종점수", format="%.1f")
                 },
 
