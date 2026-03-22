@@ -55,7 +55,7 @@ elif menu == "크레이지 번호 추출":
             display_df['선택'] = display_df['번호'].apply(lambda x: x in st.session_state.my_saved_picks)
             
             # 4. 컬럼 순서 조정 (No.를 가장 앞으로, 그 다음 선택)
-            cols = ['No.', '선택', '번호', '출현수', '출현율', '현재연속', '최대연속', '연속점수', '징검다리점수', '평균스킵', '직전스킵', "현재스킵", "에너지지수", "임계점", '통합크레이지점수']
+            cols = ['No.', '선택', '번호', '출현수', '출현율', '현재연속', '최대연속', '연속점수', '징검다리점수', '평균스킵', '직전스킵', "현재스킵", "에너지지수", "리듬점수", "변동성", "박자상태", "임계점", '통합크레이지점수']
             display_df = display_df[cols]
 
             # 5. 스타일 적용
@@ -80,6 +80,9 @@ elif menu == "크레이지 번호 추출":
                     "직전스킵": st.column_config.NumberColumn("직전스킵", format="%d"),
                     "현재스킵": st.column_config.NumberColumn("현재스킵", format="%d"), # ✅ 추가
                     "에너지지수": st.column_config.NumberColumn("에너지", format="%.2f"), # ✅ 추가
+                    "리듬점수": st.column_config.NumberColumn("리듬점수", format="%.1f"), # ✅ 추가
+                    "변동성": st.column_config.NumberColumn("변동성", format="%.2f"), # ✅ 추가
+                    "박자상태": st.column_config.TextColumn("박자상태"), # ✅ 추가 (🔥 표시용)   
                     "임계점": st.column_config.TextColumn("상태"), # ✅ 추가 (🔥 표시용)
                     "통합크레이지점수": st.column_config.NumberColumn("최종점수", format="%.1f")
                 },
@@ -121,19 +124,6 @@ elif menu == "크레이지 번호 추출":
                 * **1.5 이상:** 과냉각 상태. 폭발 가능성이 매우 높은 구간
                 """)
 
-            st.divider()
-
-            # 최종 점수 공식 업데이트
-            st.success("#### 🏆 최종 통합 크레이지 점수 (Total Score)")
-            st.latex(r"Total = (S_{streak} \times 0.4) + (S_{bridge} \times 0.3) + (S_{energy} \times 0.3) + Bonus_{rate}")
-            st.markdown("""
-            **핵심 산출 근거:**
-            1. **기세(40%):** 과거 폭발력 대비 현재 응축도
-            2. **탄성(30%):** 최근 출현 리듬의 규칙성 
-            3. **에너지(30%):** 평균 주기 대비 현재 미출현 기간 (**에너지 지수 반영**)
-            4. **보너스:** 최근 출현율(Rate)에 따른 미세 조정
-            """)
-
             col_mid1, col_mid2 = st.columns(2)
             with col_mid1:
                 st.info("#### 🏃‍♂️ 1. 기세 지수 (Streak Score)")
@@ -168,8 +158,66 @@ elif menu == "크레이지 번호 추출":
 
             # 하단 분석 팁
             st.info(f"💡 **분석 팁:** **17번**처럼 '출현율'은 낮아도 '에너지 지수'가 **1.0** 이상이면서 **최종 점수**가 높다면, 통계적 확률이 극대화된 **A급 후보**로 분류합니다.")
-            st.caption(f"※ 모든 수치는 분석 범위({analyze_count}회) 설정에 따라 실시간 반영됩니다.")
+            
+            st.divider()
+            
+            # --- [5] 최종 통합 크레이지 점수 (V3: 리듬 엔진 탑재) ---
+            st.success("#### 🏆 [V3] 최종 통합 크레이지 점수 (Total Score)")
+            
+            # 통합 점수 공식 (LaTeX)
+            st.latex(r"Total = (S_{streak} \times 0.3) + (S_{energy} \times 0.3) + (S_{bridge} \times 0.2) + (S_{rhythm} \times 0.2) + Bonus_{rate}")
+            
+            col_info1, col_info2 = st.columns(2)
+            
+            with col_info1:
+                st.markdown("""
+                **📊 핵심 4대 지표 (Main Weights)**
+                1. **기세(30%):** 과거 최대 폭발력 대비 현재 에너지 응축도
+                2. **에너지(30%):** 평균 주기 대비 미출현 기간 ($Energy\ Index$)
+                3. **탄성(20%):** 최근 10회 출현 간격의 규칙성
+                4. **리듬(20%):** 역대 스킵 데이터의 표준편차($\sigma$) 기반 규칙성
+                """)
+                
+            with col_info2:
+                st.markdown("""
+                **⚖️ 특수 조정 로직 (Adjustments)**
+                * **출현율 보너스:** 최근 기세($Rate$)에 따른 $\pm$ 미세 조정
+                * **연사 방지 필터:** 방금 나온 번호(스킵 0)는 **점수 50% 삭감**
+                * **박자 싱크:** 현재 스킵이 평균 주기에 근접하면 **'정박자'** 판정
+                """)
 
+            st.divider()
+            with st.expander("🥁 리듬(Rhythm) 분석이란?"):
+                st.write("""
+                번호마다 고유한 출현 주기가 있습니다. **리듬 점수**는 이 주기가 얼마나 일정한지를 측정합니다.
+                * **정박자:** 현재 미출현 기간이 자신의 평균 주기와 표준편차 범위 내에 들어온 상태입니다. (당첨 확률 급증)
+                * **엇박자:** 평소 리듬보다 너무 빠르거나 늦게 나타나고 있는 상태입니다.
+                * **리듬 점수 80점 이상:** 기계처럼 정확한 주기로 나오는 '효자 번호'입니다.
+                """)
+                st.latex(r"Rhythm\ Score = 100 - (StdDev(Skips) \times 10)")
+
+            st.divider()
+
+            # --- 리듬 및 박자 상세 설명 ---
+            st.subheader("🥁 리듬(Rhythm) 및 박자 해석")
+            c1, c2, c3 = st.columns(3)
+
+            with c1:
+                st.warning("#### 🥁 정박자 (On-Beat)")
+                st.latex(r"Sync \le 0.5")
+                st.markdown("자신이 선호하는 출현 주기에 정확히 도달한 상태. **당첨 임박 신호**")
+            
+            with c2:
+                st.info("#### 🌀 리듬 점수 (Rhythm)")
+                st.latex(r"100 - (\sigma \times 10)")
+                st.markdown("점수가 높을수록(80+) 주기가 일정한 '모범생' 번호, 낮을수록 '폭주형'")
+            
+            with c3:
+                st.error("#### 🔥 에너지 임계점")
+                st.latex(r"Energy \ge 1.0")
+                st.markdown("평균적으로 쉴 만큼 쉬었음을 의미. 에너지가 꽉 찬 상태")
+
+            st.caption(f"※ 모든 분석은 사용자가 설정한 {analyze_count}회 데이터를 기반으로 실시간 계산됩니다.")
 
 elif menu == "특정 번호 분석":
     st.title("🔍 번호 심층 분석")
