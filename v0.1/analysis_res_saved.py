@@ -5,35 +5,35 @@ import streamlit as st
 
 def save_analysis_to_project(df):
     try:
-        # 1. 홈 디렉토리 확인
-        home_path = os.path.expanduser("~")
+        # [핵심 수정] 현재 파일(analysis_res_saved.py)이 위치한 폴더 경로를 가져옵니다.
+        # 사용자님이 터미널에서 보고 계신 그 'V0.1' 폴더가 됩니다.
+        current_dir = os.path.dirname(os.path.abspath(__file__))
         
-        # 2. 경로 설정 (대소문자 주의: Documents vs documents)
-        # 사용자님의 실제 폴더명이 대문자 'Documents'라면 아래를 "Documents"로 수정하세요.
-        target_dir = os.path.join(home_path, "documents/lottoproject/V0.1/resource")
+        # 해당 폴더 바로 아래의 'resource' 폴더 지정
+        target_dir = os.path.join(current_dir, "resource")
         
-        # 3. 폴더 생성
+        # 폴더 생성 (없으면 생성)
         os.makedirs(target_dir, exist_ok=True)
 
-        # 4. 파일명 및 경로 생성
+        # 파일명 생성
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"crazy_res_{timestamp}.csv"
         file_path = os.path.join(target_dir, filename)
 
-        # 5. CSV 저장
+        # CSV 저장
         df.to_csv(file_path, index=False, encoding='utf-8-sig')
         
-        # [추가] 저장 직후 물리적 존재 여부 체크
+        # 물리적 존재 확인
         if os.path.exists(file_path):
             return True, file_path
         else:
-            return False, f"파일 생성 실패 (경로: {file_path})"
+            return False, "파일 쓰기 실패"
             
     except Exception as e:
         return False, str(e)
 
 def render_save_button(df):
-    if st.button("💾 분석 결과 Resource 폴더에 저장", use_container_width=True):
+    if st.button("💾 현재 프로젝트 resource 폴더에 저장", use_container_width=True):
         if df is None or df.empty:
             st.warning("저장할 데이터가 없습니다.")
             return
@@ -41,15 +41,8 @@ def render_save_button(df):
         success, result = save_analysis_to_project(df)
         
         if success:
-            st.success("✅ [코드 로직] 저장 성공 메시지 발송")
-            
-            # --- [물리적 검증 섹션] ---
-            if os.path.isfile(result):
-                st.balloons()
-                st.info(f"📂 [물리적 확인] 파일이 실제 존재함 확인 완료!")
-                st.code(f"ls -l {result}", language="bash")
-            else:
-                st.error("❗ [비상] 저장 성공 메시지는 떴으나, 파일이 실제로는 없습니다!")
-                st.warning("원인 추정: Termux 가상 파일 시스템의 쓰기 지연 또는 권한 우회 오류")
+            st.success("✅ 저장 성공!")
+            st.code(f"📍 저장된 절대 경로:\n{result}", language="text")
+            st.info("💡 위 경로를 복사해서 터미널에서 'ls -l [경로]'를 입력해보세요.")
         else:
             st.error(f"❌ 저장 실패: {result}")
