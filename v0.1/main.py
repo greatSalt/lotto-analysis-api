@@ -7,6 +7,7 @@ from specialNum import analyze_specific_number
 from streamlit_gsheets import GSheetsConnection
 from into_lottoDB import save_to_gsheet, get_recent_data
 from crazyLogic import get_crazy_analysis
+from formular_description import display_formula_guide
 
 st.set_page_config(page_title="로또 분석 프로 v0.1", layout="wide")
 conn = st.connection("gsheets", type=GSheetsConnection)
@@ -39,7 +40,7 @@ elif menu == "크레이지 번호 추출":
     st.divider()
 
     # 분석 데이터 호출
-    analyze_count = st.number_input("분석 범위(최근 회차)", 10, 100, 30)
+    analyze_count = st.number_input("분석 범위(최근 회차)", 10, 100, 15)
     df = get_recent_data(conn, SHEET_URL, count=analyze_count)
     
     if not df.empty:
@@ -76,12 +77,13 @@ elif menu == "크레이지 번호 추출":
                     "최대연속": st.column_config.NumberColumn("최대연속"),
                     "연속점수": st.column_config.NumberColumn("기세점수", format="%.1f"),
                     "징검다리점수": st.column_config.NumberColumn("탄성점수", format="%.1f"),
+                    "반등지수": st.column_config.NumberColumn("반등지수", format="%.1f"),
+                    "에너지지수": st.column_config.NumberColumn("에너지", format="%.2f"),
                     "평균스킵": st.column_config.NumberColumn("평균스킵", format="%.1f"),
                     "직전스킵": st.column_config.NumberColumn("직전스킵", format="%d"),
-                    "현재스킵": st.column_config.NumberColumn("현재스킵", format="%d"), # ✅ 추가
-                    "에너지지수": st.column_config.NumberColumn("에너지", format="%.2f"), # ✅ 추가
-                    "리듬점수": st.column_config.NumberColumn("리듬점수", format="%.1f"), # ✅ 추가
-                    "변동성": st.column_config.NumberColumn("변동성", format="%.2f"), # ✅ 추가
+                    "현재스킵": st.column_config.NumberColumn("현재스킵", format="%d"),
+                    "변동성": st.column_config.NumberColumn("변동성", format="%.2f"),
+                    "리듬점수": st.column_config.NumberColumn("리듬점수", format="%.1f"),
                     "박자상태": st.column_config.TextColumn("박자상태"), # ✅ 추가 (🔥 표시용)   
                     "임계점": st.column_config.TextColumn("상태"), # ✅ 추가 (🔥 표시용)
                     "통합크레이지점수": st.column_config.NumberColumn("최종점수", format="%.1f")
@@ -100,40 +102,7 @@ elif menu == "크레이지 번호 추출":
             st.divider()
             
             # --- [5] 공식 및 수치 해석 섹션 (최종 통합본) ---
-            st.divider()
-            st.subheader("📝 크레이지 분석 리포트 공식 가이드")
-            
-            # 상단: 주요 지표 (양적 분석 & 에너지)
-            col_top1, col_top2 = st.columns(2)
-            
-            with col_top1:
-                st.info("#### 📊 최근 출현 지표 (Quantity)")
-                st.latex(r"Rate = \frac{Count_{range}}{Range} \times 100")
-                st.markdown(f"""
-                * **출현수:** 최근 **{analyze_count}회** 중 해당 번호가 당첨된 횟수
-                * **출현율:** 분석 범위 내 실제 등장 확률 (%)
-                * **해석:** 최근 흐름에서 번호가 얼마나 활발히 움직이는지 측정합니다.
-                """)
-
-            with col_top2:
-                st.warning("#### 🔥 에너지 임계점 (Energy Index)")
-                st.latex(r"Energy = \frac{Skip_{curr} (현재스킵)}{Skip_{avg} (평균주기)}")
-                st.markdown("""
-                * **1.0 미만:** 에너지 축적 단계 (기다림 필요)
-                * **1.0 이상:** **평균 주기 돌파!** 통계적 반등 임계점 도달 🔥
-                * **1.5 이상:** 과냉각 상태. 폭발 가능성이 매우 높은 구간
-                """)
-
-            col_mid1, col_mid2 = st.columns(2)
-            with col_mid1:
-                st.info("#### 🏃‍♂️ 1. 기세 지수 (Streak Score)")
-                st.latex(r"S_{streak} = \frac{(Max - Curr)}{Max} \times 100")
-                st.caption("과거 최대 폭발력(Max) 대비 현재 비축량(Curr)을 수치화합니다.")
-
-            with col_mid2:
-                st.info("#### 🌉 2. 징검다리 탄성 (Bridge Elasticity)")
-                st.latex(r"S_{bridge} = 100 - (|1.0 - Gap_{avg}| \times 40)")
-                st.caption("최근 10회 출현 간격이 얼마나 규칙적인지(리듬) 측정합니다.")
+            display_formula_guide(analyze_count)
 
             st.divider()
 
@@ -159,33 +128,6 @@ elif menu == "크레이지 번호 추출":
             # 하단 분석 팁
             st.info(f"💡 **분석 팁:** **17번**처럼 '출현율'은 낮아도 '에너지 지수'가 **1.0** 이상이면서 **최종 점수**가 높다면, 통계적 확률이 극대화된 **A급 후보**로 분류합니다.")
             
-            st.divider()
-            
-            # --- [5] 최종 통합 크레이지 점수 (V3: 리듬 엔진 탑재) ---
-            st.success("#### 🏆 [V3] 최종 통합 크레이지 점수 (Total Score)")
-            
-            # 통합 점수 공식 (LaTeX)
-            st.latex(r"Total = (S_{streak} \times 0.3) + (S_{energy} \times 0.3) + (S_{bridge} \times 0.2) + (S_{rhythm} \times 0.2) + Bonus_{rate}")
-            
-            col_info1, col_info2 = st.columns(2)
-            
-            with col_info1:
-                st.markdown("""
-                **📊 핵심 4대 지표 (Main Weights)**
-                1. **기세(30%):** 과거 최대 폭발력 대비 현재 에너지 응축도
-                2. **에너지(30%):** 평균 주기 대비 미출현 기간 ($Energy\ Index$)
-                3. **탄성(20%):** 최근 10회 출현 간격의 규칙성
-                4. **리듬(20%):** 역대 스킵 데이터의 표준편차($\sigma$) 기반 규칙성
-                """)
-                
-            with col_info2:
-                st.markdown("""
-                **⚖️ 특수 조정 로직 (Adjustments)**
-                * **출현율 보너스:** 최근 기세($Rate$)에 따른 $\pm$ 미세 조정
-                * **연사 방지 필터:** 방금 나온 번호(스킵 0)는 **점수 50% 삭감**
-                * **박자 싱크:** 현재 스킵이 평균 주기에 근접하면 **'정박자'** 판정
-                """)
-
             st.divider()
             with st.expander("🥁 리듬(Rhythm) 분석이란?"):
                 st.write("""

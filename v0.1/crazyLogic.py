@@ -5,7 +5,6 @@ def get_crazy_analysis(df):
     if df.empty:
         return pd.DataFrame()
 
-    # 회차 기준 오름차순 정렬
     df_sorted = df.sort_values(by='round', ascending=True)
     results = []
 
@@ -15,16 +14,14 @@ def get_crazy_analysis(df):
             win_nums = [row.n1, row.n2, row.n3, row.n4, row.n5, row.n6]
             appearances_bool.append(num in win_nums)
         
-        # --- [A] 분석 범위 내 양적 지표 ---
+        # --- [A] 양적 지표 추출 (복구) ---
         count_in_range = sum(appearances_bool) 
         total_range = len(appearances_bool)
         occurrence_rate = (count_in_range / total_range) * 100 if total_range > 0 else 0
 
-        # --- [B] 스킵(미출현) 및 연속 데이터 추출 ---
-        skips = []
-        streaks = []
-        temp_skip = 0
-        temp_streak = 0
+        # --- [B] 스킵 및 연속 데이터 추출 ---
+        skips, streaks = [], []
+        temp_skip, temp_streak = 0, 0
         
         for app in appearances_bool:
             if app:
@@ -37,11 +34,11 @@ def get_crazy_analysis(df):
                 temp_skip += 1
         
         if temp_streak > 0: streaks.append(temp_streak)
-        
-        # --- [C] 주기 및 에너지 지표 계산 ---
+
+        # --- [C] 핵심 지표 계산 ---
         current_skip = temp_skip  
         avg_skip = sum(skips) / len(skips) if skips else 1.0
-        last_skip = skips[-1] if skips else 0
+        last_skip = skips[-1] if skips else avg_skip
         max_streak = max(streaks) if streaks else 1
         
         curr_streak = 0
@@ -49,74 +46,60 @@ def get_crazy_analysis(df):
             if app: curr_streak += 1
             else: break
 
-        energy_index = current_skip / avg_skip if avg_skip > 0 else 0
-        is_critical = energy_index >= 1.0
+        # --- [D] 지수 정의 ---
+        rebound_index = current_skip / avg_skip if avg_skip > 0 else 0
+        energy_index = last_skip / avg_skip if avg_skip > 0 else 0
+        is_critical = rebound_index >= 1.0
 
-        # --- [D] 리듬(Rhythm) 분석 로직 추가 ---
+        # --- [E] 리듬 및 변동성 ---
         if len(skips) >= 3:
-            # 1. 리듬 변동성 (표준편차)
             rhythm_std = np.std(skips)
-            # 2. 리듬 점수 (변동성이 작을수록 고점)
             rhythm_score = max(0, min(100, 100 - (rhythm_std * 10)))
-            # 3. 박자 싱크로율 (현재 박자가 평균에 도달했는지)
             sync_val = abs(current_skip - avg_skip) / (rhythm_std + 0.1)
             rhythm_status = "정박자" if sync_val <= 0.5 else "엇박자"
-            if current_skip == 0: rhythm_status = "연주중"
         else:
-            rhythm_std = 0
-            rhythm_score = 50
-            rhythm_status = "부족"
+            rhythm_std, rhythm_score, rhythm_status = 0, 50, "데이터부족"
 
-        # --- [E] 최종 통합 점수 산출 (가중치 조정) ---
-        # 1. 기세 점수 (30%)
-        streak_score = max(0, min(100, ((max_streak - curr_streak) / max_streak) * 100))
+        # --- [F] 가중치 기반 통합 점수 설계 ---
+        # 1. 반등 점수 (30%): 현재 타이밍
+        rebound_part = min(100, rebound_index * 75) if rebound_index <= 1.5 else max(0, 100 - (rebound_index * 10))
+        # 2. 기세 점수 (25%): 연속 폭발력
+        streak_part = min(100, (curr_streak / max_streak * 100) if curr_streak > 0 else (max_streak * 10))
+        # 3. 에너지 점수 (25%): 직전 응축도
+        energy_part = min(100, energy_index * 70)
+        # 4. 리듬 점수 (20%): 규칙성
+        rhythm_part = rhythm_score
+
+        # 통합 점수 산출
+        total_score = (rebound_part * 0.3) + (streak_part * 0.25) + (energy_part * 0.25) + (rhythm_part * 0.2)
         
-        # 2. 탄성 점수 (20%): 최근 10회 리듬
-        recent_10 = appearances_bool[-10:]
-        indices = [i for i, val in enumerate(recent_10) if val]
-        if len(indices) >= 2:
-            gaps = [indices[i] - indices[i-1] - 1 for i in range(1, len(indices))]
-            avg_gap = sum(gaps) / len(gaps)
-            elasticity = max(0, 100 - (abs(1.0 - avg_gap) * 40))
-            bridge_score = min(100, elasticity)
-        else:
-            bridge_score = min(100, sum(recent_10) * 20)
+        # 보너스: 출현율 가산점 (기본 체급 반영)
+        total_score += (occurrence_rate - 13.3) * 0.5
 
-        # 3. 에너지 점수 (30%): 에너지 지수 반영
-        energy_score = min(100, energy_index * 70) 
-
-        # 4. 리듬 점수 반영 (20%): 규칙성 가점
-        final_rhythm_part = rhythm_score * 0.2
-
-        # 5. 출현율 보너스 (Bonus)
-        rate_bonus = (occurrence_rate - 13.3) * 0.5
-
-        # 통합 점수 계산
-        total_score = (streak_score * 0.3) + (bridge_score * 0.2) + (energy_score * 0.3) + final_rhythm_part + rate_bonus
-        
-        # 방금 나온 번호는 순위 방어 (감점 로직)
+        # 이월수 보정
         if current_skip == 0:
-            total_score *= 0.5
+            total_score *= 0.7 if curr_streak < max_streak else 0.4
 
         total_score = max(0, min(100, total_score))
 
-        # --- [F] 결과 수집 ---
+        # --- [G] 최종 결과 데이터 구성 (모든 컬럼 포함) ---
         results.append({
             "번호": num,
             "출현수": count_in_range,
             "출현율": round(occurrence_rate, 1),
             "현재연속": curr_streak,
             "최대연속": max_streak,
-            "연속점수": round(streak_score, 1),
-            "징검다리점수": round(bridge_score, 1),
+            "연속점수": round(streak_part, 1),
+            "탄성점수": round(bridge_score, 1),
+            "반등지수": round(rebound_index, 2),
+            "에너지지수": round(energy_index, 2),
             "평균스킵": round(avg_skip, 1),
             "직전스킵": last_skip,
             "현재스킵": current_skip,
-            "에너지지수": round(energy_index, 2),
-            "리듬점수": round(rhythm_score, 1),
-            "변동성": round(rhythm_std, 2),
+            "변동성": round(rhythm_std, 2),        # 표준편차(Sigma) - 리듬점수의 근거
+            "리듬점수": round(rhythm_score, 1),     # 규칙성
             "박자상태": rhythm_status,
-            "임계점": "🔥도달" if is_critical else "⏳충전",
+            "임계점": "🔥반등임박" if is_critical else "⏳에너지충전",
             "통합크레이지점수": round(total_score, 1)
         })
 
