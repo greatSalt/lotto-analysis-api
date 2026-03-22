@@ -4,22 +4,18 @@ from datetime import datetime
 import streamlit as st
 
 def save_analysis_to_project(df):
-    """
-    분석 결과를 프로젝트 내 resource 폴더에 즉시 저장합니다.
-    (기존 data 폴더에서 resource로 명칭 변경 반영)
-    """
     try:
-        # 1. Termux 홈 디렉토리 경로 자동 인식 (~/)
+        # 1. 홈 디렉토리 확인
         home_path = os.path.expanduser("~")
         
-        # 2. 최종 목적지 경로 설정 (data -> resource)
-        # 사용자님의 경로: Documents/lottoproject/v0.1/resource
+        # 2. 경로 설정 (대소문자 주의: Documents vs documents)
+        # 사용자님의 실제 폴더명이 대문자 'Documents'라면 아래를 "Documents"로 수정하세요.
         target_dir = os.path.join(home_path, "documents/lottoproject/v0.1/resource")
         
-        # 3. 폴더가 없으면 생성 (중복 에러 방지)
+        # 3. 폴더 생성
         os.makedirs(target_dir, exist_ok=True)
 
-        # 4. 파일명 생성 (구분을 위해 crazy_res_ 시작)
+        # 4. 파일명 및 경로 생성
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"crazy_res_{timestamp}.csv"
         file_path = os.path.join(target_dir, filename)
@@ -27,14 +23,16 @@ def save_analysis_to_project(df):
         # 5. CSV 저장
         df.to_csv(file_path, index=False, encoding='utf-8-sig')
         
-        return True, file_path
+        # [추가] 저장 직후 물리적 존재 여부 체크
+        if os.path.exists(file_path):
+            return True, file_path
+        else:
+            return False, f"파일 생성 실패 (경로: {file_path})"
+            
     except Exception as e:
         return False, str(e)
 
 def render_save_button(df):
-    """
-    스트림릿 UI 저장 버튼 렌더링
-    """
     if st.button("💾 분석 결과 Resource 폴더에 저장", use_container_width=True):
         if df is None or df.empty:
             st.warning("저장할 데이터가 없습니다.")
@@ -43,8 +41,15 @@ def render_save_button(df):
         success, result = save_analysis_to_project(df)
         
         if success:
-            st.success("✅ Resource 저장 성공! Acode에서 확인하세요.")
-            st.code(f"📍 위치: {result}", language="text")
+            st.success("✅ [코드 로직] 저장 성공 메시지 발송")
+            
+            # --- [물리적 검증 섹션] ---
+            if os.path.isfile(result):
+                st.balloons()
+                st.info(f"📂 [물리적 확인] 파일이 실제 존재함 확인 완료!")
+                st.code(f"ls -l {result}", language="bash")
+            else:
+                st.error("❗ [비상] 저장 성공 메시지는 떴으나, 파일이 실제로는 없습니다!")
+                st.warning("원인 추정: Termux 가상 파일 시스템의 쓰기 지연 또는 권한 우회 오류")
         else:
             st.error(f"❌ 저장 실패: {result}")
-            st.info("💡 Tip: 폴더명 대소문자(documents vs Documents)를 확인해 보세요.")
