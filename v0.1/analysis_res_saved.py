@@ -10,7 +10,7 @@ def save_analysis_to_project(df):
         
         # 2. 경로 설정 (대소문자 주의: Documents vs documents)
         # 사용자님의 실제 폴더명이 대문자 'Documents'라면 아래를 "Documents"로 수정하세요.
-        target_dir = os.path.join(home_path, "documents/lottoproject/v0.1/resource")
+        target_dir = os.path.join(home_path, "documents/lottoproject/V0.1/resource")
         
         # 3. 폴더 생성
         os.makedirs(target_dir, exist_ok=True)
