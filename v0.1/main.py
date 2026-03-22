@@ -8,6 +8,7 @@ from streamlit_gsheets import GSheetsConnection
 from into_lottoDB import save_to_gsheet, get_recent_data
 from crazyLogic import get_crazy_analysis
 from formular_description import display_formula_guide
+import analysis_res_saved as saver
 
 st.set_page_config(page_title="로또 분석 프로 v0.1", layout="wide")
 conn = st.connection("gsheets", type=GSheetsConnection)
@@ -98,6 +99,11 @@ elif menu == "크레이지 번호 추출":
                 save_picks_to_sheets(conn, SHEET_URL, new_picks)
                 st.toast("주요 번호가 저장되었습니다!")
                 st.rerun()
+        
+            # --- 추가된 부분 ---
+            st.divider() # 시각적 구분선
+            saver.render_save_button(edited_df) 
+            # ------------------
 
             st.divider()
             
