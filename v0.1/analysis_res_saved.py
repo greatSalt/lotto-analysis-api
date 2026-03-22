@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime
 import streamlit as st
 
-def save_analysis_to_project(df, project_root="/data/data/com.termux/files/home/documents/lottoproject/v0.1/data"):
+def save_analysis_to_project(df, project_root="/data/data/com.termux/files/home/documents/lottoproject/v0.1"):
     """
     분석 결과를 프로젝트 내 data 폴더에 즉시 저장합니다.
     """
