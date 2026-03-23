@@ -102,7 +102,7 @@ elif menu == "크레이지 번호 추출":
         
             # --- 추가된 부분 ---
             st.divider() # 시각적 구분선
-            saver.render_gsheet_button(edited_df)
+            saver.render_gsheet_button(edited_df, SHEET_URL)
             # ------------------
 
             st.divider()
