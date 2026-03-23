@@ -8,7 +8,7 @@ from streamlit_gsheets import GSheetsConnection
 from into_lottoDB import save_to_gsheet, get_recent_data
 from crazyLogic import get_crazy_analysis
 from formular_description import display_formula_guide
-import render_gsheet_button as saver
+import analysis_to_gsheet as saver
 
 st.set_page_config(page_title="로또 분석 프로 v0.1", layout="wide")
 conn = st.connection("gsheets", type=GSheetsConnection)
