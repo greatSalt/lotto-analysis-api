@@ -8,7 +8,7 @@ from streamlit_gsheets import GSheetsConnection
 from into_lottoDB import save_to_gsheet, get_recent_data
 from crazyLogic import get_crazy_analysis
 from formular_description import display_formula_guide
-import analysis_res_saved as saver
+import render_gsheet_button as saver
 
 st.set_page_config(page_title="로또 분석 프로 v0.1", layout="wide")
 conn = st.connection("gsheets", type=GSheetsConnection)
@@ -102,7 +102,7 @@ elif menu == "크레이지 번호 추출":
         
             # --- 추가된 부분 ---
             st.divider() # 시각적 구분선
-            saver.render_save_button(edited_df) 
+            saver.render_gsheet_button(edited_df)
             # ------------------
 
             st.divider()
