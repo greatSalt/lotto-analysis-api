@@ -41,7 +41,7 @@ elif menu == "크레이지 번호 추출":
     st.divider()
 
     # 분석 데이터 호출
-    analyze_count = st.number_input("분석 범위(최근 회차)", 10, 100, 15)
+    analyze_count = st.number_input("분석 범위(최근 회차)", 10, 100, 30)
     df = get_recent_data(conn, SHEET_URL, count=analyze_count)
     
     if not df.empty:
