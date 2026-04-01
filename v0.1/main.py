@@ -57,7 +57,7 @@ elif menu == "크레이지 번호 추출":
             display_df['선택'] = display_df['번호'].apply(lambda x: x in st.session_state.my_saved_picks)
             
             # 4. 컬럼 순서 조정 (No.를 가장 앞으로, 그 다음 선택)
-            cols = ['No.', '선택', '번호', '출현수', '출현율', '현재연속', '최대연속', '연속점수', '탄성점수', '반등지수', '에너지지수', '평균스킵', '직전스킵', '현재스킵',  '변동성', '리듬점수', '박자상태', '임계점', '통합크레이지점수']
+            cols = ['No.', '선택', '번호', '출현수', '출현율', '출현기대치' '현재연속', '최대연속', '연속점수', '탄성점수', '반등지수', '에너지지수', '평균스킵', '직전스킵', '현재스킵',  '변동성', '리듬점수', '박자상태', '임계점', '통합크레이지점수']
             display_df = display_df[cols]
 
             # 5. 스타일 적용
@@ -74,9 +74,10 @@ elif menu == "크레이지 번호 추출":
                     "번호": st.column_config.NumberColumn("번호"),
                     "출현수": st.column_config.NumberColumn("출현수"),
                     "출현율": st.column_config.NumberColumn("출현율", format="%.1f"),
+                    "출현기대치": st.column_config.TextColumn("출현기대치"),
                     "현재연속": st.column_config.NumberColumn("현재연속"),
                     "최대연속": st.column_config.NumberColumn("최대연속"),
-                    "연속점수": st.column_config.NumberColumn("기세점수", format="%.1f"),
+                    "연속점수": st.column_config.NumberColumn("연속점수", format="%.1f"),
                     "탄성점수": st.column_config.NumberColumn("탄성점수", format="%.1f"),
                     "반등지수": st.column_config.NumberColumn("반등지수", format="%.1f"),
                     "에너지지수": st.column_config.NumberColumn("에너지", format="%.2f"),
@@ -86,7 +87,7 @@ elif menu == "크레이지 번호 추출":
                     "변동성": st.column_config.NumberColumn("변동성", format="%.2f"),
                     "리듬점수": st.column_config.NumberColumn("리듬점수", format="%.1f"),
                     "박자상태": st.column_config.TextColumn("박자상태"), # ✅ 추가 (🔥 표시용)   
-                    "임계점": st.column_config.TextColumn("상태"), # ✅ 추가 (🔥 표시용)
+                    "임계점": st.column_config.TextColumn("임계점"), # ✅ 추가 (🔥 표시용)
                     "통합크레이지점수": st.column_config.NumberColumn("최종점수", format="%.1f")
                 },
 
@@ -109,64 +110,7 @@ elif menu == "크레이지 번호 추출":
             
             # --- [5] 공식 및 수치 해석 섹션 (최종 통합본) ---
             display_formula_guide(analyze_count)
-
-            st.divider()
-
-            # 하단: 색상별 전략 가이드
-            st.subheader("💡 데이터 기반 전략 가이드")
-            c1, c2, c3 = st.columns(3)
-
-            with c1:
-                st.warning("#### 🟡 노란색 (주기 회귀)")
-                st.latex(r"|Skip_{last} - Skip_{avg}| \le 1")
-                st.markdown("**평균 주기 도달:** 번호가 자신의 원래 리듬을 찾고 반등을 준비하는 타이밍")
             
-            with c2:
-                st.error("#### 🔴 빨간색 (에너지 과포화)")
-                st.latex(r"Skip_{last} > Skip_{avg}")
-                st.markdown("**평균 초과 미출현:** 평소보다 오래 침묵하여 에너지가 과응축된 고확률 상태")
-            
-            with c3:
-                st.info("#### 🔵 파란색 (흐름 일시중지)")
-                st.latex(r"Streak_{curr} = 0")
-                st.markdown("**미출현 상태:** 최근 연속 당첨 흐름이 끊겨 다시 에너지를 모으는 중")
-
-            # 하단 분석 팁
-            st.info(f"💡 **분석 팁:** **17번**처럼 '출현율'은 낮아도 '에너지 지수'가 **1.0** 이상이면서 **최종 점수**가 높다면, 통계적 확률이 극대화된 **A급 후보**로 분류합니다.")
-            
-            st.divider()
-            with st.expander("🥁 리듬(Rhythm) 분석이란?"):
-                st.write("""
-                번호마다 고유한 출현 주기가 있습니다. **리듬 점수**는 이 주기가 얼마나 일정한지를 측정합니다.
-                * **정박자:** 현재 미출현 기간이 자신의 평균 주기와 표준편차 범위 내에 들어온 상태입니다. (당첨 확률 급증)
-                * **엇박자:** 평소 리듬보다 너무 빠르거나 늦게 나타나고 있는 상태입니다.
-                * **리듬 점수 80점 이상:** 기계처럼 정확한 주기로 나오는 '효자 번호'입니다.
-                """)
-                st.latex(r"Rhythm\ Score = 100 - (StdDev(Skips) \times 10)")
-
-            st.divider()
-
-            # --- 리듬 및 박자 상세 설명 ---
-            st.subheader("🥁 리듬(Rhythm) 및 박자 해석")
-            c1, c2, c3 = st.columns(3)
-
-            with c1:
-                st.warning("#### 🥁 정박자 (On-Beat)")
-                st.latex(r"Sync \le 0.5")
-                st.markdown("자신이 선호하는 출현 주기에 정확히 도달한 상태. **당첨 임박 신호**")
-            
-            with c2:
-                st.info("#### 🌀 리듬 점수 (Rhythm)")
-                st.latex(r"100 - (\sigma \times 10)")
-                st.markdown("점수가 높을수록(80+) 주기가 일정한 '모범생' 번호, 낮을수록 '폭주형'")
-            
-            with c3:
-                st.error("#### 🔥 에너지 임계점")
-                st.latex(r"Energy \ge 1.0")
-                st.markdown("평균적으로 쉴 만큼 쉬었음을 의미. 에너지가 꽉 찬 상태")
-
-            st.caption(f"※ 모든 분석은 사용자가 설정한 {analyze_count}회 데이터를 기반으로 실시간 계산됩니다.")
-
 elif menu == "특정 번호 분석":
     st.title("🔍 번호 심층 분석")
     

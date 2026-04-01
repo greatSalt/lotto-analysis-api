@@ -40,7 +40,7 @@ def display_formula_guide(analyze_count=100):
         """)
 
     with col_mid2:
-        st.info("#### 🏃‍♂️ 기세 지수 (Streak Score)")
+        st.info("#### 🏃‍♂️ 연속 지수 (Streak Score)")
         st.latex(r"S_{streak} = \frac{(Max - Curr)}{Max} \times 100")
         st.markdown("""
         * **해석:** 역대 최대 연속 기록(Max) 대비 현재의 폭발력을 수치화합니다.
@@ -89,6 +89,61 @@ def display_formula_guide(analyze_count=100):
             st.error("#### 🔥 반등 지수")
             st.latex(r"Rebound \ge 1.0")
             st.write("평균적으로 쉴 만큼 쉬었음을 의미.")
+            
+    st.divider()
+
+    # 하단: 색상별 전략 가이드
+    st.subheader("💡 데이터 기반 전략 가이드")
+    c1, c2, c3 = st.columns(3)
+
+    with c1:
+        st.warning("#### 🟡 노란색 (주기 회귀)")
+        st.latex(r"|Skip_{last} - Skip_{avg}| \le 1")
+        st.markdown("**평균 주기 도달:** 번호가 자신의 원래 리듬을 찾고 반등을 준비하는 타이밍")
+            
+    with c2:
+        st.error("#### 🔴 빨간색 (에너지 과포화)")
+        st.latex(r"Skip_{last} > Skip_{avg}")
+        st.markdown("**평균 초과 미출현:** 평소보다 오래 침묵하여 에너지가 과응축된 고확률 상태")
+            
+    with c3:
+        st.info("#### 🔵 파란색 (흐름 일시중지)")
+        st.latex(r"Streak_{curr} = 0")
+        st.markdown("**미출현 상태:** 최근 연속 당첨 흐름이 끊겨 다시 에너지를 모으는 중")
+
+    # 하단 분석 팁
+    st.info(f"💡 **분석 팁:** **17번**처럼 '출현율'은 낮아도 '에너지 지수'가 **1.0** 이상이면서***최종 점수**가 높다면, 통계적 확률이 극대화된 **A급 후보**로 분류합니다.")
+            
+    st.divider()
+    with st.expander("🥁 리듬(Rhythm) 분석이란?"):
+        st.write("""
+            번호마다 고유한 출현 주기가 있습니다. **리듬 점수**는 이 주기가 얼마나 일정한지를 측정합니다.
+            * **정박자:** 현재 미출현 기간이 자신의 평균 주기와 표준편차 범위 내에 들어온 상태입니다. (당첨 확률 급증)
+            * **엇박자:** 평소 리듬보다 너무 빠르거나 늦게 나타나고 있는 상태입니다.
+            * **리듬 점수 80점 이상:** 기계처럼 정확한 주기로 나오는 '효자 번호'입니다.""")
+            
+        st.latex(r"Rhythm\ Score = 100 - (StdDev(Skips) \times 10)")
+
+        st.divider()
+
+        # --- 리듬 및 박자 상세 설명 ---
+        st.subheader("🥁 리듬(Rhythm) 및 박자 해석")
+        c1, c2, c3 = st.columns(3)
+
+        with c1:
+            st.warning("#### 🥁 정박자 (On-Beat)")
+            st.latex(r"Sync \le 0.5")
+            st.markdown("자신이 선호하는 출현 주기에 정확히 도달한 상태. **당첨 임박 신호**")
+            
+        with c2:
+            st.info("#### 🌀 리듬 점수 (Rhythm)")
+            st.latex(r"100 - (\sigma \times 10)")
+            st.markdown("점수가 높을수록(80+) 주기가 일정한 '모범생' 번호, 낮을수록 '폭주형'")
+            
+        with c3:
+            st.error("#### 🔥 에너지 임계점")
+            st.latex(r"Energy \ge 1.0")
+            st.markdown("평균적으로 쉴 만큼 쉬었음을 의미. 에너지가 꽉 찬 상태")
             
     st.caption(f"※ 모든 분석은 실시간 업데이트되는 {analyze_count}회 데이터를 기반으로 계산됩니다.")
     st.divider()
