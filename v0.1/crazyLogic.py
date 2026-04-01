@@ -212,7 +212,7 @@ def get_crazy_analysis(df):
             "번호": num,
             "출현수": count_in_range,
             "출현율": round(occurrence_rate, 1),
-            "출현기대치": "hot" if is_hot_number else "cold" 
+            "출현기대치": "hot" if is_hot_number else "cold", 
             "현재연속": curr_streak,
             "최대연속": max_streak,
             "연속점수": round(streak_part, 1),
