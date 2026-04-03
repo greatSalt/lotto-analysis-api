@@ -9,6 +9,7 @@ from into_lottoDB import save_to_gsheet, get_recent_data
 from crazyLogic import get_crazy_analysis
 from formular_description import display_formula_guide
 import analysis_to_gsheet as saver
+from iteration_predictor import predict_iteration_count
 
 st.set_page_config(page_title="로또 분석 프로 v0.1", layout="wide")
 conn = st.connection("gsheets", type=GSheetsConnection)
@@ -166,6 +167,23 @@ elif menu == "콜드 번호 추출":
         st.info("💡 '현재미출현' 수치가 높을수록 오랫동안 나오지 않은 '차갑게 식은' 번호들입니다.")
     else:
         st.error("데이터를 불러올 수 없습니다.")
+
+st.header("🔮이월수 전략 시뮬레이터")
+
+if st.button("📊 이월수 기대치 예측 실행"):
+    count, reason = predict_iteration_count(data, current_nums)
+    
+    # 결과 표시
+    col1, col2 = st.columns([1, 3])
+    with col1:
+        st.metric(label="예측 개수", value=f"{count}개")
+    with col2:
+        st.info(f"**예측 근거:** {reason}")
+        
+    # 확률 차트 (시각적 근거)
+    st.write("💡 **이월수 개수별 표준 확률 분포**")
+    chart_data = {"0개": 38, "1개": 43, "2개": 13, "3개+": 6}
+    st.bar_chart(chart_data)
 
 
 st.sidebar.divider()
