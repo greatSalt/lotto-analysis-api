@@ -21,7 +21,7 @@ init_saved_picks(conn, SHEET_URL)
 st.sidebar.title("🎮 메뉴 선택")
 # 사이드바 메뉴 선택 아래에 바로 배치
 with st.sidebar:
-    menu = st.sidebar.radio("기능 선택", ["데이터 입력", "크레이지 번호 추출", "콜드 번호 추출", "특정 번호 분석"])
+    menu = st.sidebar.radio("기능 선택", ["데이터 입력", "크레이지 번호 추출", "콜드 번호 추출", "특정 번호 분석", "📊 이월수 예측"])
     display_sidebar_picks(conn, SHEET_URL) # 👈 어떤 메뉴에서든 내 번호가 보임
     
 if menu == "데이터 입력":
@@ -168,23 +168,43 @@ elif menu == "콜드 번호 추출":
     else:
         st.error("데이터를 불러올 수 없습니다.")
 
-st.header("🔮이월수 전략 시뮬레이터")
 
-if st.button("📊 이월수 기대치 예측 실행"):
-    count, reason = predict_iteration_count(data, current_nums)
+
+elif menu == "📊 이월수 예측":
+    st.title("🔮이월수 전략 시뮬레이터")
     
-    # 결과 표시
-    col1, col2 = st.columns([1, 3])
-    with col1:
-        st.metric(label="예측 개수", value=f"{count}개")
-    with col2:
-        st.info(f"**예측 근거:** {reason}")
+    # 분석 데이터 호출
+    analyze_count = st.number_input("분석 범위(최근 회차)", 10, 100, 30)
+    if st.button("📊 이월수 기대치 예측 실행"):
+        df = get_recent_data(conn, SHEET_URL, count=analyze_count)
         
-    # 확률 차트 (시각적 근거)
-    st.write("💡 **이월수 개수별 표준 확률 분포**")
-    chart_data = {"0개": 38, "1개": 43, "2개": 13, "3개+": 6}
-    st.bar_chart(chart_data)
+        if not df.empty:
+            analysis_df = get_crazy_analysis(df)
+            
+            if not analysis_df.empty:
+                # 최신 회차(1행)에서 당첨번호 6개 추출
+                # df의 컬럼명이 'num1', 'num2'... 식이라고 가정할 때:
+                last_win_row = df.iloc[0]
+                last_nums = [last_win_row['n1'], last_win_row['n2'], last_win_row['n3'], 
+                             last_win_row['n4'], last_win_row['n5'], last_win_row['n6']]
+                
+                # 분석 데이터(analysis_df)에서 해당 6개 번호의 행만 필터링하여 기세(streak) 정보 확보
+                current_nums_info = analysis_df[analysis_df['번호'].isin(last_nums)].copy()
+                
+                # 예측 함수 호출
+                count, reason = predict_iteration_count(df, current_nums_info)
 
+                # 결과 표시
+                col1, col2 = st.columns([1, 3])
+                with col1:
+                    st.metric(label="예측 개수", value=f"{count}개")
+                with col2:
+                    st.info(f"**예측 근거:** {reason}")
+                    
+                # 확률 차트 (시각적 근거)
+                st.write("💡 **이월수 개수별 표준 확률 분포**")
+                chart_data = {"0개": 38, "1개": 43, "2개": 13, "3개+": 6}
+                st.bar_chart(chart_data)
 
 st.sidebar.divider()
 st.sidebar.caption("v0.1 - 통계 분석 시스템")
