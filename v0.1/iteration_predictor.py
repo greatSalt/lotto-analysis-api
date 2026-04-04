@@ -1,27 +1,28 @@
+def predict_iteration_count(df, current_nums_info):
+    # 1. 최근 5회차간의 실제 이월수 개수 리스트 생성
+    # (n1~n6 컬럼을 집합으로 변환하여 윗행과 교집합 개수 산출)
+    iter_history = []
+    for i in range(len(df) - 1):
+        curr = set(df.iloc[i][['n1', 'n2', 'n3', 'n4', 'n5', 'n6']])
+        prev = set(df.iloc[i+1][['n1', 'n2', 'n3', 'n4', 'n5', 'n6']])
+        iter_history.append(len(curr & prev))
+    
+    recent_iters = iter_history[:5] # 최근 5회차 이월수 기록
+    avg_iter = sum(recent_iters) / len(recent_iters) if recent_iters else 0
 
-def predict_iteration_count(recent_data, current_winning_nums):
-    """
-    recent_data: 최근 10~20회차 당첨 번호 목록
-    current_winning_nums: 직전 회차(1217회) 당첨 번호와 각 번호의 max_streak 정보
-    """
-    # 1. 최근 이월수 출현 흐름 분석 (Moving Average)
-    # 최근 5회차 동안 이월수가 평균 몇 개 나왔는지 계산
-    recent_iter_counts = [calc_iter(r) for r in recent_data[:5]]
-    avg_iter = sum(recent_iter_counts) / len(recent_iter_counts)
-    
-    # 2. 직전 번호들의 '재출현 에너지' 합산
-    # 각 번호의 (max_streak - curr_streak)이 클수록 이월 가능성 상승
-    total_reappearance_energy = sum([n.max_streak - n.curr_streak for n in current_winning_nums])
-    
-    # 3. 예측 로직 (Heuristic)
-    if avg_iter >= 2.0: # 최근에 너무 많이 이월됨 -> 회귀 본능
-        predicted_count = 1 
-        reason = "최근 5회차 이월 과다 출현으로 인한 통계적 회귀(평균 1개로 수렴) 예상"
-    elif total_reappearance_energy >= 5: # 기세가 남은 번호가 많음
-        predicted_count = 2
-        reason = "직전 당첨번호 중 최대연속 기록에 미치지 못한 '기세 잔여 번호' 다수 포착"
+    # 2. 직전 번호들의 '기세 잔여' 에너지 (10번, 31번 등)
+    # (최대연속 > 현재연속) 인 번호들의 개수
+    potential_energy = len(current_nums_info[current_nums_info['현재연속'] < current_nums_info['최대연속']])
+
+    # 3. 최종 예측 로직
+    if avg_iter <= 0.8 and potential_energy >= 2:
+        count = 2
+        reason = f"최근 이월 흐름이 저조({avg_iter:.1f}개)하고, 기세가 남은 번호가 {potential_energy}개 포착되어 2개 이월 가능성 높음"
+    elif avg_iter >= 1.6:
+        count = 1
+        reason = f"최근 이월 과다 출현({avg_iter:.1f}개)에 따른 통계적 회귀로 1개 예상"
     else:
-        predicted_count = 1
-        reason = "표준 확률(43%) 및 최근 안정적 흐름에 따른 정석적 1개 예상"
-        
-    return predicted_count, reason
+        count = 1
+        reason = "표준 출현 확률(43%) 및 안정적 흐름에 근거하여 1개 예상"
+
+    return count, reason
