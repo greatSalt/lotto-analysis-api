@@ -44,9 +44,11 @@ def predict_with_numbers(df, current_nums_info):
     # 2. 개별 번호의 이월 확률 계산 (v2.3 복합 지표)
     # 기세 가중치 + 반등 지수 + 출현 빈도를 결합하여 점수화
     current_nums_info['이월확률'] = (
-        (current_nums_info['최대연속'] - current_nums_info['현재연속']) * 30 + # 기세 잔여(최대 30%)
-        (current_nums_info['반등지수'] * 20) +                             # 반등 에너지(최대 20%)
-        (current_nums_info['출현율'] * 1.5)                                # 기본 체급(최대 50%)
+        (current_nums_info['반등지수'] * 30) +        # 반등 (30%)
+        (current_nums_info['현재연속'] / current_nums_info['최대연속'] * 50) + # 기세 (50%)
+        (current_nums_info['에너지지수'] * 10) +      # 에너지 (10%)
+        (current_nums_info['탄성점수'] * 0.05) +      # 탄성 (5%)
+        (current_nums_info['리듬점수'] * 0.05)        # 리듬 (5%)
     ).clip(0, 95) # 로또에 100%는 없으므로 95% 상한선
     
     # 확률 상위권 번호 추출
