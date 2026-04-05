@@ -10,7 +10,7 @@ from crazyLogic import get_crazy_analysis
 from formular_description import display_formula_guide
 import analysis_to_gsheet as saver
 from iteration_predictor import predict_iteration_count, predict_with_numbers
-from empty_zone_engine import get_confirmed_empty_zone, color_rows
+from empty_zone_engine import get_confirmed_empty_zone, color_rows, apply_strategy_style
 
 st.set_page_config(page_title="로또 분석 프로 v0.1", layout="wide")
 conn = st.connection("gsheets", type=GSheetsConnection)
@@ -267,15 +267,49 @@ elif menu == "🎯 추천번호 분석":
             filtered_df = filtered_df[~filtered_df['번호'].between(start, end)]
         
         # 4. 테이블 출력 세팅
-        st.subheader("📊 필터링 결과 및 상세 로우데이터")
+        st.subheader("📊 전략 분석 테이블")
+        st.caption("컬럼명을 클릭하면 오름/내림차순 정렬이 가능합니다. (노란색: 멸 주의구간)")
         st.info("💡 **노란색 배경**: 멸 확률이 40%를 초과하는 '주의' 구간 번호입니다. / **제외**: 확정 멸구간은 리스트에서 제거되었습니다.")
         
-        # 스타일 적용 및 출력
-        styled_df = filtered_df.style.apply(color_rows, decision=decision, axis=1)
+        # 4. 체크박스가 포함된 대화형 테이블 (st.data_editor 활용)
+        # 컬럼 순서 및 편집 가능 여부 설정
+        analysis_df['선택'] = False
+        cols = ['선택', '번호', '통합크레이지점수', '현재연속', '반등지수', '에너지지수', '탄성점수', '리듬점수', '박자상태']
         
-        # 표시할 컬럼 순서 조정 (번호와 총점을 앞으로)
-        cols_to_show = ['번호', '통합크레이지점수', '현재연속', '반등지수', '에너지지수', '탄성점수', '리듬점수', '현재스킵', '박자상태']
-        st.dataframe(styled_df, column_order=cols_to_show, use_container_width=True, height=600)
+        edited_df = st.data_editor(
+            apply_strategy_style(filtered_df[cols], decision),
+            hide_index=True,
+            use_container_width=True,
+            column_config={
+                "선택": st.column_config.CheckboxColumn(help="조합에 사용할 번호를 체크하세요"),
+                "번호": st.column_config.NumberColumn(format="%d")
+            },
+            disabled=[c for c in cols if c != '선택'] # 선택 컬럼만 수정 가능
+        )
+
+        # 5. 선택된 번호로 조합 생성 섹션
+        selected_numbers = edited_df[edited_df['선택'] == True]['번호'].tolist()
+        
+        st.divider()
+        st.subheader("🎲 실전 조합 생성기 (확장 필터)")
+        
+        if len(selected_numbers) >= 6:
+            st.success(f"현재 선택된 번호 ({len(selected_numbers)}개): {selected_numbers}")
+            
+            col_f1, col_f2 = st.columns(2)
+            with col_f1:
+                st.write("**추가 필터 1: 홀짝 비율**")
+                ratio = st.multiselect("허용 비율", ["3:3", "2:4", "4:2"], default=["3:3", "2:4"])
+            with col_f2:
+                st.write("**추가 필터 2: 총합 범위**")
+                sum_range = st.slider("총합 범위 설정", 100, 200, (110, 160))
+
+            if st.button("🚀 필터 적용 조합 추출"):
+                # 여기서 itertools.combinations 등을 활용해 필터를 통과한 조합만 출력
+                # 이후 AC값, 동끝수 필터 등을 여기에 추가할 수 있음
+                st.info("선택된 번호들로 필터를 만족하는 최적의 조합을 생성합니다.")
+        else:
+            st.warning("조합을 만들려면 최소 6개 이상의 번호를 위 테이블에서 체크해 주세요.")
 
         # 5. 하단 요약 리포트
         st.divider()

@@ -66,3 +66,16 @@ def color_rows(row, decision):
     elif decision[zone]['prob'] > 40: # 주의 구간 (멸 확률 40% 초과)
         return ['background-color: #ffffcc'] * len(row) # 노란색 하이라이트
     return [''] * len(row)
+    
+#데이터프레임 스타일링 함수
+def apply_strategy_style(df, decision):
+    def row_style(row):
+        num = row['번호']
+        zone = get_zone_name(num) # 번호별 구간 반환 함수
+                
+        if decision[zone]['prob'] > 40:
+            # 노란색 배경 + 검정색 글자 (가독성 확보)
+            return ['background-color: #ffff00; color: #000000; font-weight: bold'] * len(row)
+        return [''] * len(row)
+            
+    return df.style.format(precision=1).apply(row_style, axis=1)
