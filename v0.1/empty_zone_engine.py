@@ -71,7 +71,12 @@ def color_rows(row, decision):
 def apply_strategy_style(df, decision):
     def row_style(row):
         num = row['번호']
-        zone = get_zone_name(num) # 번호별 구간 반환 함수
+        # 구간 확인용 헬퍼 로직
+        zone = '단번대'
+        if 11 <= num <= 20: zone = '10번대'
+        elif 21 <= num <= 30: zone = '20번대'
+        elif 31 <= num <= 40: zone = '30번대'
+        elif 41 <= num <= 45: zone = '40번대'
                 
         if decision[zone]['prob'] > 40:
             # 노란색 배경 + 검정색 글자 (가독성 확보)
@@ -79,3 +84,4 @@ def apply_strategy_style(df, decision):
         return [''] * len(row)
             
     return df.style.format(precision=1).apply(row_style, axis=1)
+    
