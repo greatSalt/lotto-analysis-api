@@ -9,7 +9,7 @@ from into_lottoDB import save_to_gsheet, get_recent_data
 from crazyLogic import get_crazy_analysis
 from formular_description import display_formula_guide
 import analysis_to_gsheet as saver
-from iteration_predictor import predict_iteration_count
+from iteration_predictor import predict_iteration_count, predict_by_probability
 
 st.set_page_config(page_title="로또 분석 프로 v0.1", layout="wide")
 conn = st.connection("gsheets", type=GSheetsConnection)
@@ -190,17 +190,46 @@ elif menu == "📊 이월수 예측":
                 
                 # 분석 데이터(analysis_df)에서 해당 6개 번호의 행만 필터링하여 기세(streak) 정보 확보
                 current_nums_info = analysis_df[analysis_df['번호'].isin(last_nums)].copy()
-                
-                # 예측 함수 호출
-                count, reason = predict_iteration_count(df, current_nums_info)
+#------------------------------------------------------------------------------------------------
+                # [트랩 1] 최근 추세 기반 예측 (Moving Average)
+                count1, reason1 = predict_iteration_count(df, current_nums_info)
 
-                # 결과 표시
+                next_round = int(last_win_row['round']) + 1 if 'round' in last_win_row else "다음"
+                st.subheader("📊 Trap 1: {next_round}회차 추세 분석 (Momentum)")
                 col1, col2 = st.columns([1, 3])
                 with col1:
-                    st.metric(label="예측 개수", value=f"{count}개")
+                    st.metric(label="예측 개수", value=f"{count1}개")
                 with col2:
-                    st.info(f"**예측 근거:** {reason}")
+                    st.info(f"**추세 근거:** {reason1}")
                     
+                st.divider()    
+#------------------------------------------------------------------------------------------------                    
+                # [트랩 2] 과거 사례 확률 기반 예측 (Probability Matrix)
+                count2, reason2, recommended_df = predict_with_numbers(df, current_nums_info)
+                
+                #next_round = int(last_win_row['round']) + 1 if 'round' in last_win_row else "다음"
+                st.subheader(f"🎯 Trap 2: {next_round}회차 확률 기반 추천 (예측 {count2}개)")
+                st.write(f"**확률 근거:** {reason2}")
+
+                # 추천 번호 표시 (0개일 경우 대비)
+                if not recommended_df.empty:
+                    cols = st.columns(len(recommended_df))
+                    for i, (idx, row) in enumerate(recommended_df.iterrows()):
+                        with cols[i]:
+                            st.markdown(f"""
+                            <div style="text-align: center; padding: 10px; border: 2px solid #ff4b4b; border-radius: 10px; background-color: #f9f9f9;">
+                                <h2 style="margin: 0; color: #333;">{int(row['번호'])}</h2>
+                                <p style="font-size: 0.8em; color: #666; margin-bottom: 5px;">이월 확률</p>
+                                <h3 style="color: #ff4b4b; margin: 0;">{row['이월확률']:.1f}%</h3>
+                            </div>
+                            """, unsafe_allow_html=True)
+                else:
+                    st.warning("⚠️ 이번 회차는 이월수가 발생하지 않을 확률이 높습니다.")
+                        
+                st.caption("※ Trap 2는 v2.3 엔진의 기세/반등/체급 지표를 결합한 개별 번호의 재출현 기대치입니다.")
+#------------------------------------------------------------------------------------------------
+
+                
                 # 확률 차트 (시각적 근거)
                 st.write("💡 **이월수 개수별 표준 확률 분포**")
                 chart_data = {"0개": 38, "1개": 43, "2개": 13, "3개+": 6}
