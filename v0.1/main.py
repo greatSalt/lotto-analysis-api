@@ -10,6 +10,7 @@ from crazyLogic import get_crazy_analysis
 from formular_description import display_formula_guide
 import analysis_to_gsheet as saver
 from iteration_predictor import predict_iteration_count, predict_with_numbers
+from empty_zone_engine import get_confirmed_empty_zone
 
 st.set_page_config(page_title="로또 분석 프로 v0.1", layout="wide")
 conn = st.connection("gsheets", type=GSheetsConnection)
@@ -235,6 +236,36 @@ elif menu == "📊 이월수 예측":
                 st.write("💡 **이월수 개수별 표준 확률 분포**")
                 chart_data = {"0개": 38, "1개": 43, "2개": 13, "3개+": 6}
                 st.bar_chart(chart_data)
+
+elif menu == "🎯 추천번호 분석":
+    st.sidebar.subheader("⚙️ 멸 엔진 설정")
+    analyze_range = st.sidebar.slider("역사적 확률 분석 범위", 50, 300, 30)
+    
+    st.title("🎯 v2.5 전략 추천번호")
+    
+    df = get_recent_data(conn, SHEET_URL)
+    if not df.empty:
+        decision = get_confirmed_empty_zone(df, analyze_range)
+        
+        # 멸구간 확정 브리핑
+        st.subheader("🛡️ 멸구간 확정 리포트")
+        for zone, data in decision.items():
+            if data['is_empty']:
+                st.error(f"🚫 **{zone} 제외 확정** : {data['reason']}")
+            elif data['prob'] > 40:
+                st.warning(f"⚠️ **{zone} 주의** : 멸 확률 {data['prob']:.1f}% (관찰 필요)")
+        
+        # 번호 필터링 및 우선순위 표시
+        analysis_df = get_crazy_analysis(df)
+        
+        # 확정된 멸구간 번호 제외
+        excluded_zones = [z for z, d in decision.items() if d['is_empty']]
+        filtered_df = analysis_df.copy()
+        
+        # (범용 제외 로직 실행...)
+        st.divider()
+        st.subheader(f"💎 {', '.join(excluded_zones)} 제외 정예 번호")
+        # TOP 10 카드 출력...
 
 st.sidebar.divider()
 st.sidebar.caption("v0.1 - 통계 분석 시스템")
