@@ -259,7 +259,7 @@ elif menu == "🎯 추천번호 분석":
         analysis_df = get_crazy_analysis(df)
         
         # 확정된 멸구간 번호 제외
-        #excluded_zones = [z for z, d in decision.items() if d['is_empty']]
+        excluded_zones = [z for z, d in decision.items() if d['is_empty']]
         #zones_map = {'단번대':(1,10), '10번대':(11,20), '20번대':(21,30), '30번대':(31,40), '40번대':(41,45)}
         filtered_df = analysis_df.copy()
         #for zone in excluded_zones:
