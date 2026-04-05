@@ -33,7 +33,7 @@ def predict_by_probability(df):
     else:
         predicted = 0
         
-    reason = f"과거 {last_iter_count}개 이월 후 다음 회차에 {predicted}개가 나온 실제 빈도는 {max_prob:.1;f}%입니다."
+    reason = f"과거 {last_iter_count}개 이월 후 다음 회차에 {predicted}개가 나온 실제 빈도는 {max_prob:.1f}%입니다."
     
     return predicted, reason, {0: prob_0, 1: prob_1, 2: prob_2}
 
