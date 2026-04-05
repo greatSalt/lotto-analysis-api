@@ -78,11 +78,12 @@ def apply_strategy_style(df, decision):
         elif 31 <= num <= 40: zone = '30번대'
         elif 41 <= num <= 45: zone = '40번대'
         
+        status = decision.get(zone, {'is_empty': False, 'prob': 0})
         # A. 확정 멸구간 (is_empty) -> 파란색 배경 / 흰색 글자
-        if decision_data[zone]['is_empty']:
+        if status['is_empty']:
             return ['background-color: #0000FF; color: #FFFFFF; font-weight: bold'] * len(row)
         # B. 주의 구간 (멸 확률 > 40%) -> 노란색 배경 / 검정 글자    
-        elif decision[zone]['prob'] > 40:
+        elif status['prob'] > 40:
             return ['background-color: #ffff00; color: #000000; font-weight: bold'] * len(row)
         return [''] * len(row)
             
