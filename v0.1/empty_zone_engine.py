@@ -46,3 +46,23 @@ def get_confirmed_empty_zone(df, analyze_range=100):
         }
         
     return final_decision
+
+def color_rows(row, decision):
+    """
+    구간별 상태(멸/주의)에 따라 테이블 행의 색상을 결정하는 함수
+    """
+    num = row['번호']
+    # 구간 판별
+    zone = ""
+    if 1 <= num <= 10: zone = '단번대'
+    elif 11 <= num <= 20: zone = '10번대'
+    elif 21 <= num <= 30: zone = '20번대'
+    elif 31 <= num <= 40: zone = '30번대'
+    else: zone = '40번대'
+    
+    # 스타일 결정
+    if decision[zone]['is_empty']: # 확정 멸구간 (이미 필터링되었겠지만 안전장치)
+        return ['background-color: #ffcccc'] * len(row)
+    elif decision[zone]['prob'] > 40: # 주의 구간 (멸 확률 40% 초과)
+        return ['background-color: #ffffcc'] * len(row) # 노란색 하이라이트
+    return [''] * len(row)

@@ -10,7 +10,7 @@ from crazyLogic import get_crazy_analysis
 from formular_description import display_formula_guide
 import analysis_to_gsheet as saver
 from iteration_predictor import predict_iteration_count, predict_with_numbers
-from empty_zone_engine import get_confirmed_empty_zone
+from empty_zone_engine import get_confirmed_empty_zone, color_rows
 
 st.set_page_config(page_title="로또 분석 프로 v0.1", layout="wide")
 conn = st.connection("gsheets", type=GSheetsConnection)
@@ -260,12 +260,31 @@ elif menu == "🎯 추천번호 분석":
         
         # 확정된 멸구간 번호 제외
         excluded_zones = [z for z, d in decision.items() if d['is_empty']]
+        zones_map = {'단번대':(1,10), '10번대':(11,20), '20번대':(21,30), '30번대':(31,40), '40번대':(41,45)}
         filtered_df = analysis_df.copy()
+        for zone in excluded_zones:
+            start, end = zones_map[zone]
+            filtered_df = filtered_df[~filtered_df['번호'].between(start, end)]
         
-        # (범용 제외 로직 실행...)
+        # 4. 테이블 출력 세팅
+        st.subheader("📊 필터링 결과 및 상세 로우데이터")
+        st.info("💡 **노란색 배경**: 멸 확률이 40%를 초과하는 '주의' 구간 번호입니다. / **제외**: 확정 멸구간은 리스트에서 제거되었습니다.")
+        
+        # 스타일 적용 및 출력
+        styled_df = filtered_df.style.apply(color_rows, decision=decision, axis=1)
+        
+        # 표시할 컬럼 순서 조정 (번호와 총점을 앞으로)
+        cols_to_show = ['번호', '통합크레이지점수', '현재연속', '반등지수', '에너지지수', '탄성점수', '리듬점수', '현재스킵', '박자상태']
+        st.dataframe(styled_df, column_order=cols_to_show, use_container_width=True, height=600)
+
+        # 5. 하단 요약 리포트
         st.divider()
-        st.subheader(f"💎 {', '.join(excluded_zones)} 제외 정예 번호")
-        # TOP 10 카드 출력...
+        col1, col2 = st.columns(2)
+        with col1:
+            st.error(f"🚫 **완전 제외 구간**: {', '.join(excluded_zones) if excluded_zones else '없음'}")
+        with col2:
+            warning_zones = [z for z, d in decision.items() if not d['is_empty'] and d['prob'] > 40]
+            st.warning(f"⚠️ **멸 주의 구간**: {', '.join(warning_zones) if warning_zones else '없음'}")
 
 st.sidebar.divider()
 st.sidebar.caption("v0.1 - 통계 분석 시스템")
