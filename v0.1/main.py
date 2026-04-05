@@ -195,7 +195,8 @@ elif menu == "📊 이월수 예측":
                 count1, reason1 = predict_iteration_count(df, current_nums_info)
 
                 next_round = int(last_win_row['round']) + 1 if 'round' in last_win_row else "다음"
-                st.subheader("📊 Trap 1: {next_round}회차 추세 분석 (Momentum)")
+                st.subheader(f"📊 Trap 1: {next_round}회차 추세 분석 (Momentum)")
+                
                 col1, col2 = st.columns([1, 3])
                 with col1:
                     st.metric(label="예측 개수", value=f"{count1}개")
