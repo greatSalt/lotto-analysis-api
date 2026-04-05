@@ -265,17 +265,17 @@ elif menu == "🎯 추천번호 분석":
         for zone in excluded_zones:
             start, end = zones_map[zone]
             filtered_df = filtered_df[~filtered_df['번호'].between(start, end)]
-        
         if '선택' not in filtered_df.columns:
             filtered_df.insert(0, '선택', False)
-        
+            
         # 4. 테이블 출력 세팅
         st.subheader("📊 전략 분석 테이블")
-        st.info("💡 **노란색 배경**: 멸 확률이 40%를 초과하는 '주의' 구간입니다. 상단 컬럼명을 클릭해 정렬하세요./ **제외**: 확정 멸구간은 리스트에서 제거되었습니다")
+        st.info("🔵 **파란색**: 역사적 확률에 따른 **멸 확정** 구간 / 🟡 **노란색**: 멸 확률 40% 초과 **주의** 구간")
         
         # 4. 체크박스가 포함된 대화형 테이블 (st.data_editor 활용)
         # 컬럼 순서 및 편집 가능 여부 설정
         analysis_df['선택'] = False
+        
         cols = ['선택', '번호', '통합크레이지점수', '현재연속', '반등지수', '에너지지수', '탄성점수', '리듬점수', '박자상태']
         available_cols = [c for c in cols if c in filtered_df.columns]
         
