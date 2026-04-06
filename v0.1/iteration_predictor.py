@@ -41,15 +41,9 @@ def predict_with_numbers(df, current_nums_info):
     # 1. 개수 예측 (기존 로직 사용)
     predicted_count, reason, prob_dist = predict_by_probability(df)
     
-    # 2. 개별 번호의 이월 확률 계산 (v2.3 복합 지표)
-    # 기세 가중치 + 반등 지수 + 출현 빈도를 결합하여 점수화
-    current_nums_info['이월확률'] = (
-        (current_nums_info['반등지수'] * 30) +        # 반등 (30%)
-        (current_nums_info['현재연속'] / current_nums_info['최대연속'] * 50) + # 기세 (50%)
-        (current_nums_info['에너지지수'] * 10) +      # 에너지 (10%)
-        (current_nums_info['탄성점수'] * 0.05) +      # 탄성 (5%)
-        (current_nums_info['리듬점수'] * 0.05)        # 리듬 (5%)
-    ).clip(0, 95) # 로또에 100%는 없으므로 95% 상한선
+    # 2. 외부 함수 호출 (apply 사용)
+    # Pandas가 각 행을 calculate_refined_score 함수의 'row' 인자로 전달합니다.
+    current_nums_info['이월확률'] = current_nums_info.apply(calculate_refined_score, axis=1)
     
     # 확률 상위권 번호 추출
     top_targets = current_nums_info.sort_values(by='이월확률', ascending=False)
@@ -88,4 +82,52 @@ def predict_iteration_count(df, current_nums_info):
         reason = "표준 출현 확률(43%) 및 안정적 흐름에 근거하여 1개 예상"
 
     return count, reason
+    
+def calculate_refined_score(row):
+    """
+    Pandas apply용 외부 함수: 이월 적합도 및 기세 임계점 보정 로직
+    """
+    # 1. 기초 데이터 추출
+    curr_streak = row.get('현재연속', 0)
+    max_streak = row.get('최대연속', 1)
+    occurrence_rate = row.get('출현율', 13.3)
+    
+    # 2. 기세 점수 (streak_part) 산출: 임계점 도달 시 브레이크
+    if curr_streak > 0:
+        if curr_streak >= max_streak:
+            streak_part = 0  # 역대 최고치 도달/초과 시 0점 (꺾일 타이밍)
+        else:
+            streak_part = (curr_streak / max_streak) * 100
+    else:
+        streak_part = 0
+
+    # 3. 기존 복합 지표 가중치 계산 (30/50/10/5/5 비율)
+    current_score = (
+        (row.get('반등지수', 0) * 30) +
+        (streak_part * 0.5) + # 업데이트된 기세 점수 반영
+        (row.get('에너지지수', 0) * 10) +
+        (row.get('탄성점수', 0) * 0.05) +
+        (row.get('리듬점수', 0) * 0.05)
+    )
+
+    # 4. [G] 추가 보정: 출현율 체급 가산점 (수학적 기대치 13.3% 기준)
+    current_score += (occurrence_rate - 13.3) * 0.5
+
+    # 5. 최종 총합 점수 보정 (이월수 전용 멀티플라이어 필터)
+    total_score = current_score
+    
+    if curr_streak > 0:
+        if curr_streak < max_streak:
+            # 기세 유지 구간 (기록에 여유가 있을수록 1.0 ~ 1.2배)
+            momentum_factor = 1.0 + (1.0 - (curr_streak / max_streak)) * 0.2
+            total_score *= momentum_factor
+        elif curr_streak == max_streak:
+            # 임계점 도달 (0.5배 강제 하락)
+            total_score *= 0.5
+        else:
+            # 기세 초과 경신 (0.3배 강제 하락)
+            total_score *= 0.3
+            
+    return total_score
+
             
