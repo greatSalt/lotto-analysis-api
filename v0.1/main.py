@@ -11,6 +11,7 @@ from formular_description import display_formula_guide
 import analysis_to_gsheet as saver
 from iteration_predictor import predict_iteration_count, predict_with_numbers
 from empty_zone_engine import get_confirmed_empty_zone, color_rows, apply_strategy_style
+from combination_engine import generate_strategic_combinations
 
 st.set_page_config(page_title="로또 분석 프로 v0.1", layout="wide")
 conn = st.connection("gsheets", type=GSheetsConnection)
@@ -266,7 +267,7 @@ elif menu == "🎯 추천번호 분석":
             #start, end = zones_map[zone]
             #filtered_df = filtered_df[~filtered_df['번호'].between(start, end)]
         if '선택' not in filtered_df.columns:
-            filtered_df.insert(0, '선택', False)
+            filtered_df.insert(0, '선택', filtered_df['번호'].isin(st.session_state.my_saved_picks))
             
         # 4. 테이블 출력 세팅
         st.subheader("📊 전략 분석 테이블")
@@ -294,6 +295,21 @@ elif menu == "🎯 추천번호 분석":
         # 5. 선택된 번호로 조합 생성 섹션
         selected_numbers = edited_df[edited_df['선택'] == True]['번호'].tolist()
         
+        # 6. 저장 버튼 및 데이터 업데이트
+        st.divider()
+        if st.button("💾 선택 번호 저장", use_container_width=True):
+            # 체크된 번호들 추출 및 정수형 변환
+            new_picks = [int(n) for n in edited_df[edited_df['선택'] == True]['번호'].tolist()]
+            
+            # 구글 시트에 저장
+            save_picks_to_sheets(conn, SHEET_URL, new_picks)
+            
+            # 세션 상태 업데이트 (사이드바 즉시 반영)
+            st.session_state.my_saved_picks = new_picks
+            
+            st.toast(f"🎯 {len(new_picks)}개 번호 저장 완료!")
+            st.rerun()
+        
         st.divider()
         st.subheader("🎲 실전 조합 생성기 (확장 필터)")
         
@@ -308,10 +324,34 @@ elif menu == "🎯 추천번호 분석":
                 st.write("**추가 필터 2: 총합 범위**")
                 sum_range = st.slider("총합 범위 설정", 100, 200, (110, 160))
 
-            if st.button("🚀 필터 적용 조합 추출"):
+            if st.button("🚀 필터 적용 조합 추출", use_container_width=True):
                 # 여기서 itertools.combinations 등을 활용해 필터를 통과한 조합만 출력
                 # 이후 AC값, 동끝수 필터 등을 여기에 추가할 수 있음
                 st.info("선택된 번호들로 필터를 만족하는 최적의 조합을 생성합니다.")
+                # 체크된 번호들의 로우데이터만 전달
+                selected_df = edited_df[edited_df['선택'] == True]
+                
+                with st.spinner('최적의 조합을 계산 중...'):
+                    results = generate_strategic_combinations(selected_df, ratio_filter, sum_range)
+                
+                if results:
+                    st.divider()
+                    st.balloons()
+                    st.subheader("✨ AI 추천 조합 (2-3-1 비율 적용)")
+                    
+                    for i, combo in enumerate(results):
+                        c1, c2 = st.columns([1, 5])
+                        c1.markdown(f"**SET {i+1}**")
+                        # 번호별 색상 배지 (로또 공 색상 느낌)
+                        ball_html = ""
+                        for n in combo:
+                            color = "orange" if n <= 10 else "blue" if n <= 20 else "red" if n <= 30 else "gray" if n <= 40 else "green"
+                            ball_html += f"![{n}](https://img.shields.io/badge/-{n}-{color}?style=flat-square&border_radius=50) "
+                        c2.markdown(ball_html, unsafe_allow_html=True)
+                        
+                    st.caption("※ 핫(상위점수 2개), 웜(중간점수 3개), 콜드(하위점수 1개) 비율로 생성되었습니다.")
+                else:
+                    st.warning("⚠️ 필터 조건을 만족하는 조합을 찾지 못했습니다. 범위를 넓혀주세요.")
         else:
             st.warning("조합을 만들려면 최소 6개 이상의 번호를 위 테이블에서 체크해 주세요.")
 
