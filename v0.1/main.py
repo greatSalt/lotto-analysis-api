@@ -344,7 +344,7 @@ elif menu == "🎯 추천번호 분석":
                     st.error("고정수는 최대 6개까지만 입력 가능합니다.")
                 else:
                     with st.spinner('최적의 조합을 계산 중...'):
-                        results = generate_strategic_combinations(selected_df, ratio_filter, sum_range)
+                        results = generate_strategic_combinations(selected_df, ratio_filter, sum_range, fixed_nums, exclude_nums)
                     
                     if results:
                         st.divider()
