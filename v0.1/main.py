@@ -342,7 +342,7 @@ elif menu == "🎯 추천번호 분석":
                 # 고정수가 6개 초과면 에러 처리
                 if len(fixed_nums) > 6:
                     st.error("고정수는 최대 6개까지만 입력 가능합니다.")
-                else
+                else:
                     with st.spinner('최적의 조합을 계산 중...'):
                         results = generate_strategic_combinations(selected_df, ratio_filter, sum_range)
                     
