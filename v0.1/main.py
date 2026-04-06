@@ -316,6 +316,15 @@ elif menu == "🎯 추천번호 분석":
         if len(selected_numbers) >= 6:
             st.success(f"현재 선택된 번호 ({len(selected_numbers)}개): {sorted(selected_numbers)}")
             
+            col_input1, col_input2 = st.columns(2)
+            with col_input1:
+                # 숫자 입력 (예: 1, 7, 15)
+                fixed_input = st.text_input("📌 고정수 입력 (쉼표 구분)", placeholder="예: 3, 12")
+                fixed_nums = [int(x.strip()) for x in fixed_input.split(",") if x.strip().isdigit()]
+            with col_input2:
+                exclude_input = st.text_input("🚫 제외수 입력 (쉼표 구분)", placeholder="예: 40, 41")
+                exclude_nums = [int(x.strip()) for x in exclude_input.split(",") if x.strip().isdigit()]
+                
             col_f1, col_f2 = st.columns(2)
             with col_f1:
                 st.write("**추가 필터 1: 홀짝 비율**")
@@ -330,26 +339,30 @@ elif menu == "🎯 추천번호 분석":
                 st.info("선택된 번호들로 필터를 만족하는 최적의 조합을 생성합니다.")
                 # 체크된 번호들의 로우데이터만 전달
                 selected_df = edited_df[edited_df['선택'] == True]
-                
-                with st.spinner('최적의 조합을 계산 중...'):
-                    results = generate_strategic_combinations(selected_df, ratio_filter, sum_range)
-                
-                if results:
-                    st.divider()
-                    st.balloons()
-                    st.subheader("✨ AI 추천 조합 (2-3-1 비율 적용)")
+                # 고정수가 6개 초과면 에러 처리
+                if len(fixed_nums) > 6:
+                    st.error("고정수는 최대 6개까지만 입력 가능합니다.")
+                else
+                    with st.spinner('최적의 조합을 계산 중...'):
+                        results = generate_strategic_combinations(selected_df, ratio_filter, sum_range)
                     
-                    for i, combo in enumerate(results):
-                        c1, c2 = st.columns([1, 5])
-                        c1.markdown(f"**SET {i+1}**")
-                        # 번호별 색상 배지 (로또 공 색상 느낌)
-                        ball_html = ""
-                        for n in combo:
-                            color = "orange" if n <= 10 else "blue" if n <= 20 else "red" if n <= 30 else "gray" if n <= 40 else "green"
-                            ball_html += f"![{n}](https://img.shields.io/badge/-{n}-{color}?style=flat-square&border_radius=50) "
-                        c2.markdown(ball_html, unsafe_allow_html=True)
+                    if results:
+                        st.divider()
+                        st.balloons()
+                        st.subheader("✨ AI 추천 조합 (2-3-1 비율 적용)")
+                        st.success(f"✅ 고정수 {fixed_nums} 포함, 제외수 {exclude_nums} 제거 완료!")
                         
-                    st.caption("※ 핫(상위점수 2개), 웜(중간점수 3개), 콜드(하위점수 1개) 비율로 생성되었습니다.")
+                        for i, combo in enumerate(results):
+                            c1, c2 = st.columns([1, 5])
+                            c1.markdown(f"**SET {i+1}**")
+                            # 번호별 색상 배지 (로또 공 색상 느낌)
+                            ball_html = ""
+                            for n in combo:
+                                color = "orange" if n <= 10 else "blue" if n <= 20 else "red" if n <= 30 else "gray" if n <= 40 else "green"
+                                ball_html += f"![{n}](https://img.shields.io/badge/-{n}-{color}?style=flat-square&border_radius=50) "
+                            c2.markdown(ball_html, unsafe_allow_html=True)
+                            
+                        st.caption("※ 핫(상위점수 2개), 웜(중간점수 3개), 콜드(하위점수 1개) 비율로 생성되었습니다.")
                 else:
                     st.warning("⚠️ 필터 조건을 만족하는 조합을 찾지 못했습니다. 범위를 넓혀주세요.")
         else:
