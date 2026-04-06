@@ -19,7 +19,7 @@ def generate_strategic_combinations(selected_df, ratio_filters, sum_range, count
     q_low = selected_df['통합크레이지점수'].quantile(0.3)
     
     hot_pool = selected_df[selected_df['통합크레이지점수'] >= q_high]['번호'].tolist()
-    cold_pool = selected_df[selected_df['통합크레이지점_score'] <= q_low]['번호'].tolist() # 오타 수정 가능성 대비
+    cold_pool = selected_df[selected_df['통합크레이지점수'] <= q_low]['번호'].tolist() # 오타 수정 가능성 대비
     # 실제 컬럼명 확인 필요: 통합크레이지점수
     hot_pool = selected_df[selected_df['통합크레이지점수'] >= q_high]['번호'].tolist()
     cold_pool = selected_df[selected_df['통합크레이지점수'] <= q_low]['번호'].tolist()
