@@ -361,12 +361,12 @@ elif menu == "🎯 추천번호 분석":
                             ball_html = ""
                             for n, group in combo:
                                 # 🖍️ 그룹별 색상 매핑
-                        if group == 'HOT':
-                            color = "red"        # 🟥 핫 (빨간색)
-                        elif group == 'WARM':
-                            color = "yellow"     # 🟨 웜 (노란색/골드)
-                        else:
-                            color = "blue"       # 🟦 콜드 (파란색)
+                                if group == 'HOT':
+                                    color = "red"        # 🟥 핫 (빨간색)
+                                elif group == 'WARM':
+                                    color = "yellow"     # 🟨 웜 (노란색/골드)
+                                else:
+                                    color = "blue"       # 🟦 콜드 (파란색)
                                 ball_html += f"![{n}](https://img.shields.io/badge/-{n}-{color}?style=flat-square&border_radius=50) "
                             c2.markdown(ball_html, unsafe_allow_html=True)
                             
