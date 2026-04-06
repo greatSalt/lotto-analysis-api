@@ -319,7 +319,7 @@ elif menu == "🎯 추천번호 분석":
             col_f1, col_f2 = st.columns(2)
             with col_f1:
                 st.write("**추가 필터 1: 홀짝 비율**")
-                ratio = st.multiselect("허용 비율", ["3:3", "2:4", "4:2"], default=["3:3", "2:4"])
+                ratio_filter = st.multiselect("허용 비율", ["3:3", "2:4", "4:2"], default=["3:3", "2:4"])
             with col_f2:
                 st.write("**추가 필터 2: 총합 범위**")
                 sum_range = st.slider("총합 범위 설정", 100, 200, (110, 160))
