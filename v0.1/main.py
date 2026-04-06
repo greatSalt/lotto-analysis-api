@@ -363,8 +363,8 @@ elif menu == "🎯 추천번호 분석":
                             c2.markdown(ball_html, unsafe_allow_html=True)
                             
                         st.caption("※ 핫(상위점수 2개), 웜(중간점수 3개), 콜드(하위점수 1개) 비율로 생성되었습니다.")
-                else:
-                    st.warning("⚠️ 필터 조건을 만족하는 조합을 찾지 못했습니다. 범위를 넓혀주세요.")
+                    else:
+                        st.warning("⚠️ 필터 조건을 만족하는 조합을 찾지 못했습니다. 범위를 넓혀주세요.")
         else:
             st.warning("조합을 만들려면 최소 6개 이상의 번호를 위 테이블에서 체크해 주세요.")
 
