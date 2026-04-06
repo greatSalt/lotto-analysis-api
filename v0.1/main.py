@@ -350,6 +350,8 @@ elif menu == "🎯 추천번호 분석":
                         st.divider()
                         st.balloons()
                         st.subheader("✨ AI 추천 조합 (2-3-1 비율 적용)")
+                        # 🎨 범례(Legend) 표시 - 사용자가 색상의 의미를 알 수 있도록
+                        st.info("🎨 **번호 색상 범례**: 🟥 핫 (상위 30%) / 🟨 웜 (중간 40%) / 🟦 콜드 (하위 30%)")
                         st.success(f"✅ 고정수 {fixed_nums} 포함, 제외수 {exclude_nums} 제거 완료!")
                         
                         for i, combo in enumerate(results):
@@ -357,8 +359,14 @@ elif menu == "🎯 추천번호 분석":
                             c1.markdown(f"**SET {i+1}**")
                             # 번호별 색상 배지 (로또 공 색상 느낌)
                             ball_html = ""
-                            for n in combo:
-                                color = "orange" if n <= 10 else "blue" if n <= 20 else "red" if n <= 30 else "gray" if n <= 40 else "green"
+                            for n, group in combo:
+                                # 🖍️ 그룹별 색상 매핑
+                        if group == 'HOT':
+                            color = "red"        # 🟥 핫 (빨간색)
+                        elif group == 'WARM':
+                            color = "yellow"     # 🟨 웜 (노란색/골드)
+                        else:
+                            color = "blue"       # 🟦 콜드 (파란색)
                                 ball_html += f"![{n}](https://img.shields.io/badge/-{n}-{color}?style=flat-square&border_radius=50) "
                             c2.markdown(ball_html, unsafe_allow_html=True)
                             
