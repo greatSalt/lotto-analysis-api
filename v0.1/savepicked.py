@@ -9,15 +9,23 @@ def init_all_saved_data(conn, sheet_url):
             # ttl=0으로 설정하여 항상 최신 데이터를 읽어옴
             df = conn.read(spreadsheet=sheet_url, worksheet="SavedPicks", ttl=0)
             
-            if not df.empty and '유형' in df.columns:
-                # 1. 일반 저장 번호 (PICK)
-                st.session_state.my_saved_picks = df[df['유형'] == 'PICK']['번호'].tolist()
-                # 2. 고정수 (FIX)
-                st.session_state.fixed_nums = df[df['유형'] == 'FIX']['번호'].tolist()
-                # 3. 제외수 (EX)
-                st.session_state.exclude_nums = df[df['유형'] == 'EX']['번호'].tolist()
+            if not df.empty:
+                # 1. '유형' 컬럼이 아예 없는 기존 시트인 경우 대응
+                if '유형' not in df.columns:
+                    # 모든 기존 번호를 일단 'PICK'(일반 저장)으로 간주
+                    st.session_state.my_saved_picks = df['번호'].tolist()
+                    st.session_state.fixed_nums = []
+                    st.session_state.exclude_nums = []
+                else:
+                    # 2. '유형' 컬럼이 있는 경우 정상 분류
+                    # 1. 일반 저장 번호 (PICK)
+                    st.session_state.my_saved_picks = df[df['유형'] == 'PICK']['번호'].tolist()
+                    # 2. 고정수 (FIX)
+                    st.session_state.fixed_nums = df[df['유형'] == 'FIX']['번호'].tolist()
+                    # 3. 제외수 (EX)
+                    st.session_state.exclude_nums = df[df['유형'] == 'EX']['번호'].tolist()
             else:
-                # 데이터가 없거나 유형 컬럼이 없을 때 초기화
+                # 시트가 비어있을 때
                 st.session_state.my_saved_picks = []
                 st.session_state.fixed_nums = []
                 st.session_state.exclude_nums = []
