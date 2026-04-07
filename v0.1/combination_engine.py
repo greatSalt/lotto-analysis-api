@@ -173,9 +173,9 @@ def get_advanced_stat_analysis(df):
         ratio_data.append({
             "비율": r,
             "출현(회)": count,
-            "실제%": f"{actual:.1f}%",
-            "이론%": f"{theo:.1f}%",
-            "편차": f"{diff:+.1f}%",
+            "실제%": round(actual, 2),
+            "이론%": theo,
+            "편차": round(diff, 2),
             "상태": status
         })
 
@@ -203,9 +203,9 @@ def get_advanced_stat_analysis(df):
         sum_data.append({
             "구간": lbl,
             "출현(회)": count,
-            "실제%": f"{actual:.1f}%",
-            "이론%": f"{theo:.1f}%",
-            "편차": f"{diff:+.1f}%",
+            "실제%": round(actual, 2),
+            "이론%": theo,
+            "편차": round(diff, 2),
             "상태": status
         })
 

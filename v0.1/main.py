@@ -462,8 +462,9 @@ elif menu == "🎯 추천번호 분석":
             use_container_width=True, 
             hide_index=True,
             column_config={
-                "편차": st.column_config.TextColumn("이론대비 편차", help="이론적 확률보다 얼마나 더/덜 나왔는지 표시"),
-                "실제%": st.column_config.ProgressColumn("실제 출현 비중", min_value=0, max_value=50, format="%.1f%%")
+                "실제%": st.column_config.NumberColumn("실제 출현 비중", format="%.1f%%"),
+                "이론%": st.column_config.NumberColumn("이론 확률", format="%.1f%%"),
+                "편차": st.column_config.NumberColumn("편차", format="%+.1f%%") # 부호(+/-) 표시
             }
         )
         
@@ -473,8 +474,9 @@ elif menu == "🎯 추천번호 분석":
             use_container_width=True, 
             hide_index=True,
             column_config={
-                "편차": st.column_config.TextColumn("이론대비 편차"),
-                "실제%": st.column_config.ProgressColumn("실제 출현 비중", min_value=0, max_value=40, format="%.1f%%")
+                "실제%": st.column_config.NumberColumn("실제 출현 비중", format="%.1f%%"),
+                "이론%": st.column_config.NumberColumn("이론 확률", format="%.1f%%"),
+                "편차": st.column_config.NumberColumn("편차", format="%+.1f%%") # 부호(+/-) 표시
             }
         )
         
