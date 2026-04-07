@@ -114,7 +114,10 @@ def save_to_sheets_by_type(conn, sheet_url, new_nums, type_code):
             full_df = conn.read(spreadsheet=sheet_url, worksheet="SavedPicks", ttl=0)
         except:
             full_df = pd.DataFrame(columns=["번호", "유형"])
-
+        # [중요] '유형' 컬럼이 없는 기존 시트라면 강제로 생성
+        if '유형' not in full_df.columns:
+            full_df['유형'] = 'PICK' # 기존 데이터는 모두 일반 저장으로 간주
+            
         # 1. 다른 유형의 데이터는 그대로 유지
         other_types_df = full_df[full_df["유형"] != type_code]
         
@@ -133,6 +136,7 @@ def save_to_sheets_by_type(conn, sheet_url, new_nums, type_code):
         elif type_code == 'EX': st.session_state.exclude_nums = new_nums
         
         st.toast(f"✅ {type_code} 설정이 저장되었습니다.")
+        st.rerun() # UI 즉시 갱신
         
     except Exception as e:
         st.error(f"저장 중 오류 발생: {e}")
