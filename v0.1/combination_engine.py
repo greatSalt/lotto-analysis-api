@@ -137,3 +137,57 @@ def get_ratio_analysis(df):
         })
         
     return pd.DataFrame(analysis_data).sort_values("비율")
+    
+def get_advanced_stat_analysis(df):
+    """n1~n6 컬럼을 이용한 홀짝 및 총합 구간 분석"""
+    if df.empty:
+        return pd.DataFrame(), pd.DataFrame()
+
+    ratios = []
+    sums = []
+    
+    for _, row in df.iterrows():
+        try:
+            # 컬럼명 n1~n6에서 번호 추출
+            nums = [int(row[f'n{i}']) for i in range(1, 7)]
+            
+            # 1. 홀짝 계산
+            odd_count = len([n for n in nums if n % 2 != 0])
+            ratios.append(f"{odd_count}:{6 - odd_count}")
+            
+            # 2. 총합 계산
+            sums.append(sum(nums))
+        except:
+            continue
+
+    # --- [홀짝 분석 테이블 생성] ---
+    ratio_counts = pd.Series(ratios).value_counts()
+    theo_ratios = {"3:3": 33.3, "2:4": 23.3, "4:2": 23.3, "1:5": 9.3, "5:1": 9.3, "0:6": 0.8, "6:0": 0.8}
+    
+    ratio_data = []
+    for r, theo in theo_ratios.items():
+        actual = (ratio_counts.get(r, 0) / len(df)) * 100
+        diff = actual - theo
+        status = "🔥 과열" if diff > 5 else "💎 반등" if diff < -5 else "✅ 정상"
+        ratio_data.append({"비율": r, "출현수": ratio_counts.get(r, 0), "현재%": f"{actual:.1f}%", "상태": status})
+    
+    # --- [총합 구간 분석 테이블 생성] ---
+    # 보통 로또 총합은 100~170 사이에 70% 이상이 집중됩니다.
+    bins = [0, 80, 100, 120, 140, 160, 180, 1000]
+    labels = ["80미만", "80-100", "101-120", "121-140", "141-160", "161-180", "180초과"]
+    sum_categories = pd.cut(sums, bins=bins, labels=labels)
+    sum_counts = sum_categories.value_counts()
+    
+    # 이론적 황금 구간 확률 (대략적 분포)
+    theo_sums = {"101-120": 25.0, "121-140": 25.0, "141-160": 20.0, "80-100": 15.0}
+    
+    sum_data = []
+    for label in labels:
+        actual = (sum_counts.get(label, 0) / len(df)) * 100
+        theo = theo_sums.get(label, 5.0) # 나머지 구간은 약 5% 내외
+        diff = actual - theo
+        status = "🔥 과열" if diff > 7 else "💎 반등" if diff < -7 else "✅ 정상"
+        sum_data.append({"총합구간": label, "출현수": sum_counts.get(label, 0), "현재%": f"{actual:.1f}%", "상태": status})
+
+    return pd.DataFrame(ratio_data).sort_values("비율"), pd.DataFrame(sum_data)
+
