@@ -11,7 +11,7 @@ from formular_description import display_formula_guide
 import analysis_to_gsheet as saver
 from iteration_predictor import predict_iteration_count, predict_with_numbers
 from empty_zone_engine import get_confirmed_empty_zone, color_rows, apply_strategy_style
-from combination_engine import generate_strategic_combinations, get_ratio_analysis
+from combination_engine import generate_strategic_combinations, get_advanced_stat_analysis
 
 st.set_page_config(page_title="로또 분석 프로 v0.1", layout="wide")
 conn = st.connection("gsheets", type=GSheetsConnection)
@@ -450,21 +450,30 @@ elif menu == "🎯 추천번호 분석":
             warning_zones = [z for z, d in decision.items() if not d['is_empty'] and d['prob'] > 40]
             st.warning(f"⚠️ **멸 주의 구간**: {', '.join(warning_zones) if warning_zones else '없음'}")
         
-        # --- [UI 출력 부분] ---
-        st.subheader("⚖️ 홀짝 비율 통계 및 확률 분석")
-        ratio_df = get_ratio_analysis(df) # df는 사용자가 선택한 범위 데이터
+        st.divider()
+        st.subheader("📊 홀짝 및 총합 흐름 분석 (기세 기반)")
         
-        col1, col2 = st.columns([2, 1])
+        # 엔진에서 데이터 계산
+        ratio_df, sum_df = get_advanced_stat_analysis(df)
         
-        with col1:
+        col_stat1, col_stat2 = st.columns(2)
+        
+        with col_stat1:
+            st.write("**⚖️ 홀짝 비율 통계**")
             st.dataframe(ratio_df, use_container_width=True, hide_index=True)
+            st.caption("※ 3:3, 2:4, 4:2가 수학적 황금 비율입니다.")
         
-        with col2:
-            best_ratio = ratio_df.loc[ratio_df['상태'].str.contains("추천"), "비율"].tolist()
-            if best_ratio:
-                st.success(f"💡 추천 비율: {', '.join(best_ratio)}")
-            else:
-                st.info("💡 모든 비율이 이론적 범위 내에 있습니다.")
+        with col_stat2:
+            st.write("**🔢 총합 구간 통계**")
+            st.dataframe(sum_df, use_container_width=True, hide_index=True)
+            st.caption("※ 대부분의 당첨번호 총합은 100~170 사이에 위치합니다.")
+        
+        # 종합 추천 한줄평
+        recommend_ratios = ratio_df[ratio_df['상태'] == "💎 반등"]["비율"].tolist()
+        recommend_sums = sum_df[sum_df['상태'] == "💎 반등"]["총합구간"].tolist()
+        
+        if recommend_ratios or recommend_sums:
+            st.success(f"💡 **전략 추천:** 홀짝 [{', '.join(recommend_ratios)}] 및 총합 [{', '.join(recommend_sums)}] 구간의 반등 가능성이 높습니다.")
 
 
 st.sidebar.divider()
