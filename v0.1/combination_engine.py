@@ -100,7 +100,7 @@ def get_ratio_analysis(df):
     ratios = []
     for _, row in df.iterrows():
         # 당첨번호 6개 추출 (보너스 제외)
-        nums = [row[f'번호{i}'] for i in range(1, 7)]
+        nums = [row[f'n{i}'] for i in range(1, 7)]
         odd_count = len([n for n in nums if n % 2 != 0])
         even_count = 6 - odd_count
         ratios.append(f"{odd_count}:{even_count}")
