@@ -149,23 +149,31 @@ elif menu == "콜드 번호 추출":
     df = get_recent_data(conn, SHEET_URL, count=0)
     
     if not df.empty:
-        cold_df = coldNum.get_cold_analysis(df)
+        # 세션에 데이터가 없거나 메뉴가 처음 로드될 때만 실행
+        if "cold_edited_df" not in st.session_state:
+            cold_df = coldNum.get_cold_analysis(df)
+            display_cold = cold_df.sort_values("현재미출현", ascending=False).head(15).copy()
+            # 구글 시트에서 기존 저장된 번호들 가져오기 (저장된 번호 로드)
+            try:
+                # SavedPicks 워크시트에서 번호 컬럼 추출
+                saved_df = conn.read(spreadsheet=SHEET_URL, worksheet="SavedPicks")
+                saved_picks = saved_df["번호"].tolist()
+            except:
+                saved_picks = []
         
-        # 1. 미출현 회차순으로 정렬 후 상위 15개 추출
-        display_cold = cold_df.sort_values("현재미출현", ascending=False).head(15).copy()
+            # 2. 인덱스를 1부터 15까지 새로 부여 (No. 표시용)
+            display_cold.index = range(1, len(display_cold) + 1)
+            display_cold = display_cold.reset_index().rename(columns={"index": "No."})
         
-        # 2. 인덱스를 1부터 15까지 새로 부여 (No. 표시용)
-        display_cold.index = range(1, len(display_cold) + 1)
-        display_cold = display_cold.reset_index().rename(columns={"index": "No."})
-        
-        # 2. 선택용 체크박스 컬럼 추가 (기본값 False)
-        display_cold.insert(0, "선택", False)
-        st.session_state.cold_edited_df = display_cold
+            # [핵심] 시트에 저장된 번호라면 '선택'을 True로 설정
+            display_cold.insert(0, "선택", display_cold["번호"].apply(lambda x: x in saved_picks))
+            # 세션 상태에 저장 (이제 rerun되어도 여기서 안 걸리고 아래 editor로 바로 감)
+            st.session_state.cold_edited_df = display_cold
         
         # 3. 데이터 에디터로 변경 (사용자가 체크박스 조작 가능)
         # num_rows="fixed"로 설정하여 15개 행을 유지합니다.
         # st.data_editor의 결과를 다시 session_state에 저장하여 상태 유지
-        st.session_state.cold_edited_df = st.data_editor(
+        edited_output = st.data_editor(
             st.session_state.cold_edited_df, 
             use_container_width=True,
             hide_index=True, # No. 컬럼을 따로 만들었으므로 인덱스는 숨김
@@ -177,6 +185,8 @@ elif menu == "콜드 번호 추출":
             },
             key="cold_num_editor"
         )
+        # 에디터에서 변경된 내용을 세션 상태에 동기화
+        st.session_state.cold_edited_df = edited_output
         
         # 4. 저장 버튼 및 구글 시트 연동
         if st.button("📌 선택한 콜드번호 저장 및 공유", use_container_width=True):
@@ -191,10 +201,10 @@ elif menu == "콜드 번호 추출":
                 # [기존 함수 활용] 구글 시트에 선택된 번호 업데이트
                 # 예: update_google_sheet(selected_nums, "COLD_STRATEGY")
                 save_picks_to_sheets(conn, SHEET_URL, selected_nums)
-                # 저장 후에도 선택 상태를 유지하고 싶다면 rerun만 하면 되고, 
-                # 만약 선택을 초기화하고 싶다면 st.session_state.cold_edited_df["선택"] = False 처리 후 rerun 하시면 됩니다.    
+                # 저장 후 세션 데이터를 최신화하기 위해 세션 삭제 후 재실행 (시트 데이터 다시 읽기 위함)
+                del st.session_state.cold_edited_df  
                 st.rerun() # 사이드바 갱신을 위해 앱 재실행
-        st.info("💡 체크박스를 선택한 후 저장 버튼을 누르세요. 세션 상태를 통해 선택 정보가 유지됩니다.")
+        st.info("💡 파란색으로 체크된 번호는 이미 'My Lucky Picks'에 저장된 번호입니다.")
         st.info("💡 '현재미출현' 수치가 높을수록 오랫동안 나오지 않은 '차갑게 식은' 번호들입니다.")
     else:
         st.error("데이터를 불러올 수 없습니다.")
