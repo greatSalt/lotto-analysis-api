@@ -14,14 +14,32 @@ def init_saved_picks(conn, sheet_url):
             st.session_state.my_saved_picks = []
 
 def save_picks_to_sheets(conn, sheet_url, new_picks):
-    """구글 시트에 번호 영구 저장"""
-    df = pd.DataFrame({"번호": new_picks})
+    """기존 번호를 유지하며 구글 시트에 누적 저장"""
     try:
+        # 1. 기존에 저장된 데이터 읽기 시도
+        try:
+            existing_df = conn.read(spreadsheet=sheet_url, worksheet="SavedPicks")
+            existing_picks = existing_df["번호"].tolist()
+        except:
+            # 시트가 비어있거나 오류가 나면 빈 리스트로 시작
+            existing_picks = []
+
+        # 2. 기존 번호 + 새로운 번호 합치기 (set을 사용하여 중복 제거)
+        updated_picks = list(set(existing_picks + new_picks))
+        updated_picks.sort() # 보기 좋게 정렬
+        
+        # 3. 데이터프레임 생성 및 업데이트
+        df = pd.DataFrame({"번호": updated_picks})
+    
         conn.update(spreadsheet=sheet_url, worksheet="SavedPicks", data=df)
-        st.session_state.my_saved_picks = new_picks
-        st.toast("✅ 구글 시트에 안전하게 저장되었습니다!")
+        st.session_state.my_saved_picks = updated_picks
+        st.toast("✅ 기존 번호와 합쳐져 안전하게 저장되었습니다!")
+        
+        return True
+        
     except Exception as e:
         st.error(f"저장 실패: {e}")
+        return False
 
 def display_sidebar_picks(conn, sheet_url):
     """사이드바 표시 및 관리"""

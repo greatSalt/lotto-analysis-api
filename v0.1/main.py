@@ -157,20 +157,41 @@ elif menu == "콜드 번호 추출":
         # 2. 인덱스를 1부터 15까지 새로 부여 (No. 표시용)
         display_cold.index = range(1, len(display_cold) + 1)
         
-        # 3. 데이터프레임 출력 (인덱스 이름을 'No.'로 지정)
-        st.dataframe(
+        # 2. 선택용 체크박스 컬럼 추가 (기본값 False)
+        display_cold.insert(0, "선택", False)
+        
+        # 3. 데이터 에디터로 변경 (사용자가 체크박스 조작 가능)
+        # num_rows="fixed"로 설정하여 15개 행을 유지합니다.
+        edited_cold = st.data_editor(
             display_cold, 
             use_container_width=True,
+            hide_index=True, # 인덱스 대신 번호와 미출현 정보에 집중
             column_config={
-                "index": st.column_config.NumberColumn("No.", format="%d")
-            }
+                "index": st.column_config.NumberColumn("No.", format="%d"),
+                "선택": st.column_config.CheckboxColumn("선택", default=False),
+                "번호": st.column_config.NumberColumn("번호", format="%d"),
+                "현재미출현": st.column_config.NumberColumn("미출현 회차", format="%d회")
+            },
+            key="cold_num_editor"
         )
+        
+        # 4. 저장 버튼 및 구글 시트 연동
+        if st.button("📌 선택한 콜드번호 저장 및 공유", use_container_width=True):
+            # 체크된 번호들만 리스트로 추출
+            selected_nums = edited_cold[edited_cold['선택'] == True]['번호'].tolist()
+            
+            if not selected_nums:
+                st.warning("공유할 번호를 먼저 선택해주세요.")
+            else:
+                # [기존 함수 활용] 구글 시트에 선택된 번호 업데이트
+                # 예: update_google_sheet(selected_nums, "COLD_STRATEGY")
+                if save_picks_to_sheets(conn, SHEET_URL, selected_nums):
+                    st.success(f"✅ 콜드번호 {selected_nums} 저장 완료! 사이드바에서 확인하세요.")
+                    st.rerun() # 사이드바 갱신을 위해 앱 재실행
         
         st.info("💡 '현재미출현' 수치가 높을수록 오랫동안 나오지 않은 '차갑게 식은' 번호들입니다.")
     else:
         st.error("데이터를 불러올 수 없습니다.")
-
-
 
 elif menu == "📊 이월수 예측":
     st.title("🔮이월수 전략 시뮬레이터")
