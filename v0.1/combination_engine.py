@@ -164,7 +164,7 @@ def get_advanced_stat_analysis(df):
     ratio_data = []
     for r, theo in theo_ratios.items():
         count = int(ratio_counts.get(r, 0))
-        actual = (count / total_draws) * 100
+        actual = (count / total_draws * 100) if total_draws > 0 else 0
         diff = actual - theo  # 편차
         
         # 상태 판정 (편차 5% 기준)
@@ -194,7 +194,7 @@ def get_advanced_stat_analysis(df):
     sum_data = []
     for lbl in labels:
         count = int(sum_counts.get(lbl, 0))
-        actual = (count / total_draws) * 100
+        actual = (count / total_draws * 100) if total_draws > 0 else 0
         theo = theo_sums.get(lbl, 0)
         diff = actual - theo
         
