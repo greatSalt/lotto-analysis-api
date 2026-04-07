@@ -165,7 +165,7 @@ elif menu == "콜드 번호 추출":
         edited_cold = st.data_editor(
             display_cold, 
             use_container_width=True,
-            hide_index=True, # 인덱스 대신 번호와 미출현 정보에 집중
+            hide_index=False,
             column_config={
                 "index": st.column_config.NumberColumn("No.", format="%d"),
                 "선택": st.column_config.CheckboxColumn("선택", default=False),
