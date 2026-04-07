@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 import coldNum
-from savepicked import init_saved_picks, display_sidebar_picks, save_picks_to_sheets, get_highlight_style
+from savepicked import display_sidebar_picks, get_highlight_style, init_all_saved_data, save_to_sheets_by_type
 from specialNum import analyze_specific_number
 from streamlit_gsheets import GSheetsConnection
 from into_lottoDB import save_to_gsheet, get_recent_data
@@ -18,7 +18,8 @@ conn = st.connection("gsheets", type=GSheetsConnection)
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1q8P3SClxNSYsAXwBgk3__y44XxZwI_FTj-eE9uQeVHE/edit?gid=0#gid=0"
 
 # 1. 초기화 및 사이드바 표시 (최상단)
-init_saved_picks(conn, SHEET_URL)
+#init_saved_picks(conn, SHEET_URL)
+init_all_saved_data(conn, SHEET_URL)
 
 st.sidebar.title("🎮 메뉴 선택")
 # 사이드바 메뉴 선택 아래에 바로 배치
@@ -100,7 +101,8 @@ elif menu == "크레이지 번호 추출":
             # 7. 적용 버튼 및 데이터 저장
             if st.button("💾 선택 번호 저장"):
                 new_picks = edited_df[edited_df['선택'] == True]['번호'].tolist()
-                save_picks_to_sheets(conn, SHEET_URL, new_picks)
+                #save_picks_to_sheets(conn, SHEET_URL, new_picks)
+                save_to_sheets_by_type(conn, SHEET_URL, new_picks, "PICK")
                 st.toast("주요 번호가 저장되었습니다!")
                 st.rerun()
         
@@ -200,7 +202,8 @@ elif menu == "콜드 번호 추출":
             else:
                 # [기존 함수 활용] 구글 시트에 선택된 번호 업데이트
                 # 예: update_google_sheet(selected_nums, "COLD_STRATEGY")
-                save_picks_to_sheets(conn, SHEET_URL, selected_nums)
+                #save_picks_to_sheets(conn, SHEET_URL, selected_nums)
+                save_to_sheets_by_type(conn, SHEET_URL, selected_nums, "PICK")
                 # 저장 후 세션 데이터를 최신화하기 위해 세션 삭제 후 재실행 (시트 데이터 다시 읽기 위함)
                 del st.session_state.cold_edited_df  
                 st.rerun() # 사이드바 갱신을 위해 앱 재실행
@@ -339,8 +342,8 @@ elif menu == "🎯 추천번호 분석":
             new_picks = [int(n) for n in edited_df[edited_df['선택'] == True]['번호'].tolist()]
             
             # 구글 시트에 저장
-            save_picks_to_sheets(conn, SHEET_URL, new_picks)
-            
+            #save_picks_to_sheets(conn, SHEET_URL, new_picks)
+            save_to_sheets_by_type(conn, SHEET_URL, new_picks, "PICK")
             # 세션 상태 업데이트 (사이드바 즉시 반영)
             st.session_state.my_saved_picks = new_picks
             
@@ -355,13 +358,38 @@ elif menu == "🎯 추천번호 분석":
             
             col_input1, col_input2 = st.columns(2)
             with col_input1:
-                # 숫자 입력 (예: 1, 7, 15)
-                fixed_input = st.text_input("📌 고정수 입력 (쉼표 구분)", placeholder="예: 3, 12")
-                fixed_nums = [int(x.strip()) for x in fixed_input.split(",") if x.strip().isdigit()]
+                # 고정수 입력 UI
+                fixed_nums = st.multiselect(
+                    "📌 고정수 (FIX)", 
+                    options=range(1, 46), 
+                    default=st.session_state.get('fixed_nums', []),
+                    key="fixed_multiselect" # 키 추가
+                )
+
+                if st.button("💾 고정수 시트 갱신", key="btn_fix_save"):
+                    # 현재 선택된 fixed_nums를 시트에 덮어쓰기
+                    save_to_sheets_by_type(conn, SHEET_URL, fixed_nums, "FIX")
+                    # 세션 상태 업데이트 및 리런
+                    st.session_state.fixed_nums = fixed_nums
+                    st.rerun()
+                    
             with col_input2:
-                exclude_input = st.text_input("🚫 제외수 입력 (쉼표 구분)", placeholder="예: 40, 41")
-                exclude_nums = [int(x.strip()) for x in exclude_input.split(",") if x.strip().isdigit()]
+                # 제외수 입력 UI
+                exclude_nums = st.multiselect(
+                    "🚫 제외수 (EX)", 
+                    options=range(1, 46), 
+                    default=st.session_state.get('exclude_nums', []),
+                    key="exclude_multiselect" # 키 추가
+                )
                 
+                if st.button("💾 제외수 시트 갱신", key="btn_ex_save"):
+                    #현재 선택된 exclude_nums를 시트에 덮어쓰기
+                    save_to_sheets_by_type(conn, SHEET_URL, exclude_nums, "EX")
+                    
+                    # 세션 상태 업데이트 및 리런
+                    st.session_state.exclude_nums = exclude_nums
+                    st.rerun()
+                    
             col_f1, col_f2 = st.columns(2)
             with col_f1:
                 st.write("**추가 필터 1: 홀짝 비율**")

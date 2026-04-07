@@ -1,6 +1,33 @@
 import streamlit as st
 import pandas as pd
 
+def init_all_saved_data(conn, sheet_url):
+    """앱 시작 시 구글 시트에서 PICK, FIX, EX 번호들을 모두 로드"""
+    # 세션 상태가 하나라도 없으면 로드 시도
+    if 'my_saved_picks' not in st.session_state or 'fixed_nums' not in st.session_state:
+        try:
+            # ttl=0으로 설정하여 항상 최신 데이터를 읽어옴
+            df = conn.read(spreadsheet=sheet_url, worksheet="SavedPicks", ttl=0)
+            
+            if not df.empty and '유형' in df.columns:
+                # 1. 일반 저장 번호 (PICK)
+                st.session_state.my_saved_picks = df[df['유형'] == 'PICK']['번호'].tolist()
+                # 2. 고정수 (FIX)
+                st.session_state.fixed_nums = df[df['유형'] == 'FIX']['번호'].tolist()
+                # 3. 제외수 (EX)
+                st.session_state.exclude_nums = df[df['유형'] == 'EX']['번호'].tolist()
+            else:
+                # 데이터가 없거나 유형 컬럼이 없을 때 초기화
+                st.session_state.my_saved_picks = []
+                st.session_state.fixed_nums = []
+                st.session_state.exclude_nums = []
+                
+        except Exception:
+            # 시트가 없거나 오류 발생 시 빈 리스트로 안전하게 초기화
+            st.session_state.my_saved_picks = []
+            st.session_state.fixed_nums = []
+            st.session_state.exclude_nums = []
+'''
 def init_saved_picks(conn, sheet_url):
     """앱 시작 시 구글 시트에서 저장된 번호를 불러오기"""
     if 'my_saved_picks' not in st.session_state:
@@ -12,7 +39,34 @@ def init_saved_picks(conn, sheet_url):
                 st.session_state.my_saved_picks = []
         except Exception:
             st.session_state.my_saved_picks = []
+'''
+'''
+def save_special_picks(conn, sheet_url, new_picks, type_code="PICK"):
+    """
+    유형별(PICK, FIX, EX)로 번호를 구글 시트에 저장
+    type_code: 'PICK'(일반), 'FIX'(고정), 'EX'(제외)
+    """
+    try:
+        # 1. 기존 데이터 전체 읽기
+        try:
+            existing_df = conn.read(spreadsheet=sheet_url, worksheet="SavedPicks")
+        except:
+            existing_df = pd.DataFrame(columns=["번호", "유형"])
 
+        # 2. 해당 유형의 기존 데이터 삭제 후 새로운 데이터로 교체 (유형별 업데이트)
+        other_types_df = existing_df[existing_df["유형"] != type_code]
+        new_type_df = pd.DataFrame({"번호": new_picks, "유형": type_code})
+        
+        updated_df = pd.concat([other_types_df, new_type_df]).drop_duplicates().sort_values(["유형", "번호"])
+
+        # 3. 시트 업데이트
+        conn.update(spreadsheet=sheet_url, worksheet="SavedPicks", data=updated_df)
+        st.toast(f"✅ {type_code} 번호가 시트에 저장되었습니다!")
+        
+    except Exception as e:
+        st.error(f"저장 실패: {e}")
+'''
+'''
 def save_picks_to_sheets(conn, sheet_url, new_picks):
     """기존 번호를 유지하며 구글 시트에 누적 저장"""
     try:
@@ -40,6 +94,40 @@ def save_picks_to_sheets(conn, sheet_url, new_picks):
     except Exception as e:
         st.error(f"저장 실패: {e}")
         return False
+'''
+def save_to_sheets_by_type(conn, sheet_url, new_nums, type_code):
+    """
+    type_code: 'PICK', 'FIX', 'EX' 중 하나
+    해당 유형의 번호들을 시트에 업데이트
+    """
+    try:
+        # 기존 전체 데이터 읽기
+        try:
+            full_df = conn.read(spreadsheet=sheet_url, worksheet="SavedPicks", ttl=0)
+        except:
+            full_df = pd.DataFrame(columns=["번호", "유형"])
+
+        # 1. 다른 유형의 데이터는 그대로 유지
+        other_types_df = full_df[full_df["유형"] != type_code]
+        
+        # 2. 현재 요청된 유형의 데이터 새로 생성
+        new_type_df = pd.DataFrame({"번호": new_nums, "유형": type_code})
+        
+        # 3. 합치기 및 중복 제거
+        final_df = pd.concat([other_types_df, new_type_df]).drop_duplicates().sort_values(["유형", "번호"])
+
+        # 4. 시트 업데이트
+        conn.update(spreadsheet=sheet_url, worksheet="SavedPicks", data=final_df)
+        
+        # 5. 세션 상태도 즉시 동기화
+        if type_code == 'PICK': st.session_state.my_saved_picks = new_nums
+        elif type_code == 'FIX': st.session_state.fixed_nums = new_nums
+        elif type_code == 'EX': st.session_state.exclude_nums = new_nums
+        
+        st.toast(f"✅ {type_code} 설정이 저장되었습니다.")
+        
+    except Exception as e:
+        st.error(f"저장 중 오류 발생: {e}")
 
 def display_sidebar_picks(conn, sheet_url):
     """사이드바 표시 및 관리"""
