@@ -451,29 +451,41 @@ elif menu == "🎯 추천번호 분석":
             st.warning(f"⚠️ **멸 주의 구간**: {', '.join(warning_zones) if warning_zones else '없음'}")
         
         st.divider()
-        st.subheader("📊 홀짝 및 총합 흐름 분석 (기세 기반)")
+        st.subheader("📊 정밀 통계 리포트 (수학적 확률 대조)")
         
-        # 엔진에서 데이터 계산
         ratio_df, sum_df = get_advanced_stat_analysis(df)
         
-        col_stat1, col_stat2 = st.columns(2)
+        # 컬럼 설정 (편차 강조를 위한 스타일링은 간단히 텍스트로 처리)
+        st.write("### ⚖️ 홀짝 비율 정밀 분석")
+        st.dataframe(
+            ratio_df, 
+            use_container_width=True, 
+            hide_index=True,
+            column_config={
+                "편차": st.column_config.TextColumn("이론대비 편차", help="이론적 확률보다 얼마나 더/덜 나왔는지 표시"),
+                "실제%": st.column_config.ProgressColumn("실제 출현 비중", min_value=0, max_value=50, format="%.1f%%")
+            }
+        )
         
-        with col_stat1:
-            st.write("**⚖️ 홀짝 비율 통계**")
-            st.dataframe(ratio_df, use_container_width=True, hide_index=True)
-            st.caption("※ 3:3, 2:4, 4:2가 수학적 황금 비율입니다.")
+        st.write("### 🔢 총합 구간 정밀 분석")
+        st.dataframe(
+            sum_df, 
+            use_container_width=True, 
+            hide_index=True,
+            column_config={
+                "편차": st.column_config.TextColumn("이론대비 편차"),
+                "실제%": st.column_config.ProgressColumn("실제 출현 비중", min_value=0, max_value=40, format="%.1f%%")
+            }
+        )
         
-        with col_stat2:
-            st.write("**🔢 총합 구간 통계**")
-            st.dataframe(sum_df, use_container_width=True, hide_index=True)
-            st.caption("※ 대부분의 당첨번호 총합은 100~170 사이에 위치합니다.")
-        
-        # 종합 추천 한줄평
-        recommend_ratios = ratio_df[ratio_df['상태'] == "💎 반등"]["비율"].tolist()
-        recommend_sums = sum_df[sum_df['상태'] == "💎 반등"]["총합구간"].tolist()
-        
-        if recommend_ratios or recommend_sums:
-            st.success(f"💡 **전략 추천:** 홀짝 [{', '.join(recommend_ratios)}] 및 총합 [{', '.join(recommend_sums)}] 구간의 반등 가능성이 높습니다.")
+        # 실전 베팅 가이드
+        with st.expander("💡 통계 수치 해석 가이드"):
+            st.markdown("""
+            * **편차가 (+)인 경우:** 해당 구간이 최근 유독 많이 나왔습니다. 조만간 출현 빈도가 줄어들 가능성(회귀)이 있습니다.
+            * **편차가 (-)인 경우:** 이론상 더 나와야 하는데 최근 뜸한 구간입니다. **'반등 포인트'**로 잡고 조합에 포함하는 것을 추천합니다.
+            * **황금 구간:** 홀짝 **3:3 / 2:4 / 4:2** 및 총합 **100~160** 사이가 전체 당첨의 약 80%를 차지합니다.
+            """)
+
 
 
 st.sidebar.divider()
