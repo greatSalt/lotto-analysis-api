@@ -277,7 +277,7 @@ elif menu == "🎯 추천번호 분석":
         # 컬럼 순서 및 편집 가능 여부 설정
         analysis_df['선택'] = False
         
-        cols = ['선택', '번호', '통합크레이지점수', '현재연속', '반등지수', '에너지지수', '탄성점수', '리듬점수', '박자상태']
+        cols = ['선택', '번호', '통합크레이지점수', '출현수', '출현율', '현재연속', '최대연속', '반등지수', '에너지지수', '탄성점수', '리듬점수', '박자상태']
         available_cols = [c for c in cols if c in filtered_df.columns]
         
         edited_df = st.data_editor(
