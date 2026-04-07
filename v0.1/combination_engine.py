@@ -95,3 +95,45 @@ def get_group(n, hot_pool, cold_pool):
         return 'COLD'
     return 'WARM'
 
+def get_ratio_analysis(df):
+    """최근 회차 범위 내 홀짝 비율 분석 및 추천 로직"""
+    ratios = []
+    for _, row in df.iterrows():
+        # 당첨번호 6개 추출 (보너스 제외)
+        nums = [row[f'번호{i}'] for i in range(1, 7)]
+        odd_count = len([n for n in nums if n % 2 != 0])
+        even_count = 6 - odd_count
+        ratios.append(f"{odd_count}:{even_count}")
+    
+    # 비율별 빈도수 계산
+    ratio_counts = pd.Series(ratios).value_counts()
+    total_draws = len(df)
+    
+    # 이론적 확률 (수학적 기대치)
+    theoretical_probs = {
+        "3:3": 33.3, "2:4": 23.3, "4:2": 23.3, 
+        "1:5": 9.3,  "5:1": 9.3,  "0:6": 0.8, "6:0": 0.8
+    }
+    
+    analysis_data = []
+    for ratio, count in ratio_counts.items():
+        actual_prob = (count / total_draws) * 100
+        theo_prob = theoretical_probs.get(ratio, 0)
+        
+        # 확률 차이 계산 (기세 분석)
+        diff = actual_prob - theo_prob
+        
+        # 추천 상태 결정
+        if diff > 5: status = "🔥 과열 (주의)"
+        elif diff < -5: status = "💎 반등 기대 (추천)"
+        else: status = "✅ 정상 (안정)"
+        
+        analysis_data.append({
+            "비율": ratio,
+            "출현수": count,
+            "현재확률": f"{actual_prob:.1f}%",
+            "이론확률": f"{theo_prob:.1f}%",
+            "상태": status
+        })
+        
+    return pd.DataFrame(analysis_data).sort_values("비율")

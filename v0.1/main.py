@@ -11,7 +11,7 @@ from formular_description import display_formula_guide
 import analysis_to_gsheet as saver
 from iteration_predictor import predict_iteration_count, predict_with_numbers
 from empty_zone_engine import get_confirmed_empty_zone, color_rows, apply_strategy_style
-from combination_engine import generate_strategic_combinations
+from combination_engine import generate_strategic_combinations, get_ratio_analysis
 
 st.set_page_config(page_title="로또 분석 프로 v0.1", layout="wide")
 conn = st.connection("gsheets", type=GSheetsConnection)
@@ -449,6 +449,23 @@ elif menu == "🎯 추천번호 분석":
         with col2:
             warning_zones = [z for z, d in decision.items() if not d['is_empty'] and d['prob'] > 40]
             st.warning(f"⚠️ **멸 주의 구간**: {', '.join(warning_zones) if warning_zones else '없음'}")
+        
+        # --- [UI 출력 부분] ---
+        st.subheader("⚖️ 홀짝 비율 통계 및 확률 분석")
+        ratio_df = get_ratio_analysis(df) # df는 사용자가 선택한 범위 데이터
+        
+        col1, col2 = st.columns([2, 1])
+        
+        with col1:
+            st.dataframe(ratio_df, use_container_width=True, hide_index=True)
+        
+        with col2:
+            best_ratio = ratio_df.loc[ratio_df['상태'].str.contains("추천"), "비율"].tolist()
+            if best_ratio:
+                st.success(f"💡 추천 비율: {', '.join(best_ratio)}")
+            else:
+                st.info("💡 모든 비율이 이론적 범위 내에 있습니다.")
+
 
 st.sidebar.divider()
 st.sidebar.caption("v0.1 - 통계 분석 시스템")
