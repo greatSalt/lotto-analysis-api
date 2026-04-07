@@ -156,7 +156,7 @@ elif menu == "콜드 번호 추출":
         
         # 2. 인덱스를 1부터 15까지 새로 부여 (No. 표시용)
         display_cold.index = range(1, len(display_cold) + 1)
-        display_cold = display_cold.reset_index().rename(columns={"index": "No."}
+        display_cold = display_cold.reset_index().rename(columns={"index": "No."})
         
         # 2. 선택용 체크박스 컬럼 추가 (기본값 False)
         display_cold.insert(0, "선택", False)
