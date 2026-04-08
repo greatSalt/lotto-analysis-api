@@ -32,8 +32,17 @@ def get_confirmed_empty_zone(df, analyze_range=100):
         
         prob = (history_empty_next / history_match * 100) if history_match > 0 else 0
         
-        # 3. 최근 쏠림도 계산 (최근 10회차 평균 대비)
-        recent_10_avg = sum([len([n for n in [df.iloc[k][f'n{j}'] for j in range(1, 7)] if start <= n <= end]) for k in range(10)]) / 10
+        # 수정 후 (분석 범위와 실제 데이터 개수 중 작은 값을 사용)
+        #actual_range = min(len(df), 10) # 최대 10회차까지만 보되, 데이터가 적으면 그만큼만 계산
+        # 또는 사용자가 설정한 analyze_range를 직접 사용하려면:
+        actual_range = min(len(df), analyze_range)
+        
+        # 3. 최근 쏠림도 계산 (최근 {analyze_range}회차 평균 대비)
+        recent_avg = sum([
+            len([n for n in [df.iloc[k][f'n{j}'] for j in range(1, 7)] if start <= n <= end]) 
+            for k in range(actual_range)
+        ]) / actual_range
+
         bias_index = curr_count / recent_10_avg if recent_10_avg > 0 else 1
         
         # 4. 명확한 이유 근거 생성
