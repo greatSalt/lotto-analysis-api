@@ -132,7 +132,7 @@ elif menu == "크레이지 번호 추출":
             st.divider()
             
             # --- [5] 공식 및 수치 해석 섹션 (최종 통합본) ---
-            display_formula_guide(analyze_count)
+            display_formula_guide(analyze_range)
             
 elif menu == "특정 번호 분석":
     st.title("🔍 번호 심층 분석")
@@ -157,7 +157,7 @@ elif menu == "특정 번호 분석":
         if res:
             st.write(res)
             # 현재 분석 기준 회차 표시
-            st.caption(f"※ 최근 {analyze_count}회차 데이터를 기반으로 분석된 결과입니다.")
+            st.caption(f"※ 최근 {analyze_range}회차 데이터를 기반으로 분석된 결과입니다.")
     else:
         st.error("데이터를 불러오지 못했습니다. 구글 시트 연결 상태를 확인하세요.")
 
