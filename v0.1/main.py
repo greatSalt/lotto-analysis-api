@@ -412,7 +412,18 @@ elif menu == "🎯 추천번호 분석":
             with col_f2:
                 st.write("**추가 필터 2: 총합 범위**")
                 sum_range = st.slider("총합 범위 설정", 100, 200, (110, 160))
-
+            
+            # --- 실전 필터 적용 섹션 ---
+            st.divider()
+            with st.expander("🚀 필터링 조건 설정 (생성 시 적용)", expanded=True):
+                f_col1, f_col2, f_col3 = st.columns(3)
+                with f_col1:
+                    sel_ac = st.number_input("최소 AC값", 0, 10, 7)
+                with f_col2:
+                    sel_hl = st.multiselect("허용 고저비율", ["3:3", "2:4", "4:2", "1:5", "5:1"], default=["3:3", "2:4", "4:2"])
+                with f_col3:
+                    sel_con = st.selectbox("최대 연번허용", [0, 1, 2], index=1)
+            
             if st.button("🚀 필터 적용 조합 추출", use_container_width=True):
                 # 여기서 itertools.combinations 등을 활용해 필터를 통과한 조합만 출력
                 # 이후 AC값, 동끝수 필터 등을 여기에 추가할 수 있음
@@ -424,7 +435,17 @@ elif menu == "🎯 추천번호 분석":
                     st.error("고정수는 최대 6개까지만 입력 가능합니다.")
                 else:
                     with st.spinner('최적의 조합을 계산 중...'):
-                        results = generate_strategic_combinations(selected_df, ratio_filter, sum_range, fixed_nums, exclude_nums)
+                        results = generate_strategic_combinations(
+                            selected_df, 
+                            ratio_filter, 
+                            sum_range, 
+                            fixed_nums, 
+                            exclude_nums, 
+                            min_ac=sel_ac,     # UI 입력값
+                            allowed_hl=sel_hl, # UI 입력값 (멀티셀렉트)
+                            max_con=sel_con,   # UI 입력값 (셀렉트박스)
+                            count=5
+                        )
                     
                     if results:
                         st.divider()
@@ -516,7 +537,8 @@ elif menu == "🎯 추천번호 분석":
             st.caption("7 미만은 규칙적 조합으로 제외 권장")
         
         with col_b:
-            st.write("**🌓 고저 비율 (1~22 : 23~45)**")
+            st.write("**🌓 고저 비율**")    # L:1~22, H:23~45
+            hl_df.columns = ["비율(L:H)", "출현"]
             st.dataframe(hl_df, use_container_width=True, hide_index=True)
             st.caption("3:3 비율이 가장 이상적")
         

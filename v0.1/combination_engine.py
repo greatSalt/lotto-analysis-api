@@ -1,7 +1,7 @@
 import random
 import pandas as pd
 
-def generate_strategic_combinations(selected_df, ratio_filters, sum_range, fixed_nums, exclude_nums, count=5):
+def generate_strategic_combinations(selected_df, ratio_filters, sum_range, fixed_nums, exclude_nums, min_ac=7, allowed_hl=None, max_con=1, count=5):
     """
     selected_df: 사용자가 체크한 번호들의 데이터프레임
     ratio_filters: ['3:3', '2:4'] 형태의 홀짝 비율 리스트
@@ -9,6 +9,9 @@ def generate_strategic_combinations(selected_df, ratio_filters, sum_range, fixed
     fixed_nums: [1, 7] 형태의 고정수 리스트
     exclude_nums: [10, 45] 형태의 제외수 리스트
     count: 생성할 조합 개수
+    """
+    """
+    고급 3대 필터(AC, 고저, 연번)가 통합된 전략 생성 엔진
     """
     # 기초 풀(Pool) 구성: 선택된 번호에서 제외수 먼저 제거
     base_pool_df = selected_df[~selected_df['번호'].isin(exclude_nums)].copy()
@@ -50,7 +53,7 @@ def generate_strategic_combinations(selected_df, ratio_filters, sum_range, fixed
     need_count = 6 - len(fixed_nums) # 고정수를 제외하고 더 뽑아야 할 개수
     
     # 2. 조합 생성 및 필터링 루프
-    while len(final_combinations) < count and attempts < 2000:
+    while len(final_combinations) < count and attempts < 5000:
         attempts += 1
         try:
             if len(remaining_pool_with_group) < need_count:
@@ -72,13 +75,20 @@ def generate_strategic_combinations(selected_df, ratio_filters, sum_range, fixed
             odd_count = len([n for n in just_nums if n % 2 != 0])
             even_count = 6 - odd_count
             curr_ratio = f"{odd_count}:{even_count}"
+            if curr_ratio not in ratio_filters: continue
             
             # 필터 2: 총합 범위 검증
             curr_sum = sum(just_nums)
+            if not (sum_range[0] <= curr_sum <= sum_range[1]): continue
             
-            # 모든 조건 만족 시 추가
-            if curr_ratio in ratio_filters and sum_range[0] <= curr_sum <= sum_range[1]:
-                final_combinations.append(full_combo)
+            # --- [신규 고급 필터 통합] ---
+            # 필터 3: AC, 고저, 연번 통합 검증 함수 호출
+            if not check_advanced_filters(just_nums, min_ac, allowed_hl, max_con):
+                continue
+
+            # 모든 관문을 통과한 경우에만 추가
+            final_combinations.append(full_combo)
+            
         except (ValueError, Exception):
             # 샘플링 풀이 부족할 경우 탈출
             break
@@ -281,3 +291,34 @@ def filter_combination_v2_5(nums):
     
     return True
 
+def check_advanced_filters(nums, min_ac=7, allowed_hl=None, max_consecutive=1):
+    """
+    v2.5 고급 필터링 시스템
+    nums: 생성된 6개 번호 리스트
+    """
+    s_nums = sorted(nums)
+    
+    # 1. AC값 필터 (산술적 복잡도: 보통 7~10이 당첨권)
+    diffs = set()
+    for i in range(6):
+        for j in range(i+1, 6):
+            diffs.add(s_nums[j] - s_nums[i])
+    ac = len(diffs) - 5
+    if ac < min_ac:
+        return False
+
+    # 2. 고저 비율 필터 (Low: 1~22, High: 23~45)
+    low_cnt = len([n for n in nums if n <= 22])
+    hl_ratio = f"{low_cnt}:{6-low_cnt}"
+    if allowed_hl and hl_ratio not in allowed_hl:
+        return False
+
+    # 3. 연번 필터 (연속된 숫자 쌍 개수 제한)
+    con_cnt = 0
+    for i in range(5):
+        if s_nums[i+1] - s_nums[i] == 1:
+            con_cnt += 1
+    if con_cnt > max_consecutive:
+        return False
+
+    return True
