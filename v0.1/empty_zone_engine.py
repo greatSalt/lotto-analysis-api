@@ -43,7 +43,7 @@ def get_confirmed_empty_zone(df, analyze_range=100):
             for k in range(actual_range)
         ]) / actual_range
 
-        bias_index = curr_count / recent_10_avg if recent_10_avg > 0 else 1
+        bias_index = curr_count / recent_avg if recent_avg > 0 else 1
         
         # 4. 명확한 이유 근거 생성
         is_empty = prob > 55 and bias_index > 1.1 # 확률 55% 이상 & 최근 쏠림 1.1배 이상 시 멸 확정
