@@ -172,7 +172,7 @@ def save_to_sheets_by_type(conn, sheet_url, new_nums, type_code):
         elif type_code == 'F_SUM': st.session_state.sum_range = (int(new_nums[0]), int(new_nums[1]))
         
         st.toast(f"✅ {type_code} 설정이 저장되었습니다.")
-        st.rerun() # UI 즉시 갱신
+        #st.rerun() # UI 즉시 갱신
         
     except Exception as e:
         st.error(f"저장 중 오류 발생: {e}")
