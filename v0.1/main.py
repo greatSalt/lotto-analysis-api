@@ -141,9 +141,6 @@ elif menu == "특정 번호 분석":
     col1, _ = st.columns([1, 2]) # 두 번째 컬럼은 무시, 입력창 크기 조절
     with col1:
         target_num = st.number_input("분석할 번호", 1, 45, 1)
-    '''with col2:
-        # 분석 범위 입력 추가 (기본 100회차, 최대 500회차까지 확장 가능)
-        deep_analyze_count = st.number_input("심층 분석 범위(최근 회차)", 10, 500, 30)'''
     
     st.divider()
 
