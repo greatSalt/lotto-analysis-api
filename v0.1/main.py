@@ -32,7 +32,7 @@ st.sidebar.title("🛠️ 통합 분석 설정")
 #모든 메뉴에서 공통으로 사용할 회차범위를 설정
 analyze_range = st.sidebar.slider(
     "통합 분석 범위 (최근 회차)", 
-    min_value=10, 
+    min_value=5, 
     max_value=300, 
     value=30, 
     step=5
