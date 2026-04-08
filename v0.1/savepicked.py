@@ -31,11 +31,11 @@ def init_all_saved_data(conn, sheet_url):
                     # 2. 신규 필터 설정값 로드
                     # [AC값]
                     ac_row = df[df['유형'] == 'F_AC']
-                    st.session_state.sel_ac = int(ac_row['번호'].iloc[0]) if not ac_row.empty else 7
+                    st.session_state.sel_ac = get_safe_int('F_AC', 7)
                     
                     # [최대 연번]
                     con_row = df[df['유형'] == 'F_CON']
-                    st.session_state.sel_con = int(con_row['번호'].iloc[0]) if not con_row.empty else 1
+                    st.session_state.sel_con = get_safe_int('F_CON', 1)
                     
                     # [고저 비율 리스트]
                     hl_rows = df[df['유형'] == 'F_HL']
@@ -44,8 +44,11 @@ def init_all_saved_data(conn, sheet_url):
                     # [총합 범위]
                     sum_rows = df[df['유형'] == 'F_SUM']
                     if not sum_rows.empty:
-                        sums = sum_rows['번호'].tolist()
+                        try:
+                            sums = [int(float(x)) for x in sum_rows['번호'].tolist()]
                         st.session_state.sum_range = (int(sums[0]), int(sums[1]))
+                        except:
+                        st.session_state.sum_range = (80, 200)
                     else:
                         st.session_state.sum_range = (100, 175)
             else:
@@ -55,7 +58,17 @@ def init_all_saved_data(conn, sheet_url):
         except Exception:
             # 시트가 없거나 오류 발생 시 빈 리스트로 안전하게 초기화
             set_default_session_values()
-            
+
+#단일 필터 설정 로드 (형변환 오류 방지 로직 추가)
+def get_safe_int(type_code, default_val):
+    row = df[df['유형'] == type_code]
+    if not row.empty:
+        try:
+        # float로 먼저 바꾼 뒤 int로 바꿔야 "7.0" 같은 문자열 대응 가능
+            return int(float(row['번호'].iloc[0]))
+        except: return default_val
+    return default_val
+    
 def set_default_session_values():
     """기본값 초기화 헬퍼 함수"""
     st.session_state.my_saved_picks = []
