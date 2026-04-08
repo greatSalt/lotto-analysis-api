@@ -1,4 +1,5 @@
 import pandas as pd
+import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 
 def save_to_gsheet(conn, sheet_url, new_data):
