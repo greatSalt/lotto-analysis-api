@@ -46,9 +46,9 @@ def init_all_saved_data(conn, sheet_url):
                     if not sum_rows.empty:
                         try:
                             sums = [int(float(x)) for x in sum_rows['번호'].tolist()]
-                        st.session_state.sum_range = (int(sums[0]), int(sums[1]))
+                            st.session_state.sum_range = (int(sums[0]), int(sums[1]))
                         except:
-                        st.session_state.sum_range = (80, 200)
+                            st.session_state.sum_range = (80, 200)
                     else:
                         st.session_state.sum_range = (100, 175)
             else:
