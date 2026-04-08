@@ -415,7 +415,7 @@ elif menu == "🎯 추천번호 분석":
                 sum_range = st.slider(
                     "총합 범위 설정", 
                     min_value=80, 
-                    max_vlue=200, 
+                    max_value=200, 
                     value=st.session_state.get('sum_range', (100, 170)), # 세션값이 있으면 사용, 없으면 기본값
                     step=1,
                     key='sum_input'
