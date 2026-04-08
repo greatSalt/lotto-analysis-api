@@ -31,7 +31,8 @@ def save_to_gsheet(conn, sheet_url, new_data):
     conn.update(spreadsheet=sheet_url, data=df)
     
     return df
- 
+    
+@st.cache_data # 이 함수는 500개의 데이터를 한 번 가져오면 메모리에 저장해둡니다. 슬라이더를 움직여도 구글 시트에 다시 접속하지 않고 메모리에서 꺼내옵니다.
 def get_recent_data(conn, sheet_url, count=0):
     try:
         # 1. 데이터 읽기 (캐시 무시)

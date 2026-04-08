@@ -21,8 +21,26 @@ SHEET_URL = "https://docs.google.com/spreadsheets/d/1q8P3SClxNSYsAXwBgk3__y44XxZ
 #init_saved_picks(conn, SHEET_URL)
 init_all_saved_data(conn, SHEET_URL)
 
+# --- 데이터 로드 및 사이드바 공통 설정 ---
+# 분석에 필요한 데이터를 넉넉하게 한 번만 가져옵니다.
+df_raw = get_recent_data(conn, SHEET_URL, count=0)    #모든 데이터를 가져온다. 
+
 st.sidebar.title("🎮 메뉴 선택")
-# 사이드바 메뉴 선택 아래에 바로 배치
+
+st.sidebar.title("🛠️ 통합 분석 설정")
+
+#모든 메뉴에서 공통으로 사용할 회차범위를 설정
+analyze_range = st.sidebar.slider(
+    "통합 분석 범위 (최근 회차)", 
+    min_value=10, 
+    max_value=300, 
+    value=30, 
+    step=5
+)
+
+# 모든 메뉴에서 사용할 공통 분석 데이터 (슬라이싱)
+df = df_raw.head(analyze_range).copy()
+
 with st.sidebar:
     menu = st.sidebar.radio("기능 선택", ["데이터 입력", "크레이지 번호 추출", "콜드 번호 추출", "특정 번호 분석", "📊 이월수 예측", "🎯 추천번호 분석"])
     display_sidebar_picks(conn, SHEET_URL) # 👈 어떤 메뉴에서든 내 번호가 보임
@@ -45,8 +63,8 @@ elif menu == "크레이지 번호 추출":
     st.divider()
 
     # 분석 데이터 호출
-    analyze_count = st.number_input("분석 범위(최근 회차)", 10, 100, 30)
-    df = get_recent_data(conn, SHEET_URL, count=analyze_count)
+    #analyze_count = st.number_input("분석 범위(최근 회차)", 10, 100, 30)
+    #df = get_recent_data(conn, SHEET_URL, count=analyze_count)
     
     if not df.empty:
         analysis_df = get_crazy_analysis(df)
@@ -120,17 +138,17 @@ elif menu == "특정 번호 분석":
     st.title("🔍 번호 심층 분석")
     
     # 입력 UI: 번호와 분석 범위를 나란히 배치
-    col1, col2 = st.columns(2)
+    col1 = st.columns([1, 2]) # 입력창 크기 조절
     with col1:
         target_num = st.number_input("분석할 번호", 1, 45, 1)
-    with col2:
+    '''with col2:
         # 분석 범위 입력 추가 (기본 100회차, 최대 500회차까지 확장 가능)
-        deep_analyze_count = st.number_input("심층 분석 범위(최근 회차)", 10, 500, 30)
+        deep_analyze_count = st.number_input("심층 분석 범위(최근 회차)", 10, 500, 30)'''
     
     st.divider()
 
     # 설정된 범위(deep_analyze_count)만큼 데이터 호출
-    df = get_recent_data(conn, SHEET_URL, count=deep_analyze_count)
+    #df = get_recent_data(conn, SHEET_URL, count=deep_analyze_count)
     
     if not df.empty:
         # 심층 분석 실행
@@ -139,7 +157,7 @@ elif menu == "특정 번호 분석":
         if res:
             st.write(res)
             # 현재 분석 기준 회차 표시
-            st.caption(f"※ 최근 {deep_analyze_count}회차 데이터를 기반으로 분석된 결과입니다.")
+            st.caption(f"※ 최근 {analyze_count}회차 데이터를 기반으로 분석된 결과입니다.")
     else:
         st.error("데이터를 불러오지 못했습니다. 구글 시트 연결 상태를 확인하세요.")
 
@@ -148,7 +166,7 @@ elif menu == "콜드 번호 추출":
     st.title("🧊 콜드 번호 리포트")
     
     # 데이터 호출
-    df = get_recent_data(conn, SHEET_URL, count=0)
+    #df = get_recent_data(conn, SHEET_URL, count=0)
     
     if not df.empty:
         # 세션에 데이터가 없거나 메뉴가 처음 로드될 때만 실행
@@ -207,7 +225,7 @@ elif menu == "콜드 번호 추출":
                 # 저장 후 세션 데이터를 최신화하기 위해 세션 삭제 후 재실행 (시트 데이터 다시 읽기 위함)
                 del st.session_state.cold_edited_df  
                 st.rerun() # 사이드바 갱신을 위해 앱 재실행
-        st.info("💡 파란색으로 체크된 번호는 이미 'My Lucky Picks'에 저장된 번호입니다.")
+        st.info("💡 체크된 번호는 이미 'My Lucky Picks'에 저장된 번호입니다.")
         st.info("💡 '현재미출현' 수치가 높을수록 오랫동안 나오지 않은 '차갑게 식은' 번호들입니다.")
     else:
         st.error("데이터를 불러올 수 없습니다.")
@@ -216,9 +234,9 @@ elif menu == "📊 이월수 예측":
     st.title("🔮이월수 전략 시뮬레이터")
     
     # 분석 데이터 호출
-    analyze_count = st.number_input("분석 범위(최근 회차)", 10, 100, 30)
+    #analyze_count = st.number_input("분석 범위(최근 회차)", 10, 100, 30)
     if st.button("📊 이월수 기대치 예측 실행"):
-        df = get_recent_data(conn, SHEET_URL, count=analyze_count)
+        #df = get_recent_data(conn, SHEET_URL, count=analyze_count)
         
         if not df.empty:
             analysis_df = get_crazy_analysis(df)
@@ -280,11 +298,11 @@ elif menu == "📊 이월수 예측":
 
 elif menu == "🎯 추천번호 분석":
     st.sidebar.subheader("⚙️ 멸 엔진 설정")
-    analyze_range = st.sidebar.slider("역사적 확률 분석 범위", 50, 300, 30)
+    #analyze_range = st.sidebar.slider("역사적 확률 분석 범위", 5, 300, 30) #range:min5~max300,default:30
     
     st.title("🎯 v2.5 전략 추천번호")
     
-    df = get_recent_data(conn, SHEET_URL)
+    #df = get_recent_data(conn, SHEET_URL)
     if not df.empty:
         decision = get_confirmed_empty_zone(df, analyze_range)
         
