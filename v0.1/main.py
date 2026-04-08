@@ -138,7 +138,7 @@ elif menu == "특정 번호 분석":
     st.title("🔍 번호 심층 분석")
     
     # 입력 UI: 번호와 분석 범위를 나란히 배치
-    col1 = st.columns([1, 2]) # 입력창 크기 조절
+    col1, _ = st.columns([1, 2]) # 두 번째 컬럼은 무시, 입력창 크기 조절
     with col1:
         target_num = st.number_input("분석할 번호", 1, 45, 1)
     '''with col2:
