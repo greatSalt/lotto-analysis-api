@@ -16,6 +16,10 @@ def init_all_saved_data(conn, sheet_url):
                     st.session_state.my_saved_picks = df['번호'].tolist()
                     st.session_state.fixed_nums = []
                     st.session_state.exclude_nums = []
+                    st.session_state.sel_ac = 7
+                    st.session_state.sel_con = 1
+                    st.session_state.sel_hl = ["3:3", "2:4", "4:2"]
+                    st.session_state.sum_range = (100, 175)
                 else:
                     # 2. '유형' 컬럼이 있는 경우 정상 분류
                     # 1. 일반 저장 번호 (PICK)
@@ -24,17 +28,44 @@ def init_all_saved_data(conn, sheet_url):
                     st.session_state.fixed_nums = df[df['유형'] == 'FIX']['번호'].tolist()
                     # 3. 제외수 (EX)
                     st.session_state.exclude_nums = df[df['유형'] == 'EX']['번호'].tolist()
+                    # 2. 신규 필터 설정값 로드
+                    # [AC값]
+                    ac_row = df[df['유형'] == 'F_AC']
+                    st.session_state.sel_ac = int(ac_row['번호'].iloc[0]) if not ac_row.empty else 7
+                    
+                    # [최대 연번]
+                    con_row = df[df['유형'] == 'F_CON']
+                    st.session_state.sel_con = int(con_row['번호'].iloc[0]) if not con_row.empty else 1
+                    
+                    # [고저 비율 리스트]
+                    hl_rows = df[df['유형'] == 'F_HL']
+                    st.session_state.sel_hl = hl_rows['번호'].tolist() if not hl_rows.empty else ["3:3", "2:4", "4:2"]
+                    
+                    # [총합 범위]
+                    sum_rows = df[df['유형'] == 'F_SUM']
+                    if not sum_rows.empty:
+                        sums = sum_rows['번호'].tolist()
+                        st.session_state.sum_range = (int(sums[0]), int(sums[1]))
+                    else:
+                        st.session_state.sum_range = (100, 175)
             else:
                 # 시트가 비어있을 때
-                st.session_state.my_saved_picks = []
-                st.session_state.fixed_nums = []
-                st.session_state.exclude_nums = []
+                set_default_session_values()
                 
         except Exception:
             # 시트가 없거나 오류 발생 시 빈 리스트로 안전하게 초기화
-            st.session_state.my_saved_picks = []
-            st.session_state.fixed_nums = []
-            st.session_state.exclude_nums = []
+            set_default_session_values()
+            
+def set_default_session_values():
+    """기본값 초기화 헬퍼 함수"""
+    st.session_state.my_saved_picks = []
+    st.session_state.fixed_nums = []
+    st.session_state.exclude_nums = []
+    st.session_state.sel_ac = 7
+    st.session_state.sel_con = 1
+    st.session_state.sel_hl = ["3:3", "2:4", "4:2"]
+    st.session_state.sum_range = (100, 175)
+
 '''
 def init_saved_picks(conn, sheet_url):
     """앱 시작 시 구글 시트에서 저장된 번호를 불러오기"""
@@ -134,6 +165,11 @@ def save_to_sheets_by_type(conn, sheet_url, new_nums, type_code):
         if type_code == 'PICK': st.session_state.my_saved_picks = new_nums
         elif type_code == 'FIX': st.session_state.fixed_nums = new_nums
         elif type_code == 'EX': st.session_state.exclude_nums = new_nums
+         # 신규 필터 설정 동기화
+        elif type_code == 'F_AC': st.session_state.sel_ac = int(new_nums[0])
+        elif type_code == 'F_CON': st.session_state.sel_con = int(new_nums[0])
+        elif type_code == 'F_HL': st.session_state.sel_hl = new_nums # ['3:3', '4:2'] 형태
+        elif type_code == 'F_SUM': st.session_state.sum_range = (int(new_nums[0]), int(new_nums[1]))
         
         st.toast(f"✅ {type_code} 설정이 저장되었습니다.")
         st.rerun() # UI 즉시 갱신

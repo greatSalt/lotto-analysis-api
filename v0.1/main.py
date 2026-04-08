@@ -424,6 +424,20 @@ elif menu == "🎯 추천번호 분석":
                 with f_col3:
                     sel_con = st.selectbox("최대 연번허용", [0, 1, 2], index=1)
             
+            if st.button("📌 필터 설정값 저장"):
+                with st.spinner("모든 필터 설정을 저장 중..."):
+                    # 각 필터값을 리스트 형태로 변환하여 저장 함수 호출
+                    save_to_sheets_by_type(conn, SHEET_URL, [sel_ac], 'F_AC')
+                    save_to_sheets_by_type(conn, SHEET_URL, [sel_con], 'F_CON')
+                    save_to_sheets_by_type(conn, SHEET_URL, sel_hl, 'F_HL') # 리스트 그대로 전달
+                    save_to_sheets_by_type(conn, SHEET_URL, [sum_range[0], sum_range[1]], 'F_SUM')
+                    
+                    # 고정수와 제외수도 함께 저장 (선택 사항)
+                    #save_to_sheets_by_type(conn, SHEET_URL, fixed_nums, 'FIX')
+                    #save_to_sheets_by_type(conn, SHEET_URL, exclude_nums, 'EX')
+        
+                    st.success("🎉 모든 분석 전략이 SavedPicks 시트에 통합 저장되었습니다!")
+            
             if st.button("🚀 필터 적용 조합 추출", use_container_width=True):
                 # 여기서 itertools.combinations 등을 활용해 필터를 통과한 조합만 출력
                 # 이후 AC값, 동끝수 필터 등을 여기에 추가할 수 있음
