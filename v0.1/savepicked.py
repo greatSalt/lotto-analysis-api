@@ -4,56 +4,56 @@ import pandas as pd
 def init_all_saved_data(conn, sheet_url):
     """앱 시작 시 구글 시트에서 PICK, FIX, EX 번호들을 모두 로드"""
     # 세션 상태가 하나라도 없으면 로드 시도
-    if 'my_saved_picks' not in st.session_state or 'fixed_nums' not in st.session_state:
-        try:
-            # ttl=0으로 설정하여 항상 최신 데이터를 읽어옴
-            df = conn.read(spreadsheet=sheet_url, worksheet="SavedPicks", ttl=0)
-            
-            if not df.empty:
-                # 1. '유형' 컬럼이 아예 없는 기존 시트인 경우 대응
-                if '유형' not in df.columns:
-                    set_default_session_values()
-                    # 모든 기존 번호를 일단 'PICK'(일반 저장)으로 간주
-                    st.session_state.my_saved_picks = df['번호'].tolist()
-                else:
-                    # 2. '유형' 컬럼이 있는 경우 정상 분류
-                    # 1. 일반 저장 번호 (PICK)
-                    st.session_state.my_saved_picks = get_list_by_type(df, 'PICK')
-                    # 2. 고정수 (FIX)
-                    st.session_state.fixed_nums = get_list_by_type(df, 'FIX')
-                    # 3. 제외수 (EX)
-                    st.session_state.exclude_nums = get_list_by_type(df, 'EX')
-                    # 2. 신규 필터 설정값 로드
-                    # [AC값]
-                    st.session_state.sel_ac = get_safe_int(df, 'F_AC', 7)
-                    
-                    # [최대 연번]
-                    st.session_state.sel_con = get_safe_int(df, 'F_CON', 1)
-                    
-                    # [고저 비율 리스트]
-                    hl_rows = df[df['유형'] == 'F_HL']
-                    st.session_state.sel_hl = hl_rows['번호'].tolist() if not hl_rows.empty else ["3:3", "2:4", "4:2"]
-                    
-                    # [총합 범위]
-                    sum_rows = df[df['유형'] == 'F_SUM']
-                    if not sum_rows.empty:
-                        try:
-                            sums = [int(float(x)) for x in sum_rows['번호'].tolist()]
-                            # 슬라이더 범위(80~200)를 벗어나지 않도록 보정
-                            s_min = max(80, sums[0])
-                            s_max = min(200, sums[1])
-                            st.session_state.sum_range = (s_min, s_max)
-                        except:
-                            st.session_state.sum_range = (100, 175)
-                    else:
-                        st.session_state.sum_range = (100, 175)
+    #if 'my_saved_picks' not in st.session_state or 'fixed_nums' not in st.session_state:
+    try:
+        # ttl=0으로 설정하여 항상 최신 데이터를 읽어옴
+        df = conn.read(spreadsheet=sheet_url, worksheet="SavedPicks", ttl=0)
+        set_default_session_values()
+        
+        if not df.empty:
+            # 1. '유형' 컬럼이 아예 없는 기존 시트인 경우 대응
+            if '유형' not in df.columns:
+                # 모든 기존 번호를 일단 'PICK'(일반 저장)으로 간주
+                st.session_state.my_saved_picks = df['번호'].tolist()
             else:
-                # 시트가 비어있을 때
-                set_default_session_values()
-                
-        except Exception:
-            # 시트가 없거나 오류 발생 시 빈 리스트로 안전하게 초기화
+                # 2. '유형' 컬럼이 있는 경우 정상 분류
+                # 1. 일반 저장 번호 (PICK)
+                st.session_state.my_saved_picks = get_list_by_type(df, 'PICK')
+                # 2. 고정수 (FIX)
+                st.session_state.fixed_nums = get_list_by_type(df, 'FIX')
+                # 3. 제외수 (EX)
+                st.session_state.exclude_nums = get_list_by_type(df, 'EX')
+                # 2. 신규 필터 설정값 로드
+                # [AC값]
+                st.session_state.sel_ac = get_safe_int(df, 'F_AC', 7)
+                    
+                # [최대 연번]
+                st.session_state.sel_con = get_safe_int(df, 'F_CON', 1)
+                    
+                # [고저 비율 리스트]
+                hl_rows = df[df['유형'] == 'F_HL']
+                st.session_state.sel_hl = hl_rows['번호'].tolist() if not hl_rows.empty else ["3:3", "2:4", "4:2"]
+                    
+                # [총합 범위]
+                sum_rows = df[df['유형'] == 'F_SUM']
+                if not sum_rows.empty:
+                    try:
+                        sums = [int(float(x)) for x in sum_rows['번호'].tolist()]
+                        # 슬라이더 범위(80~200)를 벗어나지 않도록 보정
+                        s_min = max(80, sums[0])
+                        s_max = min(200, sums[1])
+                        st.session_state.sum_range = (s_min, s_max)
+                    except:
+                        st.session_state.sum_range = (100, 175)
+                else:
+                    st.session_state.sum_range = (100, 175)
+        else:
+            # 시트가 비어있을 때
             set_default_session_values()
+                
+    except Exception:
+        # 시트가 없거나 오류 발생 시 빈 리스트로 안전하게 초기화
+        set_default_session_values()
 
 def get_safe_int(df, type_code, default_val):
     """구글 시트 데이터프레임에서 특정 유형의 정수값을 안전하게 추출"""
