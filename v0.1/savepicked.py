@@ -12,30 +12,23 @@ def init_all_saved_data(conn, sheet_url):
             if not df.empty:
                 # 1. '유형' 컬럼이 아예 없는 기존 시트인 경우 대응
                 if '유형' not in df.columns:
+                    set_default_session_values()
                     # 모든 기존 번호를 일단 'PICK'(일반 저장)으로 간주
                     st.session_state.my_saved_picks = df['번호'].tolist()
-                    st.session_state.fixed_nums = []
-                    st.session_state.exclude_nums = []
-                    st.session_state.sel_ac = 7
-                    st.session_state.sel_con = 1
-                    st.session_state.sel_hl = ["3:3", "2:4", "4:2"]
-                    st.session_state.sum_range = (100, 175)
                 else:
                     # 2. '유형' 컬럼이 있는 경우 정상 분류
                     # 1. 일반 저장 번호 (PICK)
-                    st.session_state.my_saved_picks = df[df['유형'] == 'PICK']['번호'].tolist()
+                    st.session_state.my_saved_picks = get_list_by_type(df, 'PICK')
                     # 2. 고정수 (FIX)
-                    st.session_state.fixed_nums = df[df['유형'] == 'FIX']['번호'].tolist()
+                    st.session_state.fixed_nums = get_list_by_type(df, 'FIX')
                     # 3. 제외수 (EX)
-                    st.session_state.exclude_nums = df[df['유형'] == 'EX']['번호'].tolist()
+                    st.session_state.exclude_nums = get_list_by_type(df, 'EX')
                     # 2. 신규 필터 설정값 로드
                     # [AC값]
-                    ac_row = df[df['유형'] == 'F_AC']
-                    st.session_state.sel_ac = get_safe_int('F_AC', 7)
+                    st.session_state.sel_ac = get_safe_int(df, 'F_AC', 7)
                     
                     # [최대 연번]
-                    con_row = df[df['유형'] == 'F_CON']
-                    st.session_state.sel_con = get_safe_int('F_CON', 1)
+                    st.session_state.sel_con = get_safe_int(df, 'F_CON', 1)
                     
                     # [고저 비율 리스트]
                     hl_rows = df[df['유형'] == 'F_HL']
@@ -46,9 +39,12 @@ def init_all_saved_data(conn, sheet_url):
                     if not sum_rows.empty:
                         try:
                             sums = [int(float(x)) for x in sum_rows['번호'].tolist()]
-                            st.session_state.sum_range = (int(sums[0]), int(sums[1]))
+                            # 슬라이더 범위(80~200)를 벗어나지 않도록 보정
+                            s_min = max(80, sums[0])
+                            s_max = min(200, sums[1])
+                            st.session_state.sum_range = (s_min, s_max)
                         except:
-                            st.session_state.sum_range = (80, 200)
+                            st.session_state.sum_range = (100, 175)
                     else:
                         st.session_state.sum_range = (100, 175)
             else:
@@ -59,16 +55,26 @@ def init_all_saved_data(conn, sheet_url):
             # 시트가 없거나 오류 발생 시 빈 리스트로 안전하게 초기화
             set_default_session_values()
 
-#단일 필터 설정 로드 (형변환 오류 방지 로직 추가)
-def get_safe_int(type_code, default_val):
+def get_safe_int(df, type_code, default_val):
+    """구글 시트 데이터프레임에서 특정 유형의 정수값을 안전하게 추출"""
     row = df[df['유형'] == type_code]
     if not row.empty:
         try:
-        # float로 먼저 바꾼 뒤 int로 바꿔야 "7.0" 같은 문자열 대응 가능
+            # "7.0" 같은 문자열 대응을 위해 float -> int 변환
             return int(float(row['번호'].iloc[0]))
-        except: return default_val
+        except:
+            return default_val
     return default_val
-    
+
+def get_list_by_type(df, t_code):
+    """특정 유형의 번호들을 리스트로 추출 (정수형 변환 포함)"""
+    selected = df[df['유형'] == t_code]['번호'].tolist()
+    try:
+        # 숫자로 변환 가능한 것만 정수로 바꿔서 리스트 생성
+        return [int(float(x)) for x in selected if x and str(x).replace('.','').isdigit()]
+    except:
+        return selected
+
 def set_default_session_values():
     """기본값 초기화 헬퍼 함수"""
     st.session_state.my_saved_picks = []
