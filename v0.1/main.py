@@ -11,7 +11,7 @@ from formular_description import display_formula_guide
 import analysis_to_gsheet as saver
 from iteration_predictor import predict_iteration_count, predict_with_numbers
 from empty_zone_engine import get_confirmed_empty_zone, color_rows, apply_strategy_style
-from combination_engine import generate_strategic_combinations, get_advanced_stat_analysis
+from combination_engine import generate_strategic_combinations, get_advanced_stat_analysis, get_comprehensive_analysis
 
 st.set_page_config(page_title="로또 분석 프로 v0.1", layout="wide")
 conn = st.connection("gsheets", type=GSheetsConnection)
@@ -488,6 +488,27 @@ elif menu == "🎯 추천번호 분석":
             * **황금 구간:** 홀짝 **3:3 / 2:4 / 4:2** 및 총합 **100~160** 사이가 전체 당첨의 약 80%를 차지합니다.
             """)
 
+        st.divider()
+        st.subheader("🛡️ v2.5 고급 품질 분석 리포트")
+        
+        ac_df, hl_df, con_df = get_comprehensive_analysis(df)
+        
+        col_a, col_b, col_c = st.columns(3)
+        
+        with col_a:
+            st.write("**📐 AC값 분포 (복잡도)**")
+            st.dataframe(ac_df, use_container_width=True, hide_index=True)
+            st.caption("7 미만은 규칙적 조합으로 제외 권장")
+        
+        with col_b:
+            st.write("**🌓 고저 비율 (1~22 : 23~45)**")
+            st.dataframe(hl_df, use_container_width=True, hide_index=True)
+            st.caption("3:3 비율이 가장 이상적")
+        
+        with col_c:
+            st.write("**🔗 연번 출현 빈도**")
+            st.dataframe(con_df, use_container_width=True, hide_index=True)
+            st.caption("보통 0~1쌍이 전체의 80%")
 
 
 st.sidebar.divider()

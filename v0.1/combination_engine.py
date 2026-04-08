@@ -211,4 +211,73 @@ def get_advanced_stat_analysis(df):
 
     return pd.DataFrame(ratio_data).sort_values("비율"), pd.DataFrame(sum_data)
 
+def get_comprehensive_analysis(df):
+    """AC값, 고저비율, 연번 분포를 포함한 종합 분석"""
+    if df is None or df.empty:
+        return None
+
+    total_draws = len(df)
+    ac_list, hl_list, con_list = [], [], []
+
+    for _, row in df.iterrows():
+        try:
+            nums = sorted([int(row[f'n{i}']) for i in range(1, 7)])
+            
+            # 1. AC값 계산
+            diffs = set()
+            for i in range(len(nums)):
+                for j in range(i + 1, len(nums)):
+                    diffs.add(nums[j] - nums[i])
+            ac_val = len(diffs) - (len(nums) - 1)
+            ac_list.append(ac_val)
+            
+            # 2. 고저 비율 (Low: 1~22, High: 23~45)
+            low_cnt = len([n for n in nums if n <= 22])
+            hl_list.append(f"{low_cnt}:{6-low_cnt}")
+            
+            # 3. 연번 개수 (연속된 숫자 쌍)
+            con_cnt = 0
+            for i in range(len(nums) - 1):
+                if nums[i+1] - nums[i] == 1:
+                    con_cnt += 1
+            con_list.append(con_cnt)
+        except: continue
+
+    # --- 데이터프레임 생성 로직 (요약) ---
+    # AC값 분포 (기대치: 7~10)
+    ac_df = pd.Series(ac_list).value_counts().sort_index().reset_index()
+    ac_df.columns = ['AC값', '출현']
+    
+    # 고저 비율 분포 (기대치: 3:3, 2:4, 4:2)
+    hl_df = pd.Series(hl_list).value_counts().reset_index()
+    hl_df.columns = ['고저비율', '출현']
+    
+    # 연번 분포 (기대치: 0~1쌍)
+    con_df = pd.Series(con_list).value_counts().sort_index().reset_index()
+    con_df.columns = ['연번쌍', '출현']
+
+    return ac_df, hl_df, con_df
+
+def filter_combination_v2_5(nums):
+    """생성된 조합이 3대 필터를 통과하는지 검사"""
+    # 1. AC값 필터 (7 이상)
+    diffs = set()
+    s_nums = sorted(nums)
+    for i in range(6):
+        for j in range(i+1, 6):
+            diffs.add(s_nums[j] - s_nums[i])
+    ac = len(diffs) - 5
+    if ac < 7: return False
+    
+    # 2. 고저 비율 필터 (0:6, 6:0 같은 극단적 경우 제외)
+    low = len([n for n in nums if n <= 22])
+    if low == 0 or low == 6: return False
+    
+    # 3. 연번 필터 (연번이 3쌍 이상인 비현실적 조합 제외)
+    con = 0
+    for i in range(5):
+        if s_nums[i+1] - s_nums[i] == 1: con += 1
+    if con >= 3: return False
+    
+    return True
 
