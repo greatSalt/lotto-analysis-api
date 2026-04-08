@@ -34,10 +34,17 @@ def save_to_gsheet(conn, sheet_url, new_data):
     return df
     
 @st.cache_data # 이 함수는 500개의 데이터를 한 번 가져오면 메모리에 저장해둡니다. 슬라이더를 움직여도 구글 시트에 다시 접속하지 않고 메모리에서 꺼내옵니다.
-def get_recent_data(conn, sheet_url, count=0):
+def get_recent_data(_conn, sheet_url, count=0): # conn -> _conn 으로 변경
+    """
+    인자 앞에 '_'를 붙이면 Streamlit은 이 인자의 변화를 
+    캐시 체크용 해시 계산에서 제외합니다.
+    """
+    # 함수 내부 로직...
+    # (내부에서도 conn 대신 _conn을 사용하세요)
+    # 예: sheet = _conn.open_by_url(url)
     try:
-        # 1. 데이터 읽기 (캐시 무시)
-        df = conn.read(spreadsheet=sheet_url, ttl=0)
+        # 1. 데이터 읽기
+        df = _conn.read(spreadsheet=sheet_url, ttl=0)
         
         if df.empty:
             return pd.DataFrame()
