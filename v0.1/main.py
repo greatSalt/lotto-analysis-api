@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 
-import coldNum
+from get_cold_analysis import coldNum
 from savepicked import display_sidebar_picks, get_highlight_style, init_all_saved_data, save_to_sheets_by_type
 from specialNum import analyze_specific_number
 from streamlit_gsheets import GSheetsConnection
@@ -214,7 +214,7 @@ elif menu == "콜드 번호 추출":
     if not df.empty:
         # 세션에 데이터가 없거나 메뉴가 처음 로드될 때만 실행
         if "cold_edited_df" not in st.session_state:
-            cold_df = coldNum.get_cold_analysis(df)
+            cold_df = get_cold_analysis(df)
             display_cold = cold_df.sort_values("현재미출현", ascending=False).head(15).copy()
             # 구글 시트에서 기존 저장된 번호들 가져오기 (저장된 번호 로드)
             try:
