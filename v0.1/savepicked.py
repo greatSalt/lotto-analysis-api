@@ -153,6 +153,15 @@ def save_picks_to_sheets(conn, sheet_url, new_picks):
         st.error(f"저장 실패: {e}")
         return False
 '''
+def save_recommended_picks(conn, sheet_url, selected_picks):
+    """체크된 추천 조합들을 'COMBI' 유형으로 구글 시트에 저장"""
+    for pick in selected_picks:
+        # 기존 저장 함수 활용, 유형(Type)만 'COMBI'로 전달
+        save_to_sheets_by_type(conn, sheet_url, pick, 'COMBI')
+    
+    # 세션 상태 갱신 플래그
+    st.session_state.needs_reload = True
+
 def save_to_sheets_by_type(conn, sheet_url, new_nums, type_code):
     """
     type_code: 'PICK', 'FIX', 'EX' 중 하나
@@ -195,7 +204,47 @@ def save_to_sheets_by_type(conn, sheet_url, new_nums, type_code):
         
     except Exception as e:
         st.error(f"저장 중 오류 발생: {e}")
-
+        
+def display_sidebar_picks(conn, sheet_url):
+    """사이드바에서 저장된 조합(PICK/COMBI) 표시 및 관리"""
+    with st.sidebar:
+        st.divider()
+        st.markdown("### 🎯 My Lucky Picks")
+        
+        # 세션에 저장된 데이터가 있는지 확인 (리스트 형태의 조합 데이터 가정)
+        # 예: [{'type': 'PICK', 'nums': [1,2,3,4,5,6]}, ...]
+        if 'my_saved_data' in st.session_state and st.session_state.my_saved_data:
+            
+            # 최신 저장 순으로 정렬하거나 그대로 표시
+            for i, item in enumerate(st.session_state.my_saved_data):
+                st_type = item.get('type', 'PICK')
+                nums = sorted(item.get('nums', []))
+                
+                # 유형별 아이콘 및 라벨 설정
+                label = "👤 PICK" if st_type == 'PICK' else "🤖 COMBI"
+                
+                # 확장형(Expander)으로 깔끔하게 표시하거나 바로 노출
+                with st.expander(f"{label} - Set {i+1}", expanded=True):
+                    # 번호들을 볼 형태로 가로 나열 (Markdown 사용)
+                    ball_html = ""
+                    for n in nums:
+                        # PICK은 회색(gray), COMBI는 보라색(purple) 배지로 구분 가능
+                        color = "lightgrey" if st_type == 'PICK' else "blueviolet"
+                        ball_html += f"![{n}](https://img.shields.io/badge/-{n}-{color}?style=flat-square&border_radius=50) "
+                    st.markdown(ball_html, unsafe_allow_html=True)
+            
+            st.divider()
+            # 리셋 버튼: 시트의 모든 저장 데이터 삭제 및 동기화
+            if st.button("🗑️ 전체 삭제 및 동기화", use_container_width=True):
+                # 기존에 만드신 초기화 함수 호출 (유형에 상관없이 해당 시트 클리어)
+                save_picks_to_sheets(conn, sheet_url, []) 
+                st.session_state.my_saved_data = [] # 세션도 즉시 비움
+                st.rerun()
+        else:
+            st.caption("저장된 조합이 없습니다. 추천 메뉴나 입력 메뉴에서 번호를 담아보세요.")
+        
+        st.divider()
+'''
 def display_sidebar_picks(conn, sheet_url):
     """사이드바 표시 및 관리"""
     with st.sidebar:
@@ -215,7 +264,7 @@ def display_sidebar_picks(conn, sheet_url):
         else:
             st.caption("저장된 번호가 없습니다.")
         st.divider()
-
+'''
 def get_highlight_style(row):
     """표의 스타일 결정 (노란색 임계점 우선 적용)"""
     base_style = ''

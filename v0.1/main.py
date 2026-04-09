@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 from coldNum import get_cold_analysis
-from savepicked import display_sidebar_picks, get_highlight_style, init_all_saved_data, save_to_sheets_by_type
+from savepicked import display_sidebar_picks, get_highlight_style, init_all_saved_data, save_to_sheets_by_type, save_recommended_picks
 from specialNum import analyze_specific_number
 from streamlit_gsheets import GSheetsConnection
 from into_lottoDB import save_to_gsheet, get_recent_data, analyze_combination
@@ -538,25 +538,57 @@ elif menu == "🎯 추천번호 분석":
                         st.info("🎨 **번호 색상 범례**: 🟥 핫 (상위 30%) / 🟨 웜 (중간 40%) / 🟦 콜드 (하위 30%)")
                         st.success(f"✅ 고정수 {fixed_nums} 포함, 제외수 {exclude_nums} 제거 완료!")
                         
-                        for i, combo in enumerate(results):
-                            c1, c2 = st.columns([1, 5])
-                            c1.markdown(f"**SET {i+1}**")
+                        # 폼을 사용하지 않고 개별 체크박스 상태를 추적하기 위해 리스트 생성
+                        to_save_picks = []
+                        
+                        for i, combo_data in enumerate(results):
+                            combo_nums = sorted([n for n, group in combo_data])
+                            col_chk, col_label, col_balls = st.columns([0.1, 0.15, 0.75])
+                            # 1. 체크박스: 고유한 key를 부여하여 상태 유지
+                            with col_chk:
+                                if st.checkbox("", key=f"chk_reco_{i}"):
+                                    to_save_picks.append(combo_nums)
+                            
+                            with col_label:
+                                st.markdown(f"**SET {i+1}**")
+                                
                             # 번호별 색상 배지 (로또 공 색상 느낌)
-                            ball_html = ""
-                            for n, group in combo:
-                                # 🖍️ 그룹별 색상 매핑
-                                if group == 'HOT':
-                                    color = "red"        # 🟥 핫 (빨간색)
-                                elif group == 'WARM':
-                                    color = "yellow"     # 🟨 웜 (노란색/골드)
-                                else:
-                                    color = "blue"       # 🟦 콜드 (파란색)
-                                ball_html += f"![{n}](https://img.shields.io/badge/-{n}-{color}?style=flat-square&border_radius=50) "
-                            c2.markdown(ball_html, unsafe_allow_html=True)
+                            with col_balls:
+                                ball_html = ""
+                                for n, group in combo:
+                                    # 🖍️ 그룹별 색상 매핑
+                                    if group == 'HOT':
+                                        color = "red"        # 🟥 핫 (빨간색)
+                                    elif group == 'WARM':
+                                        color = "yellow"     # 🟨 웜 (노란색/골드)
+                                    else:
+                                        color = "blue"       # 🟦 콜드 (파란색)
+                                    ball_html += f"![{n}](https://img.shields.io/badge/-{n}-{color}?style=flat-square&border_radius=50) "
+                                st.markdown(ball_html, unsafe_allow_html=True)
                             
                         st.caption("※ 핫(상위점수 2개), 웜(중간점수 3개), 콜드(하위점수 1개) 비율로 생성되었습니다.")
+                        
+                        st.divider()
+
+                        # 3. 저장 버튼: 'COMBI' 유형으로 저장
+                        if st.button("💾 선택한 조합 My Lucky Picks에 저장 (유형: COMBI)", use_container_width=True):
+                            if not to_save_picks:
+                                st.warning("저장할 조합을 먼저 체크해주세요!")
+                            else:
+                                with st.spinner('구글 시트에 저장 중...'):
+                                    # 기존 저장 함수 호출 (유형을 COMBI로 지정)
+                                    for pick in to_save_picks:
+                                        save_to_sheets_by_type(conn, SHEET_URL, pick, 'COMBI')
+                                    
+                                    st.success(f"✅ {len(to_save_picks)}개의 조합이 COMBI 유형으로 저장되었습니다!")
+                                    # 사이드바 즉시 갱신을 위해 앱 재실행
+                                    st.rerun()
+                                    
+                        st.caption("※ 체크박스를 선택하고 저장 버튼을 누르면 사이드바에 즉시 반영됩니다.")
                     else:
                         st.warning("⚠️ 필터 조건을 만족하는 조합을 찾지 못했습니다. 범위를 넓혀주세요.")
+                    
+                    
         else:
             st.warning("조합을 만들려면 최소 6개 이상의 번호를 위 테이블에서 체크해 주세요.")
 
