@@ -5,7 +5,7 @@ import coldNum
 from savepicked import display_sidebar_picks, get_highlight_style, init_all_saved_data, save_to_sheets_by_type
 from specialNum import analyze_specific_number
 from streamlit_gsheets import GSheetsConnection
-from into_lottoDB import save_to_gsheet, get_recent_data
+from into_lottoDB import save_to_gsheet, get_recent_data, analyze_combination
 from crazyLogic import get_crazy_analysis
 from formular_description import display_formula_guide
 import analysis_to_gsheet as saver
