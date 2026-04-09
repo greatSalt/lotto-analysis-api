@@ -196,7 +196,7 @@ def save_to_sheets_by_type(conn, sheet_url, new_nums, type_code):
             other_types_df = full_df[full_df["유형"] != type_code]
             new_type_df = pd.DataFrame({"번호": new_nums, "유형": type_code})
             # 3. 합치기 및 중복 제거
-            final_df = pd.concat([other_types_df, new_type_df]), ignore_index=True)
+            final_df = pd.concat([other_types_df, new_type_df], ignore_index=True)
             
             # [세션 동기화] 단일 리스트/값 교체
             if type_code == 'PICK': st.session_state.my_saved_picks = sorted(new_nums)
@@ -207,7 +207,7 @@ def save_to_sheets_by_type(conn, sheet_url, new_nums, type_code):
             elif type_code == 'F_CON': st.session_state.sel_con = int(new_nums[0])
             elif type_code == 'F_HL': st.session_state.sel_hl = new_nums # ['3:3', '4:2'] 형태
             elif type_code == 'F_SUM': st.session_state.sum_range = (int(new_nums[0]), int(new_nums[1]))
-                # 중복 제거 및 업데이트
+        # 중복 제거 및 업데이트
         final_df = final_df.drop_duplicates()
 
         # 4. 시트 업데이트
@@ -244,6 +244,7 @@ def display_sidebar_picks(conn, sheet_url):
         # --- [섹션 2] 관심 번호 (PICK) ---
         st.markdown("### 👤 관심 번호 (PICK)")
         picks = st.session_state.get('my_saved_picks', [])
+        
         if picks:
             # 개별 번호는 리스트 형태로 한눈에 표시
             pick_html = "".join([
