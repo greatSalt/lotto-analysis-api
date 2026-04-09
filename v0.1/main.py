@@ -44,29 +44,30 @@ df = df_raw.head(analyze_range).copy()
 with st.sidebar:
     menu = st.sidebar.radio("기능 선택", ["데이터 입력", "크레이지 번호 추출", "콜드 번호 추출", "특정 번호 분석", "📊 이월수 예측", "🎯 추천번호 분석"])
     display_sidebar_picks(conn, SHEET_URL) # 👈 어떤 메뉴에서든 내 번호가 보임
-'''    
-if menu == "데이터 입력":
-    st.title("🎰 로또 데이터 입력")
-    with st.form("lotto_input_form", clear_on_submit=True):
-        col_drw = st.number_input("회차", min_value=1, step=1)
-        c = st.columns(6)
-        n1, n2, n3, n4, n5, n6 = [c[i].number_input(f"No{i+1}", 1, 45) for i in range(6)]
-        bonus = st.number_input("Bonus", 1, 45)
-        if st.form_submit_button("DB 저장하기"):
-            data_to_save = {"round": int(col_drw), "n1": n1, "n2": n2, "n3": n3, "n4": n4, "n5": n5, "n6": n6, "bonus": bonus}
-            save_to_gsheet(conn, SHEET_URL, data_to_save)
-            st.success("데이터 저장 완료")
-'''
+
+#if menu == "데이터 입력":
+    #st.title("🎰 로또 데이터 입력")
+    #with st.form("lotto_input_form", clear_on_submit=True):
+        #col_drw = st.number_input("회차", min_value=1, step=1)
+        #c = st.columns(6)
+        #n1, n2, n3, n4, n5, n6 = [c[i].number_input(f"No{i+1}", 1, 45) for i in range(6)]
+        #bonus = st.number_input("Bonus", 1, 45)
+        #if st.form_submit_button("DB 저장하기"):
+            #data_to_save = {"round": int(col_drw), "n1": n1, "n2": n2, "n3": n3, "n4": n4, "n5": n5, "n6": n6, "bonus": bonus}
+            #save_to_gsheet(conn, SHEET_URL, data_to_save)
+            #st.success("데이터 저장 완료")
+
 if menu == "데이터 입력":
     st.title("🎰 로또 데이터 입력 및 조합 분석")
     
     # 데이터 로드 (분석용)
-    raw_df = get_lotto_data() # 전체 데이터 호출 함수 (가정)
-    prev_nums = [raw_df.iloc[0][f'n{i}'] for i in range(1, 7)] if not raw_df.empty else []
+    #raw_df = get_lotto_data() # 전체 데이터 호출 함수 (가정)
+    # 모든 메뉴에서 사용할 공통 분석 데이터 (슬라이싱), df = df_raw.head(analyze_range).copy()
+    prev_nums = [df.iloc[0][f'n{i}'] for i in range(1, 7)] if not raw_df.empty else []
     
     # 콜드번호 추출 (최근 10회차 기준 미출현 번호 가정)
     all_nums = set(range(1, 46))
-    recent_nums = set(raw_df.head(10).iloc[:, 1:7].values.flatten())
+    recent_nums = set(df.head(analyze_range).iloc[:, 1:7].values.flatten())
     cold_nums = list(all_nums - recent_nums)
 
     with st.form("lotto_input_form", clear_on_submit=False): # 분석을 위해 False 추천
