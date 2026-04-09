@@ -2,7 +2,7 @@ import pandas as pd
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 from crazyLogic import get_crazy_analysis
-from get_cold_analysis import coldNum
+from coldNum import get_cold_analysis
 
 def save_to_gsheet(conn, sheet_url, new_data):
     """

@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 
-from get_cold_analysis import coldNum
+from coldNum import get_cold_analysis
 from savepicked import display_sidebar_picks, get_highlight_style, init_all_saved_data, save_to_sheets_by_type
 from specialNum import analyze_specific_number
 from streamlit_gsheets import GSheetsConnection
