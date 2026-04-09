@@ -60,16 +60,6 @@ with st.sidebar:
 if menu == "데이터 입력":
     st.title("🎰 로또 데이터 입력 및 조합 분석")
     
-    # 데이터 로드 (분석용)
-    #raw_df = get_lotto_data() # 전체 데이터 호출 함수 (가정)
-    # 모든 메뉴에서 사용할 공통 분석 데이터 (슬라이싱), df = df_raw.head(analyze_range).copy()
-    prev_nums = [df.iloc[0][f'n{i}'] for i in range(1, 7)] if not df.empty else []
-    
-    # 콜드번호 추출 (최근 10회차 기준 미출현 번호 가정)
-    all_nums = set(range(1, 46))
-    recent_nums = set(df.head(analyze_range).iloc[:, 1:7].values.flatten())
-    cold_nums = list(all_nums - recent_nums)
-
     with st.form("lotto_input_form", clear_on_submit=False): # 분석을 위해 False 추천
         col_drw = st.number_input("회차", min_value=1, step=1)
         c = st.columns(6)
@@ -95,23 +85,23 @@ if menu == "데이터 입력":
 
         if analyze_btn:
             st.divider()
-            df_analysis, metrics = analyze_combination(current_nums, prev_nums, cold_nums)
+            df_analysis, metrics = analyze_combination(current_nums, df, analyze_range)
             
-            # 1. 개별 번호 상태 테이블
-            st.subheader("📊 번호별 특이사항")
-            st.table(df_analysis) # 또는 st.dataframe
+            # 1. 개별 번호 상태 테이블(Crazy + Cold 엔진 결과)
+            st.subheader("📊 번호별 정밀 지표")
+            st.dataframe(df_analysis, use_container_width=True, hide_index=True)
             
-            # 2. 종합 지표 (메트릭)
-            st.subheader("⚙️ 조합 종합 지표")
+            # 2. 조합 필터 (메트릭)
+            st.subheader("⚙️ 조합 필터 검증")
             m_col1, m_col2, m_col3, m_col4, m_col5 = st.columns(5)
             m_col1.metric("홀짝", metrics["홀짝"])
             m_col2.metric("총합", metrics["총합"])
             m_col3.metric("AC", metrics["AC"])
-            m_col4.metric("고저", metrics["고저"])
+            m_col4.metric("고저(저:고)", metrics["고저"])
             m_col5.metric("연번", metrics["연번"])
 
             # 로우 데이터 컬럼 (한 줄 표시)
-            st.code(f"Raw Data: {sorted(current_nums)}")
+            st.code(f"분석 조합: {sorted(current_nums)}")
 
 elif menu == "크레이지 번호 추출":
     st.title("🔥 크레이지 번호 분석 리포트")

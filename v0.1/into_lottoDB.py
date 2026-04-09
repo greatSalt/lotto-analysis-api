@@ -62,47 +62,57 @@ def get_recent_data(_conn, sheet_url, count=0): # conn -> _conn 으로 변경
         st.error(f"데이터 로드 실패: {e}")
         return pd.DataFrame()
         
-def analyze_combination(nums, prev_nums, cold_nums):
-    """입력된 번호 조합의 상세 지표 분석"""
-    nums = sorted(nums)
+def analyze_combination(input_nums, df, analyze_range):
+    """
+    Crazy 엔진의 기술 지표와 Cold 엔진의 미출현 지표를 통합 분석
+    """
+    input_nums = sorted(input_nums)
+    df_target = df.head(analyze_range).copy()
     
-    # 1. 개별 번호 분석 (이월수, 콜드수 여부)
-    analysis_list = []
-    for n in nums:
-        is_carryover = "✅" if n in prev_nums else "X"
-        is_cold = "❄️" if n in cold_nums else "X"
-        analysis_list.append({
-            "번호": n,
-            "이월수여부": is_carryover,
-            "콜드수여부": is_cold
-        })
+    # 1. 각 엔진 실행
+    df_crazy = get_crazy_analysis(df_target) # 기술 지표용
+    df_cold = get_cold_analysis(df_target)   # 콜드 지수용
     
-    # 2. 조합 전체 지표 계산
-    total_sum = sum(nums)
-    odd_count = len([n for n in nums if n % 2 != 0])
-    even_count = 6 - odd_count
-    high_count = len([n for n in nums if n >= 23])
-    low_count = 6 - high_count
+    # 2. 데이터 병합 (번호 기준)
+    df_total = pd.merge(df_crazy, df_cold, on="번호")
     
-    # AC 계산
+    # 3. 입력된 6개 번호만 추출
+    analysis_df = df_total[df_total['번호'].isin(input_nums)].copy()
+    
+    # 4. 이월수 여부 체크
+    prev_nums = [df.iloc[0][f'n{i}'] for i in range(1, 7)]
+    analysis_df['이월수'] = analysis_df['번호'].apply(lambda x: "✅" if x in prev_nums else "X")
+    
+    # 5. 요청된 컬럼 구성 (불필요 지표 제거 및 콜드지수 추가)
+    display_cols = [
+        '번호', '이월수', '반등지수', '에너지지수', '콜드지수',
+        '평균스킵', '직전스킵', '현재스킵', '최대스킵', 
+        '현재연속', '최대연속', '연속점수'
+    ]
+    analysis_df = analysis_df[display_cols]
+
+    # 6. 조합 전체 필터 지표 (홀짝, 총합, AC, 고저, 연번)
+    total_sum = sum(input_nums)
+    odd_cnt = len([n for n in input_nums if n % 2 != 0])
+    high_cnt = len([n for n in input_nums if n >= 23])
+    
     diffs = set()
-    for i in range(len(nums)):
-        for j in range(i + 1, len(nums)):
-            diffs.add(abs(nums[i] - nums[j]))
-    ac_value = len(diffs) - (6 - 1)
+    for i in range(len(input_nums)):
+        for j in range(i + 1, len(input_nums)):
+            diffs.add(abs(input_nums[i] - input_nums[j]))
+    ac_value = len(diffs) - 5
     
-    # 연번 계산
     consecutive = 0
-    for i in range(len(nums)-1):
-        if nums[i+1] - nums[i] == 1:
+    for i in range(5):
+        if input_nums[i+1] - input_nums[i] == 1:
             consecutive += 1
             
     metrics = {
-        "홀짝": f"{odd_count}:{even_count}",
+        "홀짝": f"{odd_cnt}:{6-odd_cnt}",
         "총합": total_sum,
         "AC": ac_value,
-        "고저": f"{low_count}:{high_count}",
+        "고저": f"{6-high_cnt}:{high_cnt}", # 저:고
         "연번": consecutive
     }
     
-    return pd.DataFrame(analysis_list), metrics
+    return analysis_df, metrics
