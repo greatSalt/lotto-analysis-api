@@ -16,14 +16,18 @@ def init_all_saved_data(conn, sheet_url):
                     # 모든 기존 번호를 일단 'PICK'(일반 저장)으로 간주
                     st.session_state.my_saved_picks = df['번호'].tolist()
                 else:
-                    # 2. '유형' 컬럼이 있는 경우 정상 분류
-                    # 1. 일반 저장 번호 (PICK)
-                    st.session_state.my_saved_picks = get_list_by_type(df, 'PICK')
-                    # 2. 고정수 (FIX)
+                    # 1. 개별 선택 번호 (PICK) -> 단일 리스트로 저장
+                    st.session_state.my_saved_picks = df[df['유형'] == 'PICK']['번호'].tolist()
+                    
+                    # 2. 추천 조합 번호 (COMBI) -> 6개씩 묶어서 '리스트의 리스트'로 저장
+                    combi_raw = df[df['유형'] == 'COMBI']['번호'].tolist()
+                    
+                    st.session_state.my_combi_sets = [combi_raw[i:i+6] for i in range(0, len(combi_raw), 6) if len(combi_raw[i:i+6]) == 6]
+                    # 3. 고정수 (FIX)
                     st.session_state.fixed_nums = get_list_by_type(df, 'FIX')
-                    # 3. 제외수 (EX)
+                    # 4. 제외수 (EX)
                     st.session_state.exclude_nums = get_list_by_type(df, 'EX')
-                    # 2. 신규 필터 설정값 로드
+                    # 5. 신규 필터 설정값 로드
                     # [AC값]
                     st.session_state.sel_ac = get_safe_int(df, 'F_AC', 7)
                         
@@ -171,33 +175,43 @@ def save_to_sheets_by_type(conn, sheet_url, new_nums, type_code):
         # 기존 전체 데이터 읽기
         try:
             full_df = conn.read(spreadsheet=sheet_url, worksheet="SavedPicks", ttl=0)
-        except:
+        except Exception:
             full_df = pd.DataFrame(columns=["번호", "유형"])
         # [중요] '유형' 컬럼이 없는 기존 시트라면 강제로 생성
         if '유형' not in full_df.columns:
             full_df['유형'] = 'PICK' # 기존 데이터는 모두 일반 저장으로 간주
             
-        # 1. 다른 유형의 데이터는 그대로 유지
-        other_types_df = full_df[full_df["유형"] != type_code]
-        
-        # 2. 현재 요청된 유형의 데이터 새로 생성
-        new_type_df = pd.DataFrame({"번호": new_nums, "유형": type_code})
-        
-        # 3. 합치기 및 중복 제거
-        final_df = pd.concat([other_types_df, new_type_df]).drop_duplicates().sort_values(["유형", "번호"])
+
+        # --- 데이터 병합 로직 ---
+        if type_code == 'COMBI':
+            # [추가형] 기존 데이터 유지 + 새로운 6개 번호 추가
+            new_type_df = pd.DataFrame({"번호": new_nums, "유형": type_code})
+            final_df = pd.concat([full_df, new_type_df], ignore_index=True)
+            # [세션 업데이트] 추천 조합 리스트(my_combi_sets)에 6개 세트 추가
+            if 'my_combi_sets' not in st.session_state:
+                st.session_state.my_combi_sets = []
+            st.session_state.my_combi_sets.append(sorted(new_nums))
+        else:
+            # [덮어쓰기형] 해당 유형만 제거 후 교체
+            other_types_df = full_df[full_df["유형"] != type_code]
+            new_type_df = pd.DataFrame({"번호": new_nums, "유형": type_code})
+            # 3. 합치기 및 중복 제거
+            final_df = pd.concat([other_types_df, new_type_df]), ignore_index=True)
+            
+            # [세션 동기화] 단일 리스트/값 교체
+            if type_code == 'PICK': st.session_state.my_saved_picks = sorted(new_nums)
+            elif type_code == 'FIX': st.session_state.fixed_nums = sorted(new_nums)
+            elif type_code == 'EX': st.session_state.exclude_nums = sorted(new_nums)
+             # 신규 필터 설정 동기화
+            elif type_code == 'F_AC': st.session_state.sel_ac = int(new_nums[0])
+            elif type_code == 'F_CON': st.session_state.sel_con = int(new_nums[0])
+            elif type_code == 'F_HL': st.session_state.sel_hl = new_nums # ['3:3', '4:2'] 형태
+            elif type_code == 'F_SUM': st.session_state.sum_range = (int(new_nums[0]), int(new_nums[1]))
+                # 중복 제거 및 업데이트
+        final_df = final_df.drop_duplicates()
 
         # 4. 시트 업데이트
         conn.update(spreadsheet=sheet_url, worksheet="SavedPicks", data=final_df)
-        
-        # 5. 세션 상태도 즉시 동기화
-        if type_code == 'PICK': st.session_state.my_saved_picks = new_nums
-        elif type_code == 'FIX': st.session_state.fixed_nums = new_nums
-        elif type_code == 'EX': st.session_state.exclude_nums = new_nums
-         # 신규 필터 설정 동기화
-        elif type_code == 'F_AC': st.session_state.sel_ac = int(new_nums[0])
-        elif type_code == 'F_CON': st.session_state.sel_con = int(new_nums[0])
-        elif type_code == 'F_HL': st.session_state.sel_hl = new_nums # ['3:3', '4:2'] 형태
-        elif type_code == 'F_SUM': st.session_state.sum_range = (int(new_nums[0]), int(new_nums[1]))
         
         st.toast(f"✅ {type_code} 설정이 저장되었습니다.")
         #st.rerun() # UI 즉시 갱신
@@ -209,41 +223,46 @@ def display_sidebar_picks(conn, sheet_url):
     """사이드바에서 저장된 조합(PICK/COMBI) 표시 및 관리"""
     with st.sidebar:
         st.divider()
-        st.markdown("### 🎯 My Lucky Picks")
         
-        # 세션에 저장된 데이터가 있는지 확인 (리스트 형태의 조합 데이터 가정)
-        # 예: [{'type': 'PICK', 'nums': [1,2,3,4,5,6]}, ...]
-        if 'my_saved_data' in st.session_state and st.session_state.my_saved_data:
-            
-            # 최신 저장 순으로 정렬하거나 그대로 표시
-            for i, item in enumerate(st.session_state.my_saved_data):
-                st_type = item.get('type', 'PICK')
-                nums = sorted(item.get('nums', []))
-                
-                # 유형별 아이콘 및 라벨 설정
-                label = "👤 PICK" if st_type == 'PICK' else "🤖 COMBI"
-                
-                # 확장형(Expander)으로 깔끔하게 표시하거나 바로 노출
-                with st.expander(f"{label} - Set {i+1}", expanded=True):
-                    # 번호들을 볼 형태로 가로 나열 (Markdown 사용)
-                    ball_html = ""
-                    for n in nums:
-                        # PICK은 회색(gray), COMBI는 보라색(purple) 배지로 구분 가능
-                        color = "lightgrey" if st_type == 'PICK' else "blueviolet"
-                        ball_html += f"![{n}](https://img.shields.io/badge/-{n}-{color}?style=flat-square&border_radius=50) "
+        # --- [섹션 1] AI 추천 조합 (COMBI) ---
+        st.markdown("### 🤖 추천 조합 (COMBI)")
+        combi_sets = st.session_state.get('my_combi_sets', [])
+        
+        if combi_sets:
+            for i, nums in enumerate(combi_sets):
+                with st.expander(f"추천 조합 Set {i+1}", expanded=True):
+                    ball_html = "".join([
+                        f"![{n}](https://img.shields.io/badge/-{n}-blueviolet?style=flat-square&border_radius=50) " 
+                        for n in sorted(nums)
+                    ])
                     st.markdown(ball_html, unsafe_allow_html=True)
+        else:
+            st.caption("저장된 추천 조합이 없습니다.")
             
+        st.divider()
+        
+        # --- [섹션 2] 관심 번호 (PICK) ---
+        st.markdown("### 👤 관심 번호 (PICK)")
+        picks = st.session_state.get('my_saved_picks', [])
+        if picks:
+            # 개별 번호는 리스트 형태로 한눈에 표시
+            pick_html = "".join([
+                f"![{n}](https://img.shields.io/badge/-{n}-lightgrey?style=flat-square&border_radius=50) " 
+                for n in sorted(picks)
+            ])
+            st.markdown(pick_html, unsafe_allow_html=True)
+        else:
+            st.caption("선택된 관심 번호가 없습니다.")
+        
             st.divider()
             # 리셋 버튼: 시트의 모든 저장 데이터 삭제 및 동기화
-            if st.button("🗑️ 전체 삭제 및 동기화", use_container_width=True):
+            if st.button("🗑️ 전체 데이터 초기화", use_container_width=True):
                 # 기존에 만드신 초기화 함수 호출 (유형에 상관없이 해당 시트 클리어)
                 save_picks_to_sheets(conn, sheet_url, []) 
-                st.session_state.my_saved_data = [] # 세션도 즉시 비움
+                st.session_state.my_combi_sets = []
+                st.session_state.my_saved_picks = [] # 세션도 즉시 비움
                 st.rerun()
-        else:
-            st.caption("저장된 조합이 없습니다. 추천 메뉴나 입력 메뉴에서 번호를 담아보세요.")
-        
-        st.divider()
+
 '''
 def display_sidebar_picks(conn, sheet_url):
     """사이드바 표시 및 관리"""
