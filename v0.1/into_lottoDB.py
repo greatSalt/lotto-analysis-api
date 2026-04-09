@@ -62,3 +62,47 @@ def get_recent_data(_conn, sheet_url, count=0): # conn -> _conn 으로 변경
         st.error(f"데이터 로드 실패: {e}")
         return pd.DataFrame()
         
+def analyze_combination(nums, prev_nums, cold_nums):
+    """입력된 번호 조합의 상세 지표 분석"""
+    nums = sorted(nums)
+    
+    # 1. 개별 번호 분석 (이월수, 콜드수 여부)
+    analysis_list = []
+    for n in nums:
+        is_carryover = "✅" if n in prev_nums else "X"
+        is_cold = "❄️" if n in cold_nums else "X"
+        analysis_list.append({
+            "번호": n,
+            "이월수여부": is_carryover,
+            "콜드수여부": is_cold
+        })
+    
+    # 2. 조합 전체 지표 계산
+    total_sum = sum(nums)
+    odd_count = len([n for n in nums if n % 2 != 0])
+    even_count = 6 - odd_count
+    high_count = len([n for n in nums if n >= 23])
+    low_count = 6 - high_count
+    
+    # AC 계산
+    diffs = set()
+    for i in range(len(nums)):
+        for j in range(i + 1, len(nums)):
+            diffs.add(abs(nums[i] - nums[j]))
+    ac_value = len(diffs) - (6 - 1)
+    
+    # 연번 계산
+    consecutive = 0
+    for i in range(len(nums)-1):
+        if nums[i+1] - nums[i] == 1:
+            consecutive += 1
+            
+    metrics = {
+        "홀짝": f"{odd_count}:{even_count}",
+        "총합": total_sum,
+        "AC": ac_value,
+        "고저": f"{low_count}:{high_count}",
+        "연번": consecutive
+    }
+    
+    return pd.DataFrame(analysis_list), metrics

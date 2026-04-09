@@ -44,7 +44,7 @@ df = df_raw.head(analyze_range).copy()
 with st.sidebar:
     menu = st.sidebar.radio("기능 선택", ["데이터 입력", "크레이지 번호 추출", "콜드 번호 추출", "특정 번호 분석", "📊 이월수 예측", "🎯 추천번호 분석"])
     display_sidebar_picks(conn, SHEET_URL) # 👈 어떤 메뉴에서든 내 번호가 보임
-    
+'''    
 if menu == "데이터 입력":
     st.title("🎰 로또 데이터 입력")
     with st.form("lotto_input_form", clear_on_submit=True):
@@ -56,7 +56,62 @@ if menu == "데이터 입력":
             data_to_save = {"round": int(col_drw), "n1": n1, "n2": n2, "n3": n3, "n4": n4, "n5": n5, "n6": n6, "bonus": bonus}
             save_to_gsheet(conn, SHEET_URL, data_to_save)
             st.success("데이터 저장 완료")
+'''
+if menu == "데이터 입력":
+    st.title("🎰 로또 데이터 입력 및 조합 분석")
+    
+    # 데이터 로드 (분석용)
+    raw_df = get_lotto_data() # 전체 데이터 호출 함수 (가정)
+    prev_nums = [raw_df.iloc[0][f'n{i}'] for i in range(1, 7)] if not raw_df.empty else []
+    
+    # 콜드번호 추출 (최근 10회차 기준 미출현 번호 가정)
+    all_nums = set(range(1, 46))
+    recent_nums = set(raw_df.head(10).iloc[:, 1:7].values.flatten())
+    cold_nums = list(all_nums - recent_nums)
+
+    with st.form("lotto_input_form", clear_on_submit=False): # 분석을 위해 False 추천
+        col_drw = st.number_input("회차", min_value=1, step=1)
+        c = st.columns(6)
+        n1 = c[0].number_input("No1", 1, 45, value=1)
+        n2 = c[1].number_input("No2", 1, 45, value=2)
+        n3 = c[2].number_input("No3", 1, 45, value=3)
+        n4 = c[3].number_input("No4", 1, 45, value=4)
+        n5 = c[4].number_input("No5", 1, 45, value=5)
+        n6 = c[5].number_input("No6", 1, 45, value=6)
+        bonus = st.number_input("Bonus", 1, 45, value=45)
+        
+        current_nums = [n1, n2, n3, n4, n5, n6]
+        
+        # 버튼 배치
+        btn_col1, btn_col2 = st.columns(2)
+        save_btn = btn_col1.form_submit_button("💾 DB 저장하기")
+        analyze_btn = btn_col2.form_submit_button("🔍 조합 분석하기")
+
+        if save_btn:
+            data_to_save = {"round": int(col_drw), "n1": n1, "n2": n2, "n3": n3, "n4": n4, "n5": n5, "n6": n6, "bonus": bonus}
+            save_to_gsheet(conn, SHEET_URL, data_to_save)
+            st.success(f"{col_drw}회차 데이터 저장 완료!")
+
+        if analyze_btn:
+            st.divider()
+            df_analysis, metrics = analyze_combination(current_nums, prev_nums, cold_nums)
             
+            # 1. 개별 번호 상태 테이블
+            st.subheader("📊 번호별 특이사항")
+            st.table(df_analysis) # 또는 st.dataframe
+            
+            # 2. 종합 지표 (메트릭)
+            st.subheader("⚙️ 조합 종합 지표")
+            m_col1, m_col2, m_col3, m_col4, m_col5 = st.columns(5)
+            m_col1.metric("홀짝", metrics["홀짝"])
+            m_col2.metric("총합", metrics["총합"])
+            m_col3.metric("AC", metrics["AC"])
+            m_col4.metric("고저", metrics["고저"])
+            m_col5.metric("연번", metrics["연번"])
+
+            # 로우 데이터 컬럼 (한 줄 표시)
+            st.code(f"Raw Data: {sorted(current_nums)}")
+
 elif menu == "크레이지 번호 추출":
     st.title("🔥 크레이지 번호 분석 리포트")
     
