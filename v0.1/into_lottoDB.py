@@ -75,35 +75,56 @@ def analyze_combination(input_nums, df, analyze_range):
     df_crazy = get_crazy_analysis(df_target) # 기술 지표용
     df_cold = get_cold_analysis(df_target)   # 콜드 지수용
     
-    # 2. 데이터 병합 (번호 기준)
+    # 2. 데이터 타입 동기화 및 병합 (번호 컬럼 타입 일치 필수)
+    df_crazy['번호'] = df_crazy['번호'].astype(int)
+    df_cold['번호'] = df_cold['번호'].astype(int)
     df_total = pd.merge(df_crazy, df_cold, on="번호")
     
-    # 3. 입력된 6개 번호만 추출
+    # 3. 영문 컬럼명을 출력용 한글명으로 변경 (엔진 내부 컬럼명 기준)
+    # get_crazy_analysis 결과에 맞춰 매핑
+    rename_map = {
+        'rebound_index': '반등지수',
+        'energy_index': '에너지지수',
+        'current_skip': '현재스킵',
+        'avg_skip': '평균스킵',
+        'last_skip': '직전스킵',
+        'max_gap_record': '최대스킵', # 엔진에 max_skip이 없을 경우를 대비해 체크 필요
+        'curr_streak': '현재연속',
+        'max_streak': '최대연속',
+        'streak_part': '연속점수'
+    }
+    df_total = df_total.rename(columns=rename_map)
+    
+    # 4. 입력된 6개 번호만 추출
     analysis_df = df_total[df_total['번호'].isin(input_nums)].copy()
     
-    # 4. 이월수 여부 체크
+    # 5. 이월수 여부 체크
     prev_nums = [df.iloc[0][f'n{i}'] for i in range(1, 7)]
     analysis_df['이월수'] = analysis_df['번호'].apply(lambda x: "✅" if x in prev_nums else "X")
     
-    # 5. 요청된 컬럼 구성 (불필요 지표 제거 및 콜드지수 추가)
-    display_cols = [
+    # 6. 최종 노출 컬럼 리스트 (KeyError 방지를 위해 실제 존재하는 것만 필터링)
+    desired_cols = [
         '번호', '이월수', '반등지수', '에너지지수', '콜드지수',
         '평균스킵', '직전스킵', '현재스킵', '최대스킵', 
         '현재연속', '최대연속', '연속점수'
     ]
-    analysis_df = analysis_df[display_cols]
+    # 실제 존재하는 컬럼만 선택
+    available_cols = [c for c in desired_cols if c in analysis_df.columns]
+    analysis_df = analysis_df[available_cols]
 
-    # 6. 조합 전체 필터 지표 (홀짝, 총합, AC, 고저, 연번)
+    # 7. 조합 전체 필터 지표 (홀짝, 총합, AC, 고저, 연번)
     total_sum = sum(input_nums)
     odd_cnt = len([n for n in input_nums if n % 2 != 0])
     high_cnt = len([n for n in input_nums if n >= 23])
     
+    # AC 계산
     diffs = set()
     for i in range(len(input_nums)):
         for j in range(i + 1, len(input_nums)):
             diffs.add(abs(input_nums[i] - input_nums[j]))
     ac_value = len(diffs) - 5
     
+    # 연번 계산
     consecutive = 0
     for i in range(5):
         if input_nums[i+1] - input_nums[i] == 1:
