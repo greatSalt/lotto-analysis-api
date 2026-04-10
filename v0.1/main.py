@@ -555,7 +555,7 @@ elif menu == "🎯 추천번호 분석":
                             # 번호별 색상 배지 (로또 공 색상 느낌)
                             with col_balls:
                                 ball_html = ""
-                                for n, group in combo:
+                                for n, group in combo_data:
                                     # 🖍️ 그룹별 색상 매핑
                                     if group == 'HOT':
                                         color = "red"        # 🟥 핫 (빨간색)
