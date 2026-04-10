@@ -536,11 +536,11 @@ elif menu == "🎯 추천번호 분석":
                         st.session_state.reco_results = results
                     if not st.session_state.reco_results:
                         st.warning("⚠️ 필터 조건을 만족하는 조합을 찾지 못했습니다. 범위를 넓혀주세요.")            
+                    else:   st.balloons()
             # 2. 버튼 외부에서 결과를 출력 (결과가 있을 때만 실행)
             if st.session_state.reco_results:            
                     #if results:
                 st.divider()
-                st.balloons()
                 st.subheader("✨ AI 추천 조합 (2-3-1 비율 적용)")
                 # 🎨 범례(Legend) 표시 - 사용자가 색상의 의미를 알 수 있도록
                 st.info("🎨 **번호 색상 범례**: 🟥 핫 (상위 30%) / 🟨 웜 (중간 40%) / 🟦 콜드 (하위 30%)")
