@@ -230,12 +230,14 @@ def display_sidebar_picks(conn, sheet_url):
         
         if combi_sets:
             for i, nums in enumerate(combi_sets):
-                with st.expander(f"추천 조합 Set {i+1}", expanded=True):
-                    ball_html = "".join([
-                        f"![{n}](https://img.shields.io/badge/-{n}-blueviolet?style=flat-square&border_radius=50) " 
-                        for n in sorted(nums)
-                    ])
-                    st.markdown(ball_html, unsafe_allow_html=True)
+                # 필터 설정값이 섞여 들어오는 것 방지 (리스트 길이가 6인 것만)
+                if len(nums) == 6:
+                    with st.expander(f"추천 조합 Set {i+1}", expanded=True):
+                        ball_html = "".join([
+                            f"![{n}](https://img.shields.io/badge/-{n}-blueviolet?style=flat-square&border_radius=50) " 
+                            for n in sorted(nums)
+                        ])
+                        st.markdown(ball_html, unsafe_allow_html=True)
             # [추가] 추천 조합 전용 삭제 버튼
             if st.button("🗑️ 추천 조합만 삭제", use_container_width=True, key="del_combi"):
                 # 빈 리스트를 보내서 해당 유형(COMBI)만 시트에서 제거
@@ -250,8 +252,11 @@ def display_sidebar_picks(conn, sheet_url):
         # --- [섹션 2] 관심 번호 (PICK) ---
         st.markdown("### 👤 관심 번호 (PICK)")
         picks = st.session_state.get('my_saved_picks', [])
+        # 필터 설정값(F_AC 등)이 리스트에 섞여 있을 수 있으므로 숫자만 골라냄
+        # 보통 관심 번호는 1~45 사이의 숫자임
+        valid_picks = [p for p in picks if isinstance(p, (int, float)) and 1 <= p <= 45]
         
-        if picks:
+        if valid_picks:
             # 개별 번호는 리스트 형태로 한눈에 표시
             pick_html = "".join([
                 f"![{n}](https://img.shields.io/badge/-{n}-lightgrey?style=flat-square&border_radius=50) " 
@@ -268,27 +273,7 @@ def display_sidebar_picks(conn, sheet_url):
         else:
             st.caption("선택된 관심 번호가 없습니다.")
 
-'''
-def display_sidebar_picks(conn, sheet_url):
-    """사이드바 표시 및 관리"""
-    with st.sidebar:
-        st.divider()
-        st.markdown("### 🎯 My Lucky Picks")
-        
-        if st.session_state.my_saved_picks:
-            picks = sorted(st.session_state.my_saved_picks)
-            cols = st.columns(3)
-            for i, num in enumerate(picks):
-                cols[i % 3].info(f"**{num}**")
-            
-            # 리셋 시에도 시트와 동기화되도록 sheet_url 전달
-            if st.button("🔄 Reset & Sync", use_container_width=True):
-                save_picks_to_sheets(conn, sheet_url, []) 
-                st.rerun()
-        else:
-            st.caption("저장된 번호가 없습니다.")
-        st.divider()
-'''
+
 def get_highlight_style(row):
     """표의 스타일 결정 (노란색 임계점 우선 적용)"""
     base_style = ''
