@@ -534,7 +534,8 @@ elif menu == "🎯 추천번호 분석":
                         )
                         # [핵심] 결과를 세션 상태에 저장하여 화면에 고정
                         st.session_state.reco_results = results
-            
+                    if not st.session_state.reco_results:
+                        st.warning("⚠️ 필터 조건을 만족하는 조합을 찾지 못했습니다. 범위를 넓혀주세요.")            
             # 2. 버튼 외부에서 결과를 출력 (결과가 있을 때만 실행)
             if st.session_state.reco_results:            
                     #if results:
@@ -548,7 +549,7 @@ elif menu == "🎯 추천번호 분석":
                 # 폼을 사용하지 않고 개별 체크박스 상태를 추적하기 위해 리스트 생성
                 to_save_picks = []
                         
-                for i, combo_data in enumerate(results):
+                for i, combo_data in enumerate(st.session_state.reco_results):
                     combo_nums = sorted([n for n, group in combo_data])
                     col_chk, col_label, col_balls = st.columns([0.1, 0.15, 0.75])
                     # 1. 체크박스: 고유한 key를 부여하여 상태 유지
@@ -594,9 +595,6 @@ elif menu == "🎯 추천번호 분석":
                             st.rerun()
                                     
                 st.caption("※ 체크박스를 선택하고 저장 버튼을 누르면 사이드바에 즉시 반영됩니다.")
-            else:
-                st.warning("⚠️ 필터 조건을 만족하는 조합을 찾지 못했습니다. 범위를 넓혀주세요.")
-                    
                     
         else:
             st.warning("조합을 만들려면 최소 6개 이상의 번호를 위 테이블에서 체크해 주세요.")
