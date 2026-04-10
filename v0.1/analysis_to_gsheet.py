@@ -50,8 +50,6 @@ def render_gsheet_button(df, sheet_url):
             
         if success:
             st.success(msg)
-            # 2. 바로가기 링크 제공 (사용자 편의성)
-            st.markdown(f"[👉 구글 시트 열어서 틀 고정으로 보기]({sheet_url})")
             st.balloons()
         else:
             st.error(msg)

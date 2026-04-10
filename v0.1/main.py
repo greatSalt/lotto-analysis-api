@@ -45,18 +45,6 @@ with st.sidebar:
     menu = st.sidebar.radio("기능 선택", ["데이터 입력", "크레이지 번호 추출", "콜드 번호 추출", "특정 번호 분석", "📊 이월수 예측", "🎯 추천번호 분석"])
     display_sidebar_picks(conn, SHEET_URL) # 👈 어떤 메뉴에서든 내 번호가 보임
 
-#if menu == "데이터 입력":
-    #st.title("🎰 로또 데이터 입력")
-    #with st.form("lotto_input_form", clear_on_submit=True):
-        #col_drw = st.number_input("회차", min_value=1, step=1)
-        #c = st.columns(6)
-        #n1, n2, n3, n4, n5, n6 = [c[i].number_input(f"No{i+1}", 1, 45) for i in range(6)]
-        #bonus = st.number_input("Bonus", 1, 45)
-        #if st.form_submit_button("DB 저장하기"):
-            #data_to_save = {"round": int(col_drw), "n1": n1, "n2": n2, "n3": n3, "n4": n4, "n5": n5, "n6": n6, "bonus": bonus}
-            #save_to_gsheet(conn, SHEET_URL, data_to_save)
-            #st.success("데이터 저장 완료")
-
 if menu == "데이터 입력":
     st.title("🎰 로또 데이터 입력 및 조합 분석")
     
@@ -173,6 +161,17 @@ elif menu == "크레이지 번호 추출":
             # --- 추가된 부분 ---
             st.divider() # 시각적 구분선
             saver.render_gsheet_button(edited_df, SHEET_URL)
+            #바로가기 링크 제공 (아이콘과 버튼 스타일 활용)
+            st.write("---") # 얇은 구분선
+            col1, col2 = st.columns([1, 1])
+            
+            with col1:
+                # 클릭 시 새 탭으로 구글 시트가 열리는 링크 버튼
+                st.link_button("📂 저장된 구글 시트 바로가기", SHEET_URL, use_container_width=True)
+            
+            with col2:
+                # 시트 이용 팁 제공
+                st.info("💡 **Tip**: 시트 상단 메뉴의 `보기 > 틀 고정`을 사용하면 번호를 더 편하게 보실 수 있습니다.")
             # ------------------
 
             st.divider()

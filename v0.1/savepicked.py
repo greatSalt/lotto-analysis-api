@@ -236,6 +236,12 @@ def display_sidebar_picks(conn, sheet_url):
                         for n in sorted(nums)
                     ])
                     st.markdown(ball_html, unsafe_allow_html=True)
+            # [추가] 추천 조합 전용 삭제 버튼
+            if st.button("🗑️ 추천 조합만 삭제", use_container_width=True, key="del_combi"):
+                # 빈 리스트를 보내서 해당 유형(COMBI)만 시트에서 제거
+                save_to_sheets_by_type(conn, sheet_url, [], 'COMBI')
+                st.session_state.my_combi_sets = []
+                st.rerun()
         else:
             st.caption("저장된 추천 조합이 없습니다.")
             
@@ -252,17 +258,15 @@ def display_sidebar_picks(conn, sheet_url):
                 for n in sorted(picks)
             ])
             st.markdown(pick_html, unsafe_allow_html=True)
+            
+            # [추가] 관심 번호 전용 삭제 버튼
+            if st.button("🗑️ 관심 번호만 삭제", use_container_width=True, key="del_pick"):
+                # 빈 리스트를 보내서 해당 유형(PICK)만 시트에서 제거
+                save_to_sheets_by_type(conn, sheet_url, [], 'PICK')
+                st.session_state.my_saved_picks = []
+                st.rerun()
         else:
             st.caption("선택된 관심 번호가 없습니다.")
-        
-            st.divider()
-            # 리셋 버튼: 시트의 모든 저장 데이터 삭제 및 동기화
-            if st.button("🗑️ 전체 데이터 초기화", use_container_width=True):
-                # 기존에 만드신 초기화 함수 호출 (유형에 상관없이 해당 시트 클리어)
-                save_picks_to_sheets(conn, sheet_url, []) 
-                st.session_state.my_combi_sets = []
-                st.session_state.my_saved_picks = [] # 세션도 즉시 비움
-                st.rerun()
 
 '''
 def display_sidebar_picks(conn, sheet_url):
