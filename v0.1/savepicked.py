@@ -136,9 +136,6 @@ def save_to_sheets_by_type(conn, sheet_url, new_nums, type_code):
             if 'my_combi_sets' not in st.session_state:
                 st.session_state.my_combi_sets = []
             st.session_state.my_combi_sets.append(sorted(new_nums))
-            # COMBI는 세트 내/세트 간 번호가 겹칠 수 있으므로 중복 제거를 하지 않거나,
-            # '전체 행'이 완전히 똑같은 경우만 제거합니다.
-            final_df = final_df.drop_duplicates(keep='first')
         else:
             # [덮어쓰기형] 해당 유형만 제거 후 교체
             other_types_df = full_df[full_df["유형"] != type_code]
@@ -156,7 +153,7 @@ def save_to_sheets_by_type(conn, sheet_url, new_nums, type_code):
             elif type_code == 'F_HL': st.session_state.sel_hl = new_nums # ['3:3', '4:2'] 형태
             elif type_code == 'F_SUM': st.session_state.sum_range = (int(new_nums[0]), int(new_nums[1]))
             # PICK, FIX 등 단일 번호 관리 유형은 번호 중복을 제거
-            final_df = final_df.drop_duplicates(subset=['번호', '유형'], keep='first')
+            final_df = final_df.drop_duplicates(subset=['번호', '유형'], keep='last')
 
         # 4. 시트 업데이트
         conn.update(spreadsheet=sheet_url, worksheet="SavedPicks", data=final_df)
