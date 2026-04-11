@@ -89,74 +89,6 @@ def set_default_session_values():
     st.session_state.sel_hl = ["3:3", "2:4", "4:2"]
     st.session_state.sum_range = (100, 175)
 
-'''
-def init_saved_picks(conn, sheet_url):
-    """앱 시작 시 구글 시트에서 저장된 번호를 불러오기"""
-    if 'my_saved_picks' not in st.session_state:
-        try:
-            df = conn.read(spreadsheet=sheet_url, worksheet="SavedPicks", ttl=0)
-            if not df.empty:
-                st.session_state.my_saved_picks = df['번호'].tolist()
-            else:
-                st.session_state.my_saved_picks = []
-        except Exception:
-            st.session_state.my_saved_picks = []
-'''
-'''
-def save_special_picks(conn, sheet_url, new_picks, type_code="PICK"):
-    """
-    유형별(PICK, FIX, EX)로 번호를 구글 시트에 저장
-    type_code: 'PICK'(일반), 'FIX'(고정), 'EX'(제외)
-    """
-    try:
-        # 1. 기존 데이터 전체 읽기
-        try:
-            existing_df = conn.read(spreadsheet=sheet_url, worksheet="SavedPicks")
-        except:
-            existing_df = pd.DataFrame(columns=["번호", "유형"])
-
-        # 2. 해당 유형의 기존 데이터 삭제 후 새로운 데이터로 교체 (유형별 업데이트)
-        other_types_df = existing_df[existing_df["유형"] != type_code]
-        new_type_df = pd.DataFrame({"번호": new_picks, "유형": type_code})
-        
-        updated_df = pd.concat([other_types_df, new_type_df]).drop_duplicates().sort_values(["유형", "번호"])
-
-        # 3. 시트 업데이트
-        conn.update(spreadsheet=sheet_url, worksheet="SavedPicks", data=updated_df)
-        st.toast(f"✅ {type_code} 번호가 시트에 저장되었습니다!")
-        
-    except Exception as e:
-        st.error(f"저장 실패: {e}")
-'''
-'''
-def save_picks_to_sheets(conn, sheet_url, new_picks):
-    """기존 번호를 유지하며 구글 시트에 누적 저장"""
-    try:
-        # 1. 기존에 저장된 데이터 읽기 시도
-        try:
-            existing_df = conn.read(spreadsheet=sheet_url, worksheet="SavedPicks")
-            existing_picks = existing_df["번호"].tolist()
-        except:
-            # 시트가 비어있거나 오류가 나면 빈 리스트로 시작
-            existing_picks = []
-
-        # 2. 기존 번호 + 새로운 번호 합치기 (set을 사용하여 중복 제거)
-        updated_picks = list(set(existing_picks + new_picks))
-        updated_picks.sort() # 보기 좋게 정렬
-        
-        # 3. 데이터프레임 생성 및 업데이트
-        df = pd.DataFrame({"번호": updated_picks})
-    
-        conn.update(spreadsheet=sheet_url, worksheet="SavedPicks", data=df)
-        st.session_state.my_saved_picks = updated_picks
-        st.toast("✅ 기존 번호와 합쳐져 안전하게 저장되었습니다!")
-        
-        return True
-        
-    except Exception as e:
-        st.error(f"저장 실패: {e}")
-        return False
-'''
 def save_recommended_picks(conn, sheet_url, selected_picks):
     """체크된 추천 조합들을 'COMBI' 유형으로 구글 시트에 저장"""
     for pick in selected_picks:
@@ -181,7 +113,20 @@ def save_to_sheets_by_type(conn, sheet_url, new_nums, type_code):
         if '유형' not in full_df.columns:
             full_df['유형'] = 'PICK' # 기존 데이터는 모두 일반 저장으로 간주
             
-
+        # --- [추가/수정] 삭제 로직: new_nums가 비어있는 경우 ---
+        if not new_nums:
+            # 해당 유형이 아닌 것들만 남겨서 저장 (즉, 해당 유형 전체 삭제)
+            final_df = full_df[full_df["유형"] != type_code]
+            conn.update(spreadsheet=sheet_url, worksheet="SavedPicks", data=final_df)
+            
+            # 세션 상태도 함께 비워줌
+            if type_code == 'COMBI': st.session_state.my_combi_sets = []
+            elif type_code == 'PICK': st.session_state.my_saved_picks = []
+            # (필요에 따라 FIX, EX 등도 추가)
+            
+            st.toast(f"🗑️ {type_code} 데이터가 삭제되었습니다.")
+            return # 삭제 후 함수 종료
+        
         # --- 데이터 병합 로직 ---
         if type_code == 'COMBI':
             # [추가형] 기존 데이터 유지 + 새로운 6개 번호 추가
