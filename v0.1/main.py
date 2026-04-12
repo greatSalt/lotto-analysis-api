@@ -260,11 +260,22 @@ elif menu == "콜드 번호 추출":
             if not selected_nums:
                 st.warning("공유할 번호를 먼저 선택해주세요.")
             else:
-                # [기존 함수 활용] 구글 시트에 선택된 번호 업데이트
-                # 예: update_google_sheet(selected_nums, "COLD_STRATEGY")
-                #save_picks_to_sheets(conn, SHEET_URL, selected_nums)
-                save_to_sheets_by_type(conn, SHEET_URL, selected_nums, "PICK")
-                # 저장 후 세션 데이터를 최신화하기 위해 세션 삭제 후 재실행 (시트 데이터 다시 읽기 위함)
+                # [수정 포인트] 1. 기존에 저장되어 있는 모든 번호를 먼저 불러옵니다.
+                try:
+                    existing_df = conn.read(spreadsheet=SHEET_URL, worksheet="SavedPicks")
+                    existing_nums = existing_df["번호"].tolist()
+                except:
+                    existing_nums = []
+
+                # [수정 포인트] 2. 기존 번호와 새로 선택된 번호를 합치고 중복 제거 (Set 활용)
+                final_nums = list(set(existing_nums + selected_nums))
+
+                # [수정 포인트] 3. 합쳐진 전체 리스트를 저장함
+                # (함수 내부에서 시트를 초기화하고 쓰더라도 전체 리스트가 들어가므로 데이터가 유지됨)
+                save_to_sheets_by_type(conn, SHEET_URL, final_nums, "PICK")
+                
+                st.success(f"성공! 현재 총 {len(final_nums)}개의 번호가 저장되어 있습니다.")
+                
                 del st.session_state.cold_edited_df  
                 st.rerun() # 사이드바 갱신을 위해 앱 재실행
         st.info("💡 체크된 번호는 이미 'My Lucky Picks'에 저장된 번호입니다.")
