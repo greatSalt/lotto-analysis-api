@@ -276,7 +276,7 @@ elif menu == "📊 이월수 예측":
     st.title("🔮이월수 전략 시뮬레이터")
     
     if not df.empty:
-        render_carryover_analysis(df)
+        render_carryover_analysis(df, analyze_range)
                 
     # 확률 차트 (시각적 근거)
     st.write("💡 **이월수 개수별 표준 확률 분포**")
