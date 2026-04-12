@@ -7,9 +7,12 @@ import numpy as np
 def render_carryover_analysis(df):
     st.header("🔄 이월수 통계 및 패턴 분석")
     
+    # 1. n1~n6 컬럼을 win_nums 리스트로 병합 
+    temp_df = df.copy()
+    
     # 1. 이월수 데이터 추출 (현재 회차와 전회차 비교)
     analysis_data = []
-    win_nums_list = df['win_nums'].tolist() # 최신순 리스트라고 가정
+    win_nums_list = temp_df[['n1', 'n2', 'n3', 'n4', 'n5', 'n6']].fillna(0).values.astype(int).tolist() # 최신순 리스트
     
     for i in range(len(win_nums_list) - 1):
         curr_show = win_nums_list[i]   # 현재 회차
