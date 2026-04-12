@@ -212,26 +212,26 @@ elif menu == "콜드 번호 추출":
     
     if not df.empty:
         # 세션에 데이터가 없거나 메뉴가 처음 로드될 때만 실행
-        if "cold_edited_df" not in st.session_state:
-            cold_df = get_cold_analysis(df)
-            display_cold = cold_df.sort_values("현재미출현", ascending=False).head(15).copy()
+        #if "cold_edited_df" not in st.session_state:
+        cold_df = get_cold_analysis(df)
+        display_cold = cold_df.sort_values("현재미출현", ascending=False).head(15).copy()
             # 구글 시트에서 기존 저장된 번호들 가져오기 (저장된 번호 로드)
-            try:
-                # SavedPicks 워크시트에서 번호 컬럼 추출
-                saved_df = conn.read(spreadsheet=SHEET_URL, worksheet="SavedPicks")
-                # 전체 보관함 번호 리스트 (핫번호 등 모든 번호 포함)
-                st.session_state.all_saved_picks = set(pd.to_numeric(saved_df["번호"], errors='coerce').dropna().astype(int))
-            except:
-                st.session_state.all_saved_picks = set()
+        try:
+            # SavedPicks 워크시트에서 번호 컬럼 추출
+            saved_df = conn.read(spreadsheet=SHEET_URL, worksheet="SavedPicks")
+            # 전체 보관함 번호 리스트 (핫번호 등 모든 번호 포함)
+            st.session_state.all_saved_picks = set(pd.to_numeric(saved_df["번호"], errors='coerce').dropna().astype(int))
+        except:
+            st.session_state.all_saved_picks = set()
         
-            # 2. 인덱스를 1부터 15까지 새로 부여 (No. 표시용)
-            display_cold.index = range(1, len(display_cold) + 1)
-            display_cold = display_cold.reset_index().rename(columns={"index": "No."})
+        # 2. 인덱스를 1부터 15까지 새로 부여 (No. 표시용)
+        display_cold.index = range(1, len(display_cold) + 1)
+        display_cold = display_cold.reset_index().rename(columns={"index": "No."})
         
-            # [핵심] 시트에 저장된 번호라면 '선택'을 True로 설정
-            display_cold.insert(0, "선택", display_cold["번호"].apply(lambda x: x in st.session_state.all_saved_picks))
-            # 세션 상태에 저장 (이제 rerun되어도 여기서 안 걸리고 아래 editor로 바로 감)
-            st.session_state.cold_edited_df = display_cold
+        # [핵심] 시트에 저장된 번호라면 '선택'을 True로 설정
+        display_cold.insert(0, "선택", display_cold["번호"].apply(lambda x: x in st.session_state.all_saved_picks))
+        # 세션 상태에 저장 (이제 rerun되어도 여기서 안 걸리고 아래 editor로 바로 감)
+        st.session_state.cold_edited_df = display_cold
         
         # 3. 데이터 에디터로 변경 (사용자가 체크박스 조작 가능)
         # num_rows="fixed"로 설정하여 15개 행을 유지합니다.
@@ -266,7 +266,7 @@ elif menu == "콜드 번호 추출":
             st.success(f"✅ 전체 보관함이 업데이트되었습니다! (총 {len(final_picks)}개)")
             
             # 세션 초기화 후 리런
-            del st.session_state.cold_edited_df
+            #del st.session_state.cold_edited_df
             st.rerun()
             '''    
             # 현재 에디터 상태에서 선택된 번호 추출
