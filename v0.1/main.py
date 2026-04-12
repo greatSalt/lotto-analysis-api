@@ -248,14 +248,14 @@ elif menu == "콜드 번호 추출":
             key="cold_num_editor"
         )
         # 에디터에서 변경된 내용을 세션 상태에 동기화
-        st.session_state.cold_edited_df = edited_output
+        #st.session_state.cold_edited_df = edited_output
         
         # 4. 저장 버튼 및 구글 시트 연동
         if st.button("📌 선택한 콜드번호 저장 및 공유", use_container_width=True):
             # 현재 에디터 상태에서 선택된 번호 추출
-            current_df = st.session_state.cold_edited_df
+            #current_df = st.session_state.cold_edited_df
             # 체크된 번호들만 리스트로 추출
-            selected_nums = current_df[current_df['선택'] == True]['번호'].tolist()
+            selected_nums = edited_output[edited_output['선택'] == True]['번호'].tolist()
             
             if not selected_nums:
                 st.warning("공유할 번호를 먼저 선택해주세요.")
@@ -263,7 +263,7 @@ elif menu == "콜드 번호 추출":
                 # [수정 포인트] 1. 기존에 저장되어 있는 모든 번호를 먼저 불러옵니다.
                 try:
                     existing_df = conn.read(spreadsheet=SHEET_URL, worksheet="SavedPicks")
-                    existing_nums = existing_df["번호"].tolist()
+                    existing_nums = existing_df["번호"].dropna().astype(int).tolist()
                 except:
                     existing_nums = []
 
@@ -276,7 +276,8 @@ elif menu == "콜드 번호 추출":
                 
                 st.success(f"성공! 현재 총 {len(final_nums)}개의 번호가 저장되어 있습니다.")
                 
-                del st.session_state.cold_edited_df  
+                if "cold_edited_df" in st.session_state:
+                    del st.session_state.cold_edited_df  
                 st.rerun() # 사이드바 갱신을 위해 앱 재실행
         st.info("💡 체크된 번호는 이미 'My Lucky Picks'에 저장된 번호입니다.")
         st.info("💡 '현재미출현' 수치가 높을수록 오랫동안 나오지 않은 '차갑게 식은' 번호들입니다.")
