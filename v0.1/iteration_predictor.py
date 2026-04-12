@@ -4,6 +4,45 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
+def predict_with_momentum(df, last_nums):
+    """
+    지난주 번호들(last_nums) 중 이월 가능성이 높은 번호를 
+    기세(최근 빈도)와 스킵(대기 기간)을 복합하여 점수화합니다.
+    """
+    prediction_results = []
+    win_nums_list = df[['n1', 'n2', 'n3', 'n4', 'n5', 'n6']].values.tolist()
+
+    for num in last_nums:
+        # 1. 현재 스킵 계산 (얼마나 쉬었나)
+        current_skip = calculate_skip_manually(num, 0, win_nums_list)
+        
+        # 2. 최근 기세 계산 (최근 10회차 중 몇 번 나왔나)
+        recent_count = sum(1 for draw in win_nums_list[:10] if num in draw)
+        
+        # 3. 점수 산출 로직 (사용자 커스텀 가능)
+        # - 최근 많이 나온 번호(기세)에 가산점
+        # - 아주 오래 쉰 번호(반등)에 가산점
+        score = (recent_count * 20) + (current_skip * 5)
+        
+        # 4. 상태 분류
+        if recent_count >= 3:
+            status = "🔥 기세형"
+        elif current_skip >= 10:
+            status = "⏳ 반등형"
+        else:
+            status = "🧊 일반"
+
+        prediction_results.append({
+            "번호": num,
+            "최근빈도": f"{recent_count}회",
+            "직전스킵": f"{current_skip}회",
+            "유형": status,
+            "점수": score
+        })
+
+    # 점수 순으로 정렬하여 반환
+    return  pd.DataFrame(prediction_results).sort_values(by="점수", ascending=False)
+
 # [함수] 특정 회차(idx)에서 특정 번호(num)의 직전 스킵 주기를 계산
 def calculate_skip_manually(target_num, current_idx, all_nums):
     skip_count = 0
@@ -89,27 +128,18 @@ def render_carryover_analysis(df, analyze_range):
         })
         st.table(recent_stats)
 
-    # 4. 하단 예측: 스킵 주기에 따른 번호 추천
     st.divider()
-    st.subheader("🔮 금주 이월 확률 예측")
-    
-    # 확률 기반 예측 개수 결정
-    pred_count = recent_10_counts.idxmax()
-    pred_prob = (recent_10_counts.max() / 10) * 100
-    
-    st.info(f"💡 통계 근거: 이번 회차는 **{pred_count}개**가 나올 확률이 **{pred_prob}%**로 가장 높습니다.")
-    
-    last_nums = win_nums_list[0]
-    st.write(f"🔎 **지난주 번호({last_nums})의 현재 미출현(Skip) 기간:**")
-    
+    st.subheader("🔮 복합 데이터 기반 금주 이월 후보")
+        
+    # 위 함수 호출
+    recommend_df = predict_with_momentum(temp_df, win_nums_list[0])
+        
+    # 시각화 (컬럼형태)
     cols = st.columns(6)
-    for idx, num in enumerate(last_nums):
-        # [업그레이드] 단순히 '유력'이 아니라 현재 스킵값을 직접 보여줌
-        now_skip = calculate_skip_manually(num, 0, win_nums_list)
-        with cols[idx]:
-            st.metric(label=f"번호 {num}", value=f"{now_skip}회", 
-                      delta="이월 유력" if now_skip >= 10 else None)
-
+    for i, row in enumerate(recommend_df.itertuples()):
+        with cols[i]:
+            st.metric(label=f"번호 {row.번호}", value=row.유형, delta=row.최근빈도)
+            st.caption(f"적합도: {row.점수}점")
 '''
 def predict_by_probability(df):
     # 1. 전체 이월수 히스토리 생성 (최신순 -> 과거순)
