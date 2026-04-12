@@ -43,7 +43,7 @@ def render_carryover_analysis(df, analyze_range):
         skip_results = []
         for num in carryovers:
             # i번째 회차에 나온 num이 그 전에는 언제 나왔었나? (i+1부터 탐색)
-            s_val = calculate_skip_manually(num, i, win_nums_list)
+            s_val = calculate_skip_manually(num, i+1, win_nums_list)
             skip_results.append(s_val)
             
         # 테이블 행 구성 (회차, 번호1, 스킵1, 번호2, 스킵2, 개수)
