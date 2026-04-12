@@ -1,3 +1,97 @@
+
+
+import streamlit as st
+import pandas as pd
+import numpy as np
+
+def render_carryover_analysis(df):
+    st.header("🔄 이월수 통계 및 패턴 분석")
+    
+    # 1. 이월수 데이터 추출 (현재 회차와 전회차 비교)
+    analysis_data = []
+    win_nums_list = df['win_nums'].tolist() # 최신순 리스트라고 가정
+    
+    for i in range(len(win_nums_list) - 1):
+        curr_show = win_nums_list[i]   # 현재 회차
+        prev_show = win_nums_list[i+1] # 전 회차
+        
+        # 이월수 찾기 (교집합)
+        carryovers = sorted(list(set(curr_show) & set(prev_show)))
+        
+        # 각 이월수의 스킵 주기(직전스킵) 가져오기 (데이터프레임에 있다고 가정)
+        # 예시 데이터 구조: {번호: 스킵}
+        skip_data = []
+        for num in carryovers:
+            # 해당 회차 시점의 스킵값을 가져오는 로직 (실제 데이터에 맞게 조정 필요)
+            skip_val = df.iloc[i]['skips'][num] if 'skips' in df.columns else "N/A"
+            skip_data.append(num)
+            skip_data.append(skip_val)
+            
+        # 테이블 행 구성 (회차, 번호1, 스킵1, 번호2, 스킵2, 개수)
+        row = {
+            "회차": f"{df.iloc[i]['draw_no']}회",
+            "이월수1": carryovers[0] if len(carryovers) > 0 else "-",
+            "스킵1": skip_data[1] if len(carryovers) > 0 else "-",
+            "이월수2": carryovers[1] if len(carryovers) > 1 else "-",
+            "스킵2": skip_data[3] if len(carryovers) > 1 else "-",
+            "개수": len(carryovers)
+        }
+        analysis_data.append(row)
+
+    history_df = pd.DataFrame(analysis_data)
+
+    # 2. 상단 테이블: 출현 이력 (내림차순)
+    st.subheader("📋 회차별 이월수 출현 이력")
+    st.dataframe(history_df.head(20), use_container_width=True) # 최근 20회차
+
+    # 3. 중단 통계: 전체 vs 최근 10회
+    st.subheader("📊 이월수 출현 빈도 통계")
+    
+    total_counts = history_df['개수'].value_counts().reindex([0, 1, 2], fill_value=0)
+    recent_10_counts = history_df['개수'].head(10).value_counts().reindex([0, 1, 2], fill_value=0)
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("**[전체 회차 통계]**")
+        total_stats = pd.DataFrame({
+            "개수": ["0개(멸)", "1개", "2개"],
+            "횟수": total_counts.values,
+            "확률": [f"{(v/len(history_df)*100):.1f}%" for v in total_counts.values]
+        })
+        st.table(total_stats)
+
+    with col2:
+        st.markdown("**[최근 10회 통계]**")
+        recent_stats = pd.DataFrame({
+            "개수": ["0개(멸)", "1개", "2개"],
+            "횟수": recent_10_counts.values,
+            "확률": [f"{(v/10*100):.1f}%" for v in recent_10_counts.values]
+        })
+        st.table(recent_stats)
+
+    # 4. 하단 예측: 스킵 주기에 따른 번호 추천
+    st.divider()
+    st.subheader("🔮 금주 이월 확률 예측")
+    
+    # 확률 기반 예측 개수 결정
+    pred_count = recent_10_counts.idxmax()
+    pred_prob = (recent_10_counts.max() / 10) * 100
+    
+    st.info(f"💡 통계 근거: 이번 회차는 **{pred_count}개**가 나올 확률이 **{pred_prob}%**로 가장 높습니다.")
+    
+    # 지난주 번호 중 스킵 주기로 예측 (간단 예시)
+    last_nums = win_nums_list[0]
+    st.write(f"🔎 **지난주 번호({last_nums}) 중 스킵 주기 적중 후보:**")
+    
+    # 실제 앱의 스킵 데이터와 연동하여 출력
+    # (예: 평균스킵에 도달한 번호들 나열)
+    cols = st.columns(6)
+    for idx, num in enumerate(last_nums):
+        with cols[idx]:
+            st.metric(label=f"번호 {num}", value="유력" if idx < 2 else "보통")
+
+'''
 def predict_by_probability(df):
     # 1. 전체 이월수 히스토리 생성 (최신순 -> 과거순)
     iter_history = []
@@ -129,5 +223,5 @@ def calculate_refined_score(row):
             total_score *= 0.3
             
     return total_score
-
+'''
             

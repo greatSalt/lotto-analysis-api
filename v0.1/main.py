@@ -9,7 +9,7 @@ from into_lottoDB import save_to_gsheet, get_recent_data, analyze_combination
 from crazyLogic import get_crazy_analysis
 from formular_description import display_formula_guide
 import analysis_to_gsheet as saver
-from iteration_predictor import predict_iteration_count, predict_with_numbers
+from iteration_predictor import predict_iteration_count, predict_with_numbers, render_carryover_analysis
 from empty_zone_engine import get_confirmed_empty_zone, color_rows, apply_strategy_style
 from combination_engine import generate_strategic_combinations, get_advanced_stat_analysis, get_comprehensive_analysis
 
@@ -275,6 +275,10 @@ elif menu == "콜드 번호 추출":
 elif menu == "📊 이월수 예측":
     st.title("🔮이월수 전략 시뮬레이터")
     
+    if not df.empty:
+        render_carryover_analysis(df)
+    
+    '''
     # 분석 데이터 호출
     #analyze_count = st.number_input("분석 범위(최근 회차)", 10, 100, 30)
     if st.button("📊 이월수 기대치 예측 실행"):
@@ -331,12 +335,12 @@ elif menu == "📊 이월수 예측":
                         
                 st.caption("※ Trap 2는 v2.3 엔진의 기세/반등/체급 지표를 결합한 개별 번호의 재출현 기대치입니다.")
 #------------------------------------------------------------------------------------------------
-
+'''
                 
-                # 확률 차트 (시각적 근거)
-                st.write("💡 **이월수 개수별 표준 확률 분포**")
-                chart_data = {"0개": 38, "1개": 43, "2개": 13, "3개+": 6}
-                st.bar_chart(chart_data)
+        # 확률 차트 (시각적 근거)
+        st.write("💡 **이월수 개수별 표준 확률 분포**")
+        chart_data = {"0개": 38, "1개": 43, "2개": 13, "3개+": 6}
+        st.bar_chart(chart_data)
 
 elif menu == "🎯 추천번호 분석":
     st.sidebar.subheader("⚙️ 멸 엔진 설정")
