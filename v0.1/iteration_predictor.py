@@ -9,36 +9,35 @@ def predict_with_momentum(df, last_nums):
     win_nums_list = df[['n1', 'n2', 'n3', 'n4', 'n5', 'n6']].values.tolist()
 
     for num in last_nums:
-        # 1. 지표 추출
+        # 1. 기초 지표 산출
         current_skip = calculate_skip_manually(num, 0, win_nums_list)
         recent_count = sum(1 for draw in win_nums_list[:10] if num in draw)
         
-        # 2. 비선형 점수 설계
+        # 2. 점수 체계 초기화
         score = 0
+        status = "🧊 일반"
         
-        # [A그룹: 기세형 점수 - 45번 타겟]
-        # 최근 10회 중 3회 이상 나오면 기세가 꺾이지 않는다고 보고 점수를 대폭 가산
-        momentum_score = recent_count * 15
+        # [강력 필터 1: 기세형 (45번 타겟)]
+        # 최근 10회 중 3회 이상 등장했다면 '기세형' 점수만 부여
         if recent_count >= 3:
-            momentum_score += 40  # 강력 추천 (Hot Area)
-            
-        # [B그룹: 반등형 점수 - 28번 타겟]
-        # 10회 이상 쉬었다면 에너지가 임계점에 도달한 것으로 판단
-        rebound_score = 0
-        if current_skip >= 10:
-            rebound_score = 50 + (current_skip * 2) # 장기 미출 보너스
-        elif current_skip <= 1:
-            rebound_score = 20 # 직전 이월 기세 보너스
-            
-        # 두 에너지 중 더 강한 에너지를 메인 점수로 채택 (어설픈 중간 점수 배제)
-        score = max(momentum_score, rebound_score)
-
-        # 3. 유형 결정
-        if recent_count >= 3:
+            score = 80 + (recent_count * 5)
             status = "🔥 기세형(Hot)"
+            
+        # [강력 필터 2: 반등형 (28번 타겟)]
+        # 10회 이상 장기 미출수라면 '반등형' 점수 부여
         elif current_skip >= 10:
+            score = 70 + (current_skip * 2)
             status = "⏳ 반등형(Cold)"
+            
+        # [강력 필터 3: 재출현형 (단기 스킵)]
+        # 최근에 나왔고 기세도 나쁘지 않은 경우
+        elif current_skip <= 2 and recent_count >= 1:
+            score = 50 + (recent_count * 5)
+            status = "⚡ 재출현형"
+            
+        # 위 조건에 해당하지 않는 '어중간한 번호'는 기본 점수만 부여 (상위권 진입 불가)
         else:
+            score = (recent_count * 5) + current_skip
             status = "🧊 일반"
 
         prediction_results.append({
@@ -49,7 +48,9 @@ def predict_with_momentum(df, last_nums):
             "점수": score
         })
 
+    # 점수 순으로 정렬 (이제 28, 45번이 무조건 상단에 위치함)
     return pd.DataFrame(prediction_results).sort_values(by="점수", ascending=False)
+
 
 
 # [함수] 특정 회차(idx)에서 특정 번호(num)의 직전 스킵 주기를 계산
