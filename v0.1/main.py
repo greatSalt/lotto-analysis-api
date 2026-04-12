@@ -252,6 +252,12 @@ elif menu == "콜드 번호 추출":
         
         # 4. 저장 버튼 및 구글 시트 연동
         if st.button("📌 선택한 콜드번호 저장 및 공유", use_container_width=True):
+            new_picks = edited_output[edited_output['선택'] == True]['번호'].tolist()
+                #save_picks_to_sheets(conn, SHEET_URL, new_picks)
+                save_to_sheets_by_type(conn, SHEET_URL, new_picks, "PICK")
+                st.toast("주요 번호가 저장되었습니다!")
+                st.rerun()
+            '''    
             # 현재 에디터 상태에서 선택된 번호 추출
             #current_df = st.session_state.cold_edited_df
             # 체크된 번호들만 리스트로 추출
@@ -283,7 +289,7 @@ elif menu == "콜드 번호 추출":
                     del st.session_state.cold_edited_df
                 
                 # 화면 갱신 (저장된 체크 상태가 다시 로드됨)
-                st.rerun()
+                st.rerun()'''
     else:
         st.error("데이터를 불러올 수 없습니다.")         
         
