@@ -262,8 +262,8 @@ elif menu == "콜드 번호 추출":
             else:
                 # [수정 포인트] 1. 기존에 저장되어 있는 모든 번호를 먼저 불러옵니다.
                 try:
-                    existing_df = conn.read(spreadsheet=SHEET_URL, worksheet="SavedPicks")
-                    if not saved_df.empty:
+                    current_saved_df = conn.read(spreadsheet=SHEET_URL, worksheet="SavedPicks")
+                    if not current_saved_df.empty and "번호" in current_saved_df.columns:
                         existing_nums = pd.to_numeric(saved_df["번호"], errors='coerce').dropna().astype(int).tolist()
                     else:
                         existing_nums = []
