@@ -263,27 +263,30 @@ elif menu == "콜드 번호 추출":
                 # [수정 포인트] 1. 기존에 저장되어 있는 모든 번호를 먼저 불러옵니다.
                 try:
                     existing_df = conn.read(spreadsheet=SHEET_URL, worksheet="SavedPicks")
-                    existing_nums = existing_df["번호"].dropna().astype(int).tolist()
+                    if not saved_df.empty:
+                        existing_nums = pd.to_numeric(saved_df["번호"], errors='coerce').dropna().astype(int).tolist()
+                    else:
+                        existing_nums = []
                 except:
                     existing_nums = []
 
-                # [수정 포인트] 2. 기존 번호와 새로 선택된 번호를 합치고 중복 제거 (Set 활용)
+                # [핵심 3] 기존 번호 + 새로 선택한 번호 합친 후 중복 제거
                 final_nums = list(set(existing_nums + selected_nums))
 
-                # [수정 포인트] 3. 합쳐진 전체 리스트를 저장함
-                # (함수 내부에서 시트를 초기화하고 쓰더라도 전체 리스트가 들어가므로 데이터가 유지됨)
+                # [핵심 4] 최종 리스트를 시트에 기록 (덮어쓰기 되더라도 합쳐진 리스트라 안전)
                 save_to_sheets_by_type(conn, SHEET_URL, final_nums, "PICK")
                 
-                st.success(f"성공! 현재 총 {len(final_nums)}개의 번호가 저장되어 있습니다.")
+                st.success(f"✅ 총 {len(final_nums)}개의 번호가 안전하게 통합 저장되었습니다!")
                 
+                # 저장 완료 후 세션 데이터 강제 갱신을 위해 삭제
                 if "cold_edited_df" in st.session_state:
-                    del st.session_state.cold_edited_df  
-                st.rerun() # 사이드바 갱신을 위해 앱 재실행
-        st.info("💡 체크된 번호는 이미 'My Lucky Picks'에 저장된 번호입니다.")
-        st.info("💡 '현재미출현' 수치가 높을수록 오랫동안 나오지 않은 '차갑게 식은' 번호들입니다.")
+                    del st.session_state.cold_edited_df
+                
+                # 화면 갱신 (저장된 체크 상태가 다시 로드됨)
+                st.rerun()
     else:
-        st.error("데이터를 불러올 수 없습니다.")
-
+        st.error("데이터를 불러올 수 없습니다.")         
+        
 elif menu == "📊 이월수 예측":
     st.title("🔮이월수 전략 시뮬레이터")
     
