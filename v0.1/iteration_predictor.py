@@ -32,7 +32,7 @@ def render_carryover_analysis(df):
             
         # 테이블 행 구성 (회차, 번호1, 스킵1, 번호2, 스킵2, 개수)
         row = {
-            "회차": f"{df.iloc[i]['draw_no']}회",
+            "회차": f"{df.iloc[i]['round']}회",
             "이월수1": carryovers[0] if len(carryovers) > 0 else "-",
             "스킵1": skip_data[1] if len(carryovers) > 0 else "-",
             "이월수2": carryovers[1] if len(carryovers) > 1 else "-",
