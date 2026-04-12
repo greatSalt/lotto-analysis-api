@@ -219,12 +219,14 @@ elif menu == "콜드 번호 추출":
         try:
             # SavedPicks 워크시트에서 번호 컬럼 추출
             saved_df = conn.read(spreadsheet=SHEET_URL, worksheet="SavedPicks")
-            # 전체 보관함 번호 리스트 (핫번호 등 모든 번호 포함)
-            st.session_state.all_saved_picks = set(pd.to_numeric(saved_df["번호"], errors='coerce').dropna().astype(int))
+            # PICK 유형만 필터링
+            pick_only_df = saved_df[saved_df["유형"] == "PICK"]
+            st.session_state.all_saved_picks = set(pd.to_numeric(pick_only_df["번호"], errors='coerce').dropna().astype(int))
         except:
             st.session_state.all_saved_picks = set()
         
         # 2. 인덱스를 1부터 15까지 새로 부여 (No. 표시용)
+        display_cold = display_cold.reset_index(drop=True)
         display_cold.index = range(1, len(display_cold) + 1)
         display_cold = display_cold.reset_index().rename(columns={"index": "No."})
         
