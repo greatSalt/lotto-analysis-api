@@ -219,16 +219,17 @@ elif menu == "콜드 번호 추출":
             try:
                 # SavedPicks 워크시트에서 번호 컬럼 추출
                 saved_df = conn.read(spreadsheet=SHEET_URL, worksheet="SavedPicks")
-                saved_picks = saved_df["번호"].tolist()
+                # 전체 보관함 번호 리스트 (핫번호 등 모든 번호 포함)
+                st.session_state.all_saved_picks = set(pd.to_numeric(saved_df["번호"], errors='coerce').dropna().astype(int))
             except:
-                saved_picks = []
+                st.session_state.all_saved_picks = set()
         
             # 2. 인덱스를 1부터 15까지 새로 부여 (No. 표시용)
             display_cold.index = range(1, len(display_cold) + 1)
             display_cold = display_cold.reset_index().rename(columns={"index": "No."})
         
             # [핵심] 시트에 저장된 번호라면 '선택'을 True로 설정
-            display_cold.insert(0, "선택", display_cold["번호"].apply(lambda x: x in saved_picks))
+            display_cold.insert(0, "선택", display_cold["번호"].apply(lambda x: x in st.session_state.all_saved_picks))
             # 세션 상태에 저장 (이제 rerun되어도 여기서 안 걸리고 아래 editor로 바로 감)
             st.session_state.cold_edited_df = display_cold
         
@@ -252,9 +253,20 @@ elif menu == "콜드 번호 추출":
         
         # 4. 저장 버튼 및 구글 시트 연동
         if st.button("📌 선택한 콜드번호 저장 및 공유", use_container_width=True):
-            new_picks = edited_output[edited_output['선택'] == True]['번호'].tolist()
-            save_to_sheets_by_type(conn, SHEET_URL, new_picks, "PICK")
-            st.toast("주요 번호가 저장되었습니다!")
+            # A. 현재 화면에서 '체크된' 번호들
+            currently_checked = set(edited_output[edited_output['선택'] == True]['번호'])
+            # B. 현재 화면에서 '체크 해제된' 번호들 (기존에 있었더라도 지워야 할 경우를 위해)
+            currently_unchecked = set(edited_output[edited_output['선택'] == False]['번호'])
+            # C. [핵심] 전체 보관함 업데이트 (기존 전체 목록 + 새로 체크 - 체크 해제)
+            final_picks = (st.session_state.all_saved_picks | currently_checked) - currently_unchecked
+            
+            # D. 최종 결과 저장
+            save_to_sheets_by_type(conn, SHEET_URL, list(final_picks), "PICK")
+            
+            st.success(f"✅ 전체 보관함이 업데이트되었습니다! (총 {len(final_picks)}개)")
+            
+            # 세션 초기화 후 리런
+            del st.session_state.cold_edited_df
             st.rerun()
             '''    
             # 현재 에디터 상태에서 선택된 번호 추출
