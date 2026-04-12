@@ -6,33 +6,38 @@ import numpy as np
 
 def predict_with_momentum(df, last_nums):
     prediction_results = []
-    # 데이터프레임 전체 리스트화
     win_nums_list = df[['n1', 'n2', 'n3', 'n4', 'n5', 'n6']].values.tolist()
 
     for num in last_nums:
-        # 1. 현재 스킵 (이 번호가 당첨되기 전까지 대기한 시간)
+        # 1. 지표 추출
         current_skip = calculate_skip_manually(num, 0, win_nums_list)
-        
-        # 2. 최근 10회 기세 (최근 얼마나 핫한가)
         recent_count = sum(1 for draw in win_nums_list[:10] if num in draw)
         
-        # 3. 보강된 점수 산출 로직
-        # [기본 점수]
-        score = (recent_count * 15)  # 기세 가중치 상향
+        # 2. 비선형 점수 설계
+        score = 0
         
-        # [보너스 점수 - 28번 같은 반등형 포착]
+        # [A그룹: 기세형 점수 - 45번 타겟]
+        # 최근 10회 중 3회 이상 나오면 기세가 꺾이지 않는다고 보고 점수를 대폭 가산
+        momentum_score = recent_count * 15
+        if recent_count >= 3:
+            momentum_score += 40  # 강력 추천 (Hot Area)
+            
+        # [B그룹: 반등형 점수 - 28번 타겟]
+        # 10회 이상 쉬었다면 에너지가 임계점에 도달한 것으로 판단
+        rebound_score = 0
         if current_skip >= 10:
-            score += 30  # 10회 이상 장기 미출수는 강력한 반등 후보로 가점
-        elif current_skip <= 2:
-            score += 10  # 아주 최근에 나온 번호도 기세 유지 가점 (45번 케이스)
+            rebound_score = 50 + (current_skip * 2) # 장기 미출 보너스
+        elif current_skip <= 1:
+            rebound_score = 20 # 직전 이월 기세 보너스
+            
+        # 두 에너지 중 더 강한 에너지를 메인 점수로 채택 (어설픈 중간 점수 배제)
+        score = max(momentum_score, rebound_score)
 
-        # 4. 유형 분류 상세화
+        # 3. 유형 결정
         if recent_count >= 3:
             status = "🔥 기세형(Hot)"
         elif current_skip >= 10:
             status = "⏳ 반등형(Cold)"
-        elif current_skip <= 2:
-            status = "⚡ 재출현형"
         else:
             status = "🧊 일반"
 
@@ -44,7 +49,6 @@ def predict_with_momentum(df, last_nums):
             "점수": score
         })
 
-    # 점수 높은 순으로 정렬
     return pd.DataFrame(prediction_results).sort_values(by="점수", ascending=False)
 
 
