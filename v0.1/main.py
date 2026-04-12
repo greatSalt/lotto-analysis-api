@@ -9,7 +9,7 @@ from into_lottoDB import save_to_gsheet, get_recent_data, analyze_combination
 from crazyLogic import get_crazy_analysis
 from formular_description import display_formula_guide
 import analysis_to_gsheet as saver
-from iteration_predictor import predict_iteration_count, predict_with_numbers, render_carryover_analysis
+from iteration_predictor import render_carryover_analysis
 from empty_zone_engine import get_confirmed_empty_zone, color_rows, apply_strategy_style
 from combination_engine import generate_strategic_combinations, get_advanced_stat_analysis, get_comprehensive_analysis
 
