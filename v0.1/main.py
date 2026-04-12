@@ -264,7 +264,7 @@ elif menu == "콜드 번호 추출":
                 try:
                     current_saved_df = conn.read(spreadsheet=SHEET_URL, worksheet="SavedPicks")
                     if not current_saved_df.empty and "번호" in current_saved_df.columns:
-                        existing_nums = pd.to_numeric(saved_df["번호"], errors='coerce').dropna().astype(int).tolist()
+                        existing_nums = pd.to_numeric(current_saved_df["번호"], errors='coerce').dropna().astype(int).tolist()
                     else:
                         existing_nums = []
                 except:
