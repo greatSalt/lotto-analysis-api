@@ -22,7 +22,7 @@ def predict_with_momentum(df, last_nums):
         # 3. 점수 산출 로직 (사용자 커스텀 가능)
         # - 최근 많이 나온 번호(기세)에 가산점
         # - 아주 오래 쉰 번호(반등)에 가산점
-        score = (recent_count * 20) + (current_skip * 5)
+        score = (recent_count * 5) + (current_skip * 5)
         
         # 4. 상태 분류
         if recent_count >= 3:
