@@ -5,43 +5,48 @@ import pandas as pd
 import numpy as np
 
 def predict_with_momentum(df, last_nums):
-    """
-    지난주 번호들(last_nums) 중 이월 가능성이 높은 번호를 
-    기세(최근 빈도)와 스킵(대기 기간)을 복합하여 점수화합니다.
-    """
     prediction_results = []
+    # 데이터프레임 전체 리스트화
     win_nums_list = df[['n1', 'n2', 'n3', 'n4', 'n5', 'n6']].values.tolist()
 
     for num in last_nums:
-        # 1. 현재 스킵 계산 (얼마나 쉬었나)
+        # 1. 현재 스킵 (이 번호가 당첨되기 전까지 대기한 시간)
         current_skip = calculate_skip_manually(num, 0, win_nums_list)
         
-        # 2. 최근 기세 계산 (최근 10회차 중 몇 번 나왔나)
+        # 2. 최근 10회 기세 (최근 얼마나 핫한가)
         recent_count = sum(1 for draw in win_nums_list[:10] if num in draw)
         
-        # 3. 점수 산출 로직 (사용자 커스텀 가능)
-        # - 최근 많이 나온 번호(기세)에 가산점
-        # - 아주 오래 쉰 번호(반등)에 가산점
-        score = (recent_count * 10) + (current_skip * 1)
+        # 3. 보강된 점수 산출 로직
+        # [기본 점수]
+        score = (recent_count * 15)  # 기세 가중치 상향
         
-        # 4. 상태 분류
+        # [보너스 점수 - 28번 같은 반등형 포착]
+        if current_skip >= 10:
+            score += 30  # 10회 이상 장기 미출수는 강력한 반등 후보로 가점
+        elif current_skip <= 2:
+            score += 10  # 아주 최근에 나온 번호도 기세 유지 가점 (45번 케이스)
+
+        # 4. 유형 분류 상세화
         if recent_count >= 3:
-            status = "🔥 기세형"
+            status = "🔥 기세형(Hot)"
         elif current_skip >= 10:
-            status = "⏳ 반등형"
+            status = "⏳ 반등형(Cold)"
+        elif current_skip <= 2:
+            status = "⚡ 재출현형"
         else:
             status = "🧊 일반"
 
         prediction_results.append({
             "번호": num,
             "최근빈도": f"{recent_count}회",
-            "직전스킵": f"{current_skip}회",
+            "현재스킵": f"{current_skip}회",
             "유형": status,
             "점수": score
         })
 
-    # 점수 순으로 정렬하여 반환
-    return  pd.DataFrame(prediction_results).sort_values(by="점수", ascending=False)
+    # 점수 높은 순으로 정렬
+    return pd.DataFrame(prediction_results).sort_values(by="점수", ascending=False)
+
 
 # [함수] 특정 회차(idx)에서 특정 번호(num)의 직전 스킵 주기를 계산
 def calculate_skip_manually(target_num, current_idx, all_nums):
