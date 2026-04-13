@@ -647,61 +647,58 @@ elif menu == "🎯 추천번호 분석":
             st.dataframe(con_df, use_container_width=True, hide_index=True)
             st.caption("보통 0~1쌍이 전체의 80%")
 
-elif menu == "스킵 주기별 통계":
-    st.title("🔢 스킵 주기별 출현 빈도 리포트")
+elif menu == "현재 스킵 주기 분석":
+    st.title("🧊 당첨 번호 기준 현재 미출현 주기")
     
     if not df.empty:
-        # 분석 대상 번호 리스트 (최신순)
+        # 전체 당첨 번호 리스트 (최신순)
         win_nums_list = df[['n1', 'n2', 'n3', 'n4', 'n5', 'n6']].values.tolist()
         
-        # [수정] 스킵 주기 범위를 analyze_range만큼 유동적으로 설정
-        # (0주부터 analyze_range주까지 담을 수 있는 공간 생성)
-        skip_stats = {i: [] for i in range(analyze_range + 1)} 
-        total_hits = 0
-
-        # 최근 회차부터 analyze_range만큼 분석 수행
-        for i in range(analyze_range):
-            if i >= len(win_nums_list): break
+        # [핵심] 입력 회차 범위(analyze_range) 내의 당첨 번호들만 추출 (중복 제거)
+        target_period_draws = win_nums_list[:analyze_range]
+        # 리스트 내 모든 번호를 하나의 집합으로 합쳐서 고유 번호 리스트 생성
+        target_numbers = sorted(list(set(num for draw in target_period_draws for num in draw)))
+        
+        # 현재 스킵 주기를 저장할 딕셔너리
+        current_skips = {}
+        total_target_count = len(target_numbers)
+        
+        # 추출된 당첨 번호들만 대상으로 현재 미출현 주수 계산
+        for num in target_numbers:
+            skip_count = 0
+            found = False
             
-            current_draw = win_nums_list[i]
-            # 해당 회차 이후(과거) 데이터 추출
-            past_data = win_nums_list[i+1:] 
+            # 최신 회차(인덱스 0)부터 과거로 가며 이 번호가 마지막으로 언제 나왔는지 탐색
+            for draw in win_nums_list:
+                if num in draw:
+                    found = True
+                    break
+                skip_count += 1
             
-            for num in current_draw:
-                skip_count = 0
-                found = False
-                
-                # [핵심] 탐색 한계를 analyze_range로 설정 (고정값 30 제거)
-                search_limit = min(len(past_data), analyze_range) 
-                
-                for skip_idx in range(search_limit):
-                    if num in past_data[skip_idx]:
-                        skip_count = skip_idx
-                        found = True
-                        break
-                
-                # 설정된 범위 내에서 기록을 찾은 경우에만 통계에 포함
-                if found:
-                    skip_stats[skip_count].append(num)
-                    total_hits += 1
+            # 주기별로 번호 그룹화
+            if skip_count not in current_skips:
+                current_skips[skip_count] = []
+            current_skips[skip_count].append(num)
 
-        # 2. 테이블용 데이터 가공 (30행 제한 없이 설정한 범위만큼 생성)
+        # 2. 테이블용 데이터 가공
         report_data = []
-        # 비중이 높은 순서대로 보기 위해 상위 30~50개 정도만 표시하거나 전체 표시 가능
-        # 여기서는 테이블 가독성을 위해 데이터가 있는 주기만 추출
-        for skip_val in range(analyze_range + 1):
-            nums_at_skip = skip_stats[skip_val]
-            count = len(nums_at_skip)
+        if current_skips:
+            # 발견된 최대 주기까지 표시
+            max_skip = max(current_skips.keys())
             
-            # 데이터가 있는 주기만 리스트에 추가 (표 가독성)
-            if count > 0:
-                percentage = (count / total_hits * 100) if total_hits > 0 else 0
-                unique_nums = sorted(list(set(nums_at_skip)))
-                nums_str = ", ".join(map(str, unique_nums))
+            for skip_val in range(max_skip + 1):
+                nums_at_skip = current_skips.get(skip_val, [])
+                count = len(nums_at_skip)
+                
+                # 비중 계산 (소수점 없이 정수화)
+                # 대상 번호들 중 해당 주기에 머물러 있는 번호의 비율
+                percentage = int(round(count / total_target_count * 100)) if total_target_count > 0 else 0
+                
+                nums_str = ", ".join(map(str, sorted(nums_at_skip)))
                 
                 report_data.append({
-                    "스킵 주기": f"{skip_val}주",
-                    "출현 횟수": count,
+                    "현재 스킵 주기": f"{skip_val}주",
+                    "번호 갯수": count,
                     "비중(%)": percentage,
                     "해당 번호 리스트": nums_str
                 })
@@ -712,14 +709,15 @@ elif menu == "스킵 주기별 통계":
             use_container_width=True,
             hide_index=True,
             column_config={
-                "스킵 주기": st.column_config.TextColumn("📅 스킵 주기"),
-                "출현 횟수": st.column_config.NumberColumn("🔢 출현 횟수", format="%d회"),
-                "비중(%)": st.column_config.ProgressColumn("📊 비중(%)", format="%.2f%%", min_value=0, max_value=25),
-                "해당 번호 리스트": st.column_config.TextColumn("🏷️ 관련 번호")
+                "현재 스킵 주기": st.column_config.TextColumn("📅 현재 대기 기간"),
+                "번호 갯수": st.column_config.NumberColumn("🔢 번호 갯수", format="%d개"),
+                "비중(%)": st.column_config.ProgressColumn("📊 분포 비중", format="%d%%", min_value=0, max_value=100),
+                "해당 번호 리스트": st.column_config.TextColumn("🏷️ 분석 대상 번호")
             }
         )
 
-        st.info(f"💡 최근 {analyze_range}회차 내 분석 결과입니다. 탐색 범위 내에 기록이 없는 번호는 제외되었습니다.")
+        st.info(f"💡 최근 {analyze_range}회차 동안 출현했던 고유 번호 {total_target_count}개를 대상으로 현재 미출현 주기를 분석했습니다.")
+
 
 
 st.sidebar.divider()
