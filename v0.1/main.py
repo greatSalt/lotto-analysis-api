@@ -678,71 +678,7 @@ elif menu == "현재 스킵 주기 분석":
             st.write(f"**3. total_target_count (분석 대상 번호 총 개수):**")
             st.info(f"총 {total_target_count}개의 번호가 분석 범위 내에 존재합니다.")
         # ==================================
-'''
-        if total_target_count == 0:
-            st.warning(f"최근 {r_limit}회차 내에 데이터가 존재하지 않습니다.")
-        else:
-            # 4. 현재 스킵 주기 계산
-            current_skips = {}
-            for num in target_numbers:
-                skip_count = 0
-                found = False
-                # 전체 데이터를 뒤져서 '가장 최근에 나온 지 몇 주 됐는지' 계산
-                for draw in win_nums_list:
-                    if num in draw:
-                        found = True
-                        break
-                    skip_count += 1
-                
-                # 그룹화
-                if skip_count not in current_skips:
-                    current_skips[skip_count] = []
-                current_skips[skip_count].append(num)
 
-            # 5. 테이블용 리스트 빌드
-            # 발견된 주기 중 가장 큰 값을 찾아 루프 범위 결정
-            all_found_skips = list(current_skips.keys())
-            max_skip_val = max(all_found_skips) if all_found_skips else 0
-            
-            final_report = []
-            for s_val in range(max_skip_val + 1):
-                nums_list = current_skips.get(s_val, [])
-                cnt = len(nums_list)
-                
-                # 비중 정수화 (반올림 후 int 변환)
-                perc = int(round((cnt / total_target_count) * 100)) if total_target_count > 0 else 0
-                
-                # 번호 목록 문자열 정리
-                nums_str = ", ".join(map(str, sorted(nums_list)))
-                
-                final_report.append({
-                    "주기": f"{s_val}주",
-                    "갯수": cnt,
-                    "비중": perc,
-                    "목록": nums_str
-                })
-
-            # 6. 데이터프레임 변환 및 출력
-            display_df = pd.DataFrame(final_report)
-            
-            if not display_df.empty:
-                st.dataframe(
-                    display_df,
-                    use_container_width=True,
-                    hide_index=True,
-                    column_config={
-                        "주기": st.column_config.TextColumn("📅 현재 대기"),
-                        "갯수": st.column_config.NumberColumn("🔢 갯수", format="%d개"),
-                        "비중": st.column_config.ProgressColumn("📊 비중", format="%d%%", min_value=0, max_value=100),
-                        "목록": st.column_config.TextColumn("🏷️ 번호 목록")
-                    }
-                )
-                st.success(f"✅ 분석 완료: 대상 번호 {total_target_count}개")
-            else:
-                st.error("데이터 생성에 실패했습니다.")
-    else:
-        st.error("데이터가 로드되지 않았습니다.")
-'''
 
 
 
