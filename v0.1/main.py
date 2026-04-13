@@ -649,38 +649,6 @@ elif menu == "🎯 추천번호 분석":
 
 elif menu == "현재 스킵 주기 분석":
     st.title("🧊 당첨 번호 기준 현재 미출현 주기")
-    
-    if not df.empty:
-        # 1. 원본 데이터 복사 및 리스트화
-        # df가 전역 변수이므로 안전하게 복사본 사용
-        win_data = df[['n1', 'n2', 'n3', 'n4', 'n5', 'n6']].copy()
-        win_nums_list = win_data.values.tolist()
-        
-        # 2. 분석 범위 설정 (외부 analyze_range 참조)
-        try:
-            r_limit = int(analyze_range)
-        except (NameError, TypeError, ValueError):
-            r_limit = 30 # 변수가 없거나 오류 시 기본값
-            
-        # 3. 분석 대상 번호 추출 (최신 회차부터 r_limit 만큼)
-        # 중복 제거를 위해 set 사용 후 리스트로 변환
-        target_draws = win_nums_list[:r_limit]
-        target_numbers = sorted(list(set(n for draw in target_draws for n in draw)))
-        total_target_count = len(target_numbers)
-         # === 변수 확인용 출력 디버깅 영역 ===
-        with st.expander("🛠️ 데이터 추출 변수 확인 (디버깅)", expanded=False):
-            st.write(f"**1. target_draws (최근 {r_limit}회차 당첨번호 리스트):**")
-            st.code(target_draws[:5]) # 너무 길면 안되니 상위 5개만 표시
-            
-            st.write(f"**2. target_numbers (범위 내 중복 제거된 고유 번호):**")
-            st.write(f"{target_numbers}")
-            
-            st.write(f"**3. total_target_count (분석 대상 번호 총 개수):**")
-            st.info(f"총 {total_target_count}개의 번호가 분석 범위 내에 존재합니다.")
-        # ==================================
-
-
-
 
 
 st.sidebar.divider()
