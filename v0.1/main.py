@@ -42,7 +42,7 @@ analyze_range = st.sidebar.slider(
 df = df_raw.head(analyze_range).copy()
 
 with st.sidebar:
-    menu = st.sidebar.radio("기능 선택", ["데이터 입력", "크레이지 번호 추출", "콜드 번호 추출", "특정 번호 분석", "📊 이월수 예측", "🎯 추천번호 분석"])
+    menu = st.sidebar.radio("기능 선택", ["데이터 입력", "크레이지 번호 추출", "콜드 번호 추출", "특정 번호 분석", "📊 이월수 예측", "🎯 추천번호 분석", "스킵 주기별 통계"])
     display_sidebar_picks(conn, SHEET_URL) # 👈 어떤 메뉴에서든 내 번호가 보임
 
 if menu == "데이터 입력":
