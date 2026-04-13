@@ -648,64 +648,74 @@ elif menu == "🎯 추천번호 분석":
             st.caption("보통 0~1쌍이 전체의 80%")
 
 elif menu == "스킵 주기별 통계":
-    st.title("🧊 당첨 번호 기준 현재 미출현(스킵) 주기")
+    st.title("🧊 현재 미출현(스킵) 주기 전수 조사")
     
-    if not df.empty:
-        # 1. 전체 데이터(df_raw)를 리스트로 변환 (정확한 스킵 추적용)
+    # df_raw: 전체 DB (스킵 카운트용)
+    # df: analyze_range만큼 잘린 데이터 (대상 번호 추출용)
+    
+    if not df_raw.empty:
+        # 1. 전체 당첨 데이터 리스트 (끝까지 추적하기 위함)
         win_nums_full = df_raw[['n1', 'n2', 'n3', 'n4', 'n5', 'n6']].values.tolist()
         
-        # 2. 분석 대상: 입력한 범위(analyze_range) 내에 한 번이라도 나왔던 번호들만 추출
-        target_draws = win_nums_full[:analyze_range]
+        # 2. 분석 대상 번호 추출 (최근 r_limit 회차 내에 등장한 번호들)
+        r_limit = int(analyze_range)
+        target_draws = win_nums_full[:r_limit]
         target_numbers = sorted(list(set(n for draw in target_draws for n in draw)))
-        total_target_count = len(target_numbers)
+        total_count = len(target_numbers)
 
-        # 3. 현재 스킵 주기 계산 (범위를 벗어나더라도 실제 마지막 당첨일을 찾음)
+        # 3. 실제 스킵 주기 계산 (분석 범위를 제한하지 않고 DB 끝까지 카운트)
         current_skips = {}
         for num in target_numbers:
             skip_count = 0
+            found = False
             for draw in win_nums_full:
                 if num in draw:
+                    found = True
                     break
                 skip_count += 1
             
+            # 번호를 찾지 못했더라도(DB 끝까지 갔을 때) 그동안의 skip_count를 기록
             if skip_count not in current_skips:
                 current_skips[skip_count] = []
             current_skips[skip_count].append(num)
 
-        # 4. 테이블 데이터 생성 (소수점 제거 및 정수화)
+        # 4. 리포트 데이터 구성 (소수점 없는 정수 비중)
         report_data = []
         if current_skips:
-            max_s = max(current_skips.keys())
-            for s in range(max_s + 1):
-                nums = current_skips.get(s, [])
-                if not nums: continue
+            # 발견된 모든 주기(범위 밖 포함)를 정렬하여 테이블화
+            sorted_keys = sorted(current_skips.keys())
+            
+            for s_val in sorted_keys:
+                nums_list = current_skips[s_val]
+                cnt = len(nums_list)
                 
-                # 비중 계산: 소수점 없이 무조건 정수 처리
-                perc = int(round(len(nums) / total_target_count * 100)) if total_target_count > 0 else 0
+                # 비중 계산 (소수점 제거 정수화)
+                perc = int(round(cnt / total_count * 100)) if total_count > 0 else 0
                 
                 report_data.append({
-                    "현재 스킵": f"{s}주",
-                    "갯수": f"{len(nums)}개",
+                    "현재 스킵 주기": f"{s_val}주",
+                    "갯수": cnt,
                     "비중": perc,
-                    "번호 목록": ", ".join(map(str, sorted(nums)))
+                    "해당 번호 목록": ", ".join(map(str, sorted(nums_list)))
                 })
 
-            # 5. 결과 출력
-            display_df = pd.DataFrame(report_data)
+            # 5. 최종 테이블 출력
+            res_df = pd.DataFrame(report_data)
             st.dataframe(
-                display_df,
+                res_df,
                 use_container_width=True,
                 hide_index=True,
                 column_config={
-                    "비중": st.column_config.ProgressColumn(
-                        "분포 비중", 
-                        format="%d%%", # 여기서 %d로 소수점 강제 제거
-                        min_value=0, 
-                        max_value=100
-                    )
+                    "현재 스킵 주기": st.column_config.TextColumn("📅 현재 대기"),
+                    "갯수": st.column_config.NumberColumn("🔢 갯수", format="%d개"),
+                    "비중": st.column_config.ProgressColumn("📊 비중", format="%d%%", min_value=0, max_value=100),
+                    "해당 번호 목록": st.column_config.TextColumn("🏷️ 번호 리스트")
                 }
             )
-            st.success(f"✅ 분석 대상: 최근 {analyze_range}회차 내 출현 번호 {total_target_count}개 전체 조사 완료")
+            st.success(f"최근 {r_limit}회차 내 출현한 {total_count}개 번호의 **전체 스킵 주기** 분석 완료")
+    else:
+        st.error("전체 데이터를 불러올 수 없습니다.")
+
 
 
 
