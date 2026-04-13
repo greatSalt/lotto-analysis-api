@@ -667,7 +667,18 @@ elif menu == "현재 스킵 주기 분석":
         target_draws = win_nums_list[:r_limit]
         target_numbers = sorted(list(set(n for draw in target_draws for n in draw)))
         total_target_count = len(target_numbers)
-
+         # === 변수 확인용 출력 디버깅 영역 ===
+        with st.expander("🛠️ 데이터 추출 변수 확인 (디버깅)", expanded=False):
+            st.write(f"**1. target_draws (최근 {r_limit}회차 당첨번호 리스트):**")
+            st.code(target_draws[:5]) # 너무 길면 안되니 상위 5개만 표시
+            
+            st.write(f"**2. target_numbers (범위 내 중복 제거된 고유 번호):**")
+            st.write(f"{target_numbers}")
+            
+            st.write(f"**3. total_target_count (분석 대상 번호 총 개수):**")
+            st.info(f"총 {total_target_count}개의 번호가 분석 범위 내에 존재합니다.")
+        # ==================================
+'''
         if total_target_count == 0:
             st.warning(f"최근 {r_limit}회차 내에 데이터가 존재하지 않습니다.")
         else:
@@ -731,7 +742,7 @@ elif menu == "현재 스킵 주기 분석":
                 st.error("데이터 생성에 실패했습니다.")
     else:
         st.error("데이터가 로드되지 않았습니다.")
-
+'''
 
 
 
