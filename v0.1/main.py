@@ -651,79 +651,87 @@ elif menu == "현재 스킵 주기 분석":
     st.title("🧊 당첨 번호 기준 현재 미출현 주기")
     
     if not df.empty:
-        # 1. 데이터 준비
-        win_nums_list = df[['n1', 'n2', 'n3', 'n4', 'n5', 'n6']].values.tolist()
+        # 1. 원본 데이터 복사 및 리스트화
+        # df가 전역 변수이므로 안전하게 복사본 사용
+        win_data = df[['n1', 'n2', 'n3', 'n4', 'n5', 'n6']].copy()
+        win_nums_list = win_data.values.tolist()
         
-        # [체크] analyze_range가 정상적으로 정의되어 있는지 확인
+        # 2. 분석 범위 설정 (외부 analyze_range 참조)
         try:
             r_limit = int(analyze_range)
-        except:
-            r_limit = 30 # 기본값
+        except (NameError, TypeError, ValueError):
+            r_limit = 30 # 변수가 없거나 오류 시 기본값
             
-        # 2. 분석 대상 번호 추출 (최신 회차부터 범위만큼)
-        target_period_draws = win_nums_list[:r_limit]
-        target_numbers = sorted(list(set(num for draw in target_period_draws for num in draw)))
+        # 3. 분석 대상 번호 추출 (최신 회차부터 r_limit 만큼)
+        # 중복 제거를 위해 set 사용 후 리스트로 변환
+        target_draws = win_nums_list[:r_limit]
+        target_numbers = sorted(list(set(n for draw in target_draws for n in draw)))
         total_target_count = len(target_numbers)
 
-        # [디버깅용 정보] 데이터가 안 나올 경우를 대비해 상단에 표시
         if total_target_count == 0:
-            st.warning(f"선택하신 {r_limit}회차 내에 분석할 당첨 번호 데이터가 없습니다.")
+            st.warning(f"최근 {r_limit}회차 내에 데이터가 존재하지 않습니다.")
         else:
-            # 3. 현재 스킵 주기 계산
+            # 4. 현재 스킵 주기 계산
             current_skips = {}
             for num in target_numbers:
                 skip_count = 0
                 found = False
+                # 전체 데이터를 뒤져서 '가장 최근에 나온 지 몇 주 됐는지' 계산
                 for draw in win_nums_list:
                     if num in draw:
                         found = True
                         break
                     skip_count += 1
                 
+                # 그룹화
                 if skip_count not in current_skips:
                     current_skips[skip_count] = []
                 current_skips[skip_count].append(num)
 
-            # 4. 테이블 데이터 생성
-            report_data = []
-            max_skip = max(current_skips.keys()) if current_skips else 0
+            # 5. 테이블용 리스트 빌드
+            # 발견된 주기 중 가장 큰 값을 찾아 루프 범위 결정
+            all_found_skips = list(current_skips.keys())
+            max_skip_val = max(all_found_skips) if all_found_skips else 0
             
-            # 0주부터 발견된 최대 주기까지 빠짐없이 루프
-            for skip_val in range(max_skip + 1):
-                nums_at_skip = current_skips.get(skip_val, [])
-                count = len(nums_at_skip)
+            final_report = []
+            for s_val in range(max_skip_val + 1):
+                nums_list = current_skips.get(s_val, [])
+                cnt = len(nums_list)
                 
-                # 비중 계산 (소수점 없는 정수)
-                percentage = int(round(count / total_target_count * 100))
+                # 비중 정수화 (반올림 후 int 변환)
+                perc = int(round((cnt / total_target_count) * 100)) if total_target_count > 0 else 0
                 
-                # 번호가 있는 주기만 표시하거나 전체 표시 (여기서는 모든 주기 표시)
-                nums_str = ", ".join(map(str, sorted(nums_at_skip)))
+                # 번호 목록 문자열 정리
+                nums_str = ", ".join(map(str, sorted(nums_list)))
                 
-                report_data.append({
-                    "현재 스킵 주기": f"{skip_val}주",
-                    "번호 갯수": count,
-                    "비중(%)": percentage,
-                    "해당 번호 리스트": nums_str
+                final_report.append({
+                    "주기": f"{s_val}주",
+                    "갯수": cnt,
+                    "비중": perc,
+                    "목록": nums_str
                 })
 
-            # 5. 최종 테이블 출력
-            if report_data:
+            # 6. 데이터프레임 변환 및 출력
+            display_df = pd.DataFrame(final_report)
+            
+            if not display_df.empty:
                 st.dataframe(
-                    pd.DataFrame(report_data),
+                    display_df,
                     use_container_width=True,
                     hide_index=True,
                     column_config={
-                        "현재 스킵 주기": st.column_config.TextColumn("📅 현재 대기"),
-                        "번호 갯수": st.column_config.NumberColumn("🔢 갯수", format="%d개"),
-                        "비중(%)": st.column_config.ProgressColumn("📊 비중", format="%d%%", min_value=0, max_value=100),
-                        "해당 번호 리스트": st.column_config.TextColumn("🏷️ 번호 목록")
+                        "주기": st.column_config.TextColumn("📅 현재 대기"),
+                        "갯수": st.column_config.NumberColumn("🔢 갯수", format="%d개"),
+                        "비중": st.column_config.ProgressColumn("📊 비중", format="%d%%", min_value=0, max_value=100),
+                        "목록": st.column_config.TextColumn("🏷️ 번호 목록")
                     }
                 )
-                st.success(f"최근 {r_limit}회차의 당첨 번호 {total_target_count}개에 대한 전수 조사가 완료되었습니다.")
+                st.success(f"✅ 분석 완료: 대상 번호 {total_target_count}개")
             else:
-                st.error("분석 결과 테이블을 생성할 수 없습니다.")
+                st.error("데이터 생성에 실패했습니다.")
     else:
-        st.error("데이터프레임이 비어 있습니다.")
+        st.error("데이터가 로드되지 않았습니다.")
+
 
 
 
