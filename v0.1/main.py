@@ -651,31 +651,36 @@ elif menu == "스킵 주기별 통계":
     st.title("🧊 최근 당첨 번호들의 출현 당시 스킵 주기")
     
     if not df_raw.empty:
+        # 1. 전체 데이터 준비 (df_raw 사용)
         win_nums_full = df_raw[['n1', 'n2', 'n3', 'n4', 'n5', 'n6']].values.tolist()
         r_limit = int(analyze_range)
         target_draws = win_nums_full[:r_limit]
         
-        # 1. 스킵 주기 계산 및 데이터 수집
+        # 2. 스킵 주기 계산 및 데이터 수집
         appeared_skips = {}
         total_appearance_count = 0
 
         for i in range(len(target_draws)):
             for num in target_draws[i]:
-                t_num = int(num)
+                # 번호를 확실하게 정수로 변환 (소수점 원천 차단)
+                t_num = int(float(num)) 
+                
                 skip_count = 0
                 for past_draw in win_nums_full[i+1:]:
-                    if t_num in past_draw: break
+                    if t_num in [int(float(n)) for n in past_draw]: 
+                        break
                     skip_count += 1
                 
                 if skip_count not in appeared_skips:
-                    appeared_skips[skip_count] = set() # 중복 방지를 위해 set 사용
+                    appeared_skips[skip_count] = set()
                 appeared_skips[skip_count].add(t_num)
                 total_appearance_count += 1
 
-        # 2. 에디터용 데이터프레임 생성
+        # 3. 에디터용 데이터프레임 생성
         report_rows = []
         for s_val in sorted(appeared_skips.keys()):
-            nums_list = sorted(list(appeared_skips[s_val]))
+            # 정수형으로 정렬된 번호 리스트
+            nums_list = sorted([int(n) for n in appeared_skips[s_val]])
             cnt = len(nums_list)
             perc = int(round(cnt / total_appearance_count * 100)) if total_appearance_count > 0 else 0
             
@@ -684,57 +689,55 @@ elif menu == "스킵 주기별 통계":
                 "당시 스킵": f"{s_val}주",
                 "갯수": cnt,
                 "비중": perc,
-                "번호 리스트": ", ".join(map(str, nums_list)),
-                "raw_nums": nums_list # 저장을 위한 숨겨진 데이터
+                "번호 리스트": ", ".join(map(str, nums_list)), # 소수점 없는 문자열
+                "raw_nums": nums_list 
             })
 
-        # 3. 데이터 에디터 출력 (번호 선택 UI)
-        st.subheader("📋 주기별 번호 리스트 (저장할 그룹을 선택하세요)")
+        # 4. 데이터 에디터 출력 (TypeError 수정 완료)
+        st.subheader("📋 주기별 번호 리스트 (저장할 그룹 선택)")
+        
+        # 에러 원인인 disabled=True를 삭제하고, 
+        # st.data_editor의 disabled 인자를 사용하여 일괄 제어합니다.
         edited_df = st.data_editor(
             pd.DataFrame(report_rows),
             use_container_width=True,
             hide_index=True,
             column_config={
                 "선택": st.column_config.CheckboxColumn("선택", default=False),
-                "당시 스킵": st.column_config.TextColumn("📅 주기", disabled=True),
-                "갯_수": st.column_config.NumberColumn("🔢 갯수", format="%d개", disabled=True),
-                "비중": st.column_config.ProgressColumn("📊 비중", format="%d%%", min_value=0, max_value=100, disabled=True),
-                "번호 리스트": st.column_config.TextColumn("🏷️ 번호들", disabled=True),
-                "raw_nums": None # 화면에서 숨김
-            }
+                "당시 스킵": st.column_config.TextColumn("📅 주기"),
+                "갯수": st.column_config.NumberColumn("🔢 갯수", format="%d개"),
+                "비중": st.column_config.ProgressColumn("📊 비중", format="%d%%", min_value=0, max_value=100),
+                "번호 리스트": st.column_config.TextColumn("🏷️ 번호들"),
+                "raw_nums": None # 화면 숨김
+            },
+            # '선택' 컬럼만 수정 가능하게 설정 (나머지는 자동 비활성화)
+            disabled=["당시 스킵", "갯수", "비중", "번호 리스트"]
         )
 
-        # 4. 저장 로직
+        # 5. 저장 로직
         st.divider()
-        col1, col2 = st.columns([2, 1])
+        selected_rows = edited_df[edited_df["선택"] == True]
         
-        with col1:
-            # 선택된 행의 번호들만 합치기
-            selected_rows = edited_df[edited_df["선택"] == True]
+        if not selected_rows.empty:
             all_selected_nums = []
             for _, row in selected_rows.iterrows():
                 all_selected_nums.extend(row["raw_nums"])
             
-            # 중복 제거 및 정렬
-            final_to_save = sorted(list(set(all_selected_nums)))
+            # 최종 저장용 정수 리스트 (중복 제거)
+            final_to_save = sorted(list(set(map(int, all_selected_nums))))
             
-            if final_to_save:
-                st.info(f"📍 선택된 번호: {final_to_save}")
-            else:
-                st.write("위 테이블에서 저장할 주기의 체크박스를 선택하세요.")
-
-        with col2:
-            if st.button("💾 선택 번호 저장하기", use_container_width=True, type="primary"):
-                if final_to_save:
-                    # 기존 저장 함수 활용 (유형: PICK)
-                    save_to_sheets_by_type(conn, SHEET_URL, final_to_save, "PICK")
-                    st.success(f"✅ {len(final_to_save)}개 번호 저장 완료!")
-                    st.rerun()
-                else:
-                    st.warning("선택된 번호가 없습니다.")
+            st.info(f"📍 선택된 번호: {final_to_save}")
+            
+            if st.button("💾 선택 번호 보관함에 저장", use_container_width=True, type="primary"):
+                save_to_sheets_by_type(conn, SHEET_URL, final_to_save, "PICK")
+                st.success(f"✅ {len(final_to_save)}개 번호 저장 완료!")
+                st.rerun()
+        else:
+            st.write("💡 저장할 번호 그룹의 왼쪽 체크박스를 선택하세요.")
 
     else:
-        st.error("데이터를 불러올 수 없습니다.")
+        st.error("데이터가 없습니다.")
+
 
 
 
