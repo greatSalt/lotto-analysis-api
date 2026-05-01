@@ -508,9 +508,9 @@ elif menu == "🎯 추천번호 분석":
                         results = generate_strategic_combinations(
                             selected_df, 
                             ratio_filter=sel_oe, # UI 입력값 (멀티셀렉트)
-                            sum_range,          # UI 입력값 
-                            fixed_nums,         # UI 입력값
-                            exclude_nums,       # UI 입력값
+                            sum_range = sum_range,      # UI 입력값 
+                            fixed_nums = st.session_state.fixed_nums,  # UI 입력값
+                            exclude_nums = st.session_state.exclude_nums,  # UI 입력값
                             min_ac=sel_ac,     # UI 입력값
                             allowed_hl=sel_hl, # UI 입력값 (멀티셀렉트)
                             max_con=sel_con,   # UI 입력값 (셀렉트박스)
