@@ -28,6 +28,11 @@ def init_all_saved_data(conn, sheet_url):
                     # 4. 제외수 (EX)
                     st.session_state.exclude_nums = get_list_by_type(df, 'EX')
                     # 5. 신규 필터 설정값 로드
+                    #[홀짝]
+                    # [홀짝 비율 리스트]
+                    oe_rows = df[df['유형'] == 'F_OE']
+                    st.session_state.sel_oe = oe_rows['번호'].tolist() if not oe_rows.empty else ["3:3", "2:4", "4:2"]
+                    
                     # [AC값]
                     st.session_state.sel_ac = get_safe_int(df, 'F_AC', 7)
                         
@@ -84,6 +89,7 @@ def set_default_session_values():
     st.session_state.my_saved_picks = []
     st.session_state.fixed_nums = []
     st.session_state.exclude_nums = []
+    st.session_state.sel_oe = ["3:3", "2:4", "4:2"]
     st.session_state.sel_ac = 7
     st.session_state.sel_con = 1
     st.session_state.sel_hl = ["3:3", "2:4", "4:2"]
@@ -148,6 +154,8 @@ def save_to_sheets_by_type(conn, sheet_url, new_nums, type_code):
             elif type_code == 'FIX': st.session_state.fixed_nums = sorted(new_nums)
             elif type_code == 'EX': st.session_state.exclude_nums = sorted(new_nums)
              # 신규 필터 설정 동기화
+            # [추가] 홀짝(Odd-Even) 설정이 필요하다면 별도 코드로 관리 (예: F_OE)
+            elif type_code == 'F_OE': st.session_state.sel_oe = new_nums
             elif type_code == 'F_AC': st.session_state.sel_ac = int(new_nums[0])
             elif type_code == 'F_CON': st.session_state.sel_con = int(new_nums[0])
             elif type_code == 'F_HL': st.session_state.sel_hl = new_nums # ['3:3', '4:2'] 형태

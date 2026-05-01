@@ -433,7 +433,12 @@ elif menu == "🎯 추천번호 분석":
             with col_f1:
                 st.write("**추가 필터 1: 홀짝 비율**")
                 ratio_options = ["0:6", "1:5", "2:4", "3:3", "4:2", "5:1", "6:0"]
-                ratio_filter = st.multiselect("허용 비율", options=ratio_options, default=["3:3", "2:4"], key='hl_input')
+                sel_oe = st.multiselect(
+                    "허용 비율", 
+                    options=ratio_options, 
+                    default=st.session_state.get('sel_oe', ["3:3", "2:4"]), 
+                    key='oe_input'
+                )
             with col_f2:
                 st.write("**추가 필터 2: 총합 범위**")
                 sum_range = st.slider(
@@ -474,6 +479,7 @@ elif menu == "🎯 추천번호 분석":
             if st.button("📌 필터 설정값 저장"):
                 with st.spinner("모든 필터 설정을 저장 중..."):
                     # 각 필터값을 리스트 형태로 변환하여 저장 함수 호출
+                    save_to_sheets_by_type(conn, SHEET_URL, sel_oe, 'F_OE')
                     save_to_sheets_by_type(conn, SHEET_URL, [sel_ac], 'F_AC')
                     save_to_sheets_by_type(conn, SHEET_URL, [sel_con], 'F_CON')
                     save_to_sheets_by_type(conn, SHEET_URL, sel_hl, 'F_HL') # 리스트 그대로 전달
@@ -501,10 +507,10 @@ elif menu == "🎯 추천번호 분석":
                     with st.spinner('최적의 조합을 계산 중...'):
                         results = generate_strategic_combinations(
                             selected_df, 
-                            ratio_filter, 
-                            sum_range, 
-                            fixed_nums, 
-                            exclude_nums, 
+                            ratio_filter=sel_oe, # UI 입력값 (멀티셀렉트)
+                            sum_range,          # UI 입력값 
+                            fixed_nums,         # UI 입력값
+                            exclude_nums,       # UI 입력값
                             min_ac=sel_ac,     # UI 입력값
                             allowed_hl=sel_hl, # UI 입력값 (멀티셀렉트)
                             max_con=sel_con,   # UI 입력값 (셀렉트박스)
