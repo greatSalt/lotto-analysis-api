@@ -12,7 +12,7 @@ import analysis_to_gsheet as saver
 from iteration_predictor import render_carryover_analysis
 from empty_zone_engine import get_confirmed_empty_zone, color_rows, apply_strategy_style
 from combination_engine import generate_strategic_combinations, get_advanced_stat_analysis, get_comprehensive_analysis
-from winnig_skip_analysis import analyze_winning_skip_distribution
+from winning_skip_analysis import analyze_winning_skip_distribution
 
 st.set_page_config(page_title="로또 분석 프로 v0.1", layout="wide")
 conn = st.connection("gsheets", type=GSheetsConnection)
