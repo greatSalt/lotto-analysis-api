@@ -12,6 +12,7 @@ import analysis_to_gsheet as saver
 from iteration_predictor import render_carryover_analysis
 from empty_zone_engine import get_confirmed_empty_zone, color_rows, apply_strategy_style
 from combination_engine import generate_strategic_combinations, get_advanced_stat_analysis, get_comprehensive_analysis
+from winnig_skip_analysis import analyze_winning_skip_distribution
 
 st.set_page_config(page_title="로또 분석 프로 v0.1", layout="wide")
 conn = st.connection("gsheets", type=GSheetsConnection)
@@ -42,7 +43,7 @@ analyze_range = st.sidebar.slider(
 df = df_raw.head(analyze_range).copy()
 
 with st.sidebar:
-    menu = st.sidebar.radio("기능 선택", ["데이터 입력", "크레이지 번호 추출", "콜드 번호 추출", "특정 번호 분석", "📊 이월수 예측", "🎯 추천번호 분석", "스킵 주기별 통계"])
+    menu = st.sidebar.radio("기능 선택", ["데이터 입력", "크레이지 번호 추출", "콜드 번호 추출", "특정 번호 분석", "📊 이월수 예측", "🎯 추천번호 분석", "당첨번호 주기 분석"])
     display_sidebar_picks(conn, SHEET_URL) # 👈 어떤 메뉴에서든 내 번호가 보임
 
 if menu == "데이터 입력":
@@ -653,102 +654,22 @@ elif menu == "🎯 추천번호 분석":
             st.dataframe(con_df, use_container_width=True, hide_index=True)
             st.caption("보통 0~1쌍이 전체의 80%")
 
-elif menu == "스킵 주기별 통계":
-    st.title("🧊 최근 당첨 번호들의 출현 당시 스킵 주기")
+elif menu == "당첨번호 주기 분석":
+    
+    st.subheader("📊 회차별 당첨번호 주기 분석")
     
     if not df_raw.empty:
-        # 1. 전체 데이터 준비 (df_raw 사용)
-        win_nums_full = df_raw[['n1', 'n2', 'n3', 'n4', 'n5', 'n6']].values.tolist()
-        r_limit = int(analyze_range)
-        target_draws = win_nums_full[:r_limit]
+        results_df, skip_stats = analyze_winning_skip_distribution(df_raw, analyze_range)
         
-        # 2. 스킵 주기 계산 및 데이터 수집
-        appeared_skips = {}
-        total_appearance_count = 0
-
-        for i in range(len(target_draws)):
-            for num in target_draws[i]:
-                # 번호를 확실하게 정수로 변환 (소수점 원천 차단)
-                t_num = int(float(num)) 
-                
-                skip_count = 0
-                for past_draw in win_nums_full[i+1:]:
-                    if t_num in [int(float(n)) for n in past_draw]: 
-                        break
-                    skip_count += 1
-                
-                if skip_count not in appeared_skips:
-                    appeared_skips[skip_count] = set()
-                appeared_skips[skip_count].add(t_num)
-                total_appearance_count += 1
-
-        # 3. 에디터용 데이터프레임 생성
-        report_rows = []
-        for s_val in sorted(appeared_skips.keys()):
-            # 정수형으로 정렬된 번호 리스트
-            nums_list = sorted([int(n) for n in appeared_skips[s_val]])
-            cnt = len(nums_list)
-            perc = int(round(cnt / total_appearance_count * 100)) if total_appearance_count > 0 else 0
-            
-            report_rows.append({
-                "선택": False,
-                "당시 스킵": f"{s_val}주",
-                "갯수": cnt,
-                "비중": perc,
-                "번호 리스트": ", ".join(map(str, nums_list)), # 소수점 없는 문자열
-                "raw_nums": nums_list 
-            })
-
-        # 4. 데이터 에디터 출력 (TypeError 수정 완료)
-        st.subheader("📋 주기별 번호 리스트 (저장할 그룹 선택)")
-        
-        # 에러 원인인 disabled=True를 삭제하고, 
-        # st.data_editor의 disabled 인자를 사용하여 일괄 제어합니다.
-        edited_df = st.data_editor(
-            pd.DataFrame(report_rows),
-            use_container_width=True,
-            hide_index=True,
-            column_config={
-                "선택": st.column_config.CheckboxColumn("선택", default=False),
-                "당시 스킵": st.column_config.TextColumn("📅 주기"),
-                "갯수": st.column_config.NumberColumn("🔢 갯수", format="%d개"),
-                "비중": st.column_config.ProgressColumn("📊 비중", format="%d%%", min_value=0, max_value=100),
-                "번호 리스트": st.column_config.TextColumn("🏷️ 번호들"),
-                "raw_nums": None # 화면 숨김
-            },
-            # '선택' 컬럼만 수정 가능하게 설정 (나머지는 자동 비활성화)
-            disabled=["당시 스킵", "갯수", "비중", "번호 리스트"]
-        )
-
-        # 5. 저장 로직
-        st.divider()
-        selected_rows = edited_df[edited_df["선택"] == True]
-        
-        if not selected_rows.empty:
-            all_selected_nums = []
-            for _, row in selected_rows.iterrows():
-                all_selected_nums.extend(row["raw_nums"])
-            
-            # 최종 저장용 정수 리스트 (중복 제거)
-            final_to_save = sorted(list(set(map(int, all_selected_nums))))
-            
-            st.info(f"📍 선택된 번호: {final_to_save}")
-            
-            if st.button("💾 선택 번호 보관함에 저장", use_container_width=True, type="primary"):
-                save_to_sheets_by_type(conn, SHEET_URL, final_to_save, "PICK")
-                st.success(f"✅ {len(final_to_save)}개 번호 저장 완료!")
-                st.rerun()
-        else:
-            st.write("💡 저장할 번호 그룹의 왼쪽 체크박스를 선택하세요.")
-
+        # 그래프 표시
+        fig = px.bar(skip_stats, x='주기', y='출현빈도', 
+                     title=f"최근 {rounds_to_analyze}회차 당첨번호 출현 주기 분포",
+                     labels={'주기': '스킵 주기 (Skip Interval)', '출현빈도': '당첨 횟수'},
+                     text='출현빈도')
+        st.plotly_chart(fig)
+    
     else:
         st.error("데이터가 없습니다.")
-
-
-
-
-
-
 
 st.sidebar.divider()
 st.sidebar.caption("v0.1 - 통계 분석 시스템")
