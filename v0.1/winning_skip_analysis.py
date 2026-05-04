@@ -66,6 +66,9 @@ def render_skip_group_weight_ui(skip_stats):
     total_hits = group_stats['출현빈도'].sum()
     group_stats['확률'] = (group_stats['출현빈도'] / total_hits).round(4)
     
+    # [핵심] 확률의 10배를 기본 가중치로 설정
+    group_stats['가중치'] = (group_stats['확률'] * 10).round(2)
+    
     # 3. 세션 상태를 이용한 가중치 관리 (최초 1회 초기화)
     if 'skip_weight_df' not in st.session_state:
         # 초기 가중치는 모두 1.0으로 설정 (혹은 확률 기반으로 자동 계산 가능)
@@ -86,8 +89,8 @@ def render_skip_group_weight_ui(skip_stats):
             "출현빈도": st.column_config.NumberColumn("당첨 빈도수", format="%d회", disabled=True),
             "확률": st.column_config.ProgressColumn("당첨 확률", format="%.2f", min_value=0, max_value=1),
             "가중치": st.column_config.NumberColumn(
-                "가중치 입력", 
-                help="이 구간 번호들의 선택 확률을 배정합니다.",
+                "가중치(확률x10)", 
+                help="값이 클수록 해당 구간 번호가 더 많이 뽑힙니다.",
                 min_value=0.0, max_value=5.0, step=0.1, format="%.1f"
             )
         },
