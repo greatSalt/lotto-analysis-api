@@ -664,7 +664,7 @@ elif menu == "당첨번호 주기 분석":
         
         # 그래프 표시
         fig = px.bar(skip_stats, x='주기', y='출현빈도', 
-                     title=f"최근 {rounds_to_analyze}회차 당첨번호 출현 주기 분포",
+                     title=f"최근 {analyze_range}회차 당첨번호 출현 주기 분포",
                      labels={'주기': '스킵 주기 (Skip Interval)', '출현빈도': '당첨 횟수'},
                      text='출현빈도')
         st.plotly_chart(fig)
