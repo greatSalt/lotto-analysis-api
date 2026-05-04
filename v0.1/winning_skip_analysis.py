@@ -29,7 +29,7 @@ def analyze_winning_skip_distribution(history_df, target_rounds=10):
             if not last_idx.empty:
                 skip_val = last_idx[0] - idx - 1 # 주기 계산
             else:
-                skip_val = target_rounds*2 # 아주 오래된 미출현수
+                skip_val = target_rounds+10 # 아주 오래된 미출현수
                 
             skip_data.append({"회차": round_num, "번호": num, "주기": skip_val})
             
