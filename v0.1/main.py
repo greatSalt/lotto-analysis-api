@@ -13,7 +13,7 @@ import analysis_to_gsheet as saver
 from iteration_predictor import render_carryover_analysis
 from empty_zone_engine import get_confirmed_empty_zone, color_rows, apply_strategy_style
 from combination_engine import generate_strategic_combinations, get_advanced_stat_analysis, get_comprehensive_analysis
-from winning_skip_analysis import analyze_winning_skip_distribution
+from winning_skip_analysis import analyze_winning_skip_distribution, render_skip_group_weight_ui
 
 st.set_page_config(page_title="로또 분석 프로 v0.1", layout="wide")
 conn = st.connection("gsheets", type=GSheetsConnection)
@@ -668,6 +668,8 @@ elif menu == "당첨번호 주기 분석":
                      labels={'주기': '스킵 주기 (Skip Interval)', '출현빈도': '당첨 횟수'},
                      text='출현빈도')
         st.plotly_chart(fig)
+        
+        final_weight_table = render_skip_group_weight_ui(skip_stats)
     
     else:
         st.error("데이터가 없습니다.")
