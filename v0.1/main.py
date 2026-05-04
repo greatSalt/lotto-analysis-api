@@ -347,8 +347,22 @@ elif menu == "🎯 추천번호 분석":
         #for zone in excluded_zones:
             #start, end = zones_map[zone]
             #filtered_df = filtered_df[~filtered_df['번호'].between(start, end)]
-        if '선택' not in filtered_df.columns:
-            filtered_df.insert(0, '선택', filtered_df['번호'].isin(st.session_state.my_saved_picks))
+        #if '선택' not in filtered_df.columns:
+            #filtered_df.insert(0, '선택', filtered_df['번호'].isin(st.session_state.my_saved_picks))
+        
+        # --- [추가] 전체 번호 선택 로직 시작 ---
+        col_select_all, _ = st.columns([1, 4])
+        with col_select_all:
+            # 세션 상태를 활용하여 전체 선택 여부 관리
+            select_all = st.checkbox("🔄 모든 번호 선택", value=False, key="all_nums_toggle")
+        
+        # 전체 선택이 체크되면 모든 행의 '선택' 컬럼을 True로 초기화
+        if select_all:
+            filtered_df['선택'] = True
+        else:
+            # 기존 저장된 픽이 있으면 그것만 체크, 없으면 False
+            filtered_df['선택'] = filtered_df['번호'].isin(st.session_state.get('my_saved_picks', []))
+        # --- [추가] 전체 번호 선택 로직 끝 ---
             
         # 4. 테이블 출력 세팅
         st.subheader("📊 전략 분석 테이블")
