@@ -71,14 +71,14 @@ def render_skip_group_weight_ui(skip_stats):
     
     # 3. 세션 상태를 이용한 가중치 관리 (최초 1회 초기화)
     if 'skip_weight_df' not in st.session_state:
-        # 초기 가중치는 모두 1.0으로 설정 (혹은 확률 기반으로 자동 계산 가능)
-        group_stats['가중치'] = 1.0
         st.session_state.skip_weight_df = group_stats
     else:
         # 기존에 수정하던 값이 있다면 빈도와 확률만 최신화
         st.session_state.skip_weight_df['출현빈도'] = group_stats['출현빈도']
         st.session_state.skip_weight_df['확률'] = group_stats['확률']
-
+        # 만약 '분석 회차'가 바뀌면 가중치도 다시 10배로 초기화하고 싶다면 아래 주석 해제
+        st.session_state.skip_weight_df['가중치'] = group_stats['가중치']
+        
     # 4. st.data_editor를 이용한 편집 가능한 표 출력
     st.info("💡 **가중치** 컬럼을 수정하여 조합 생성 시 비중을 조절하세요. (예: 1.5는 50% 강조)")
     
