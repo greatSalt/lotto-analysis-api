@@ -10,10 +10,18 @@ def generate_strategic_combinations(selected_df, ratio_filters, sum_range, skip_
     fixed_nums: [1, 7] 형태의 고정수 리스트
     exclude_nums: [10, 45] 형태의 제외수 리스트
     count: 생성할 조합 개수
-    """
-    """
+    
     고급 3대 필터(AC, 고저, 연번)가 통합된 전략 생성 엔진
     """
+    
+    """
+    가중치 데이터가 없으면 실행을 중단하고 메시지를 반환함
+    """
+    # 1. [핵심] 가중치 데이터 유효성 검사 및 즉시 리턴 로직
+    if skip_weights_df is None or (isinstance(skip_weights_df, pd.DataFrame) and skip_weights_df.empty):
+        st.warning("⚠️ 주기별 가중치 데이터가 없습니다. 상단의 [주기 분석] 버튼을 먼저 클릭하여 가중치를 계산해 주세요.")
+        return [] # 데이터가 없으므로 빈 리스트 리턴 후 함수 종료
+    
     # 기초 풀(Pool) 구성: 선택된 번호에서 제외수 먼저 제거
     base_pool_df = selected_df[~selected_df['번호'].isin(exclude_nums)].copy()
     
