@@ -567,7 +567,7 @@ elif menu == "🎯 추천번호 분석":
                                 color = "red"        # 🟥 핫 (빨간색)
                             elif group == 'WARM':
                                 color = "yellow"     # 🟨 웜 (노란색/골드)
-                            elif group == 'cold':
+                            elif group == 'COLD':
                                 color = "blue"       # 🟦 콜드 (파란색)
                             else:
                                 color = "lightgrey"  # 데이터 오류 시 회색
