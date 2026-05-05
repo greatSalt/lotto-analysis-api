@@ -344,11 +344,6 @@ elif menu == "🎯 추천번호 분석":
         excluded_zones = [z for z, d in decision.items() if d['is_empty']]
         #zones_map = {'단번대':(1,10), '10번대':(11,20), '20번대':(21,30), '30번대':(31,40), '40번대':(41,45)}
         filtered_df = analysis_df.copy()
-        #for zone in excluded_zones:
-            #start, end = zones_map[zone]
-            #filtered_df = filtered_df[~filtered_df['번호'].between(start, end)]
-        #if '선택' not in filtered_df.columns:
-            #filtered_df.insert(0, '선택', filtered_df['번호'].isin(st.session_state.my_saved_picks))
         
         # --- [추가] 전체 번호 선택 로직 시작 ---
         col_select_all, _ = st.columns([1, 4])
@@ -362,7 +357,7 @@ elif menu == "🎯 추천번호 분석":
         else:
             # 기존 저장된 픽이 있으면 그것만 체크, 없으면 False
             filtered_df['선택'] = filtered_df['번호'].isin(st.session_state.get('my_saved_picks', []))
-        # --- [추가] 전체 번호 선택 로직 끝 ---
+        # --- 전체 번호 선택 로직 끝 ---
             
         # 4. 테이블 출력 세팅
         st.subheader("📊 전략 분석 테이블")
@@ -525,6 +520,7 @@ elif menu == "🎯 추천번호 분석":
                             selected_df, 
                             ratio_filter=sel_oe, # UI 입력값 (멀티셀렉트)
                             sum_range = sum_range,      # UI 입력값 
+                            skip_weights=st.session_state.get('skip_weight_df'), #사용자가 설정한 주기별 가중치 표 전달
                             fixed_nums = st.session_state.fixed_nums,  # UI 입력값
                             exclude_nums = st.session_state.exclude_nums,  # UI 입력값
                             min_ac=sel_ac,     # UI 입력값
@@ -565,7 +561,9 @@ elif menu == "🎯 추천번호 분석":
                         ball_html = ""
                         for n, group in combo_data:
                             # 🖍️ 그룹별 색상 매핑
-                            if group == 'HOT':
+                            if group == '이월수':
+                                color = "white"      # ⬜ 이월수 (흰색 배경 + 검정 글자)
+                            elif group == 'HOT':
                                 color = "red"        # 🟥 핫 (빨간색)
                             elif group == 'WARM':
                                 color = "yellow"     # 🟨 웜 (노란색/골드)
