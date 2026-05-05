@@ -567,8 +567,11 @@ elif menu == "🎯 추천번호 분석":
                                 color = "red"        # 🟥 핫 (빨간색)
                             elif group == 'WARM':
                                 color = "yellow"     # 🟨 웜 (노란색/골드)
-                            else:
+                            elif group == 'cold':
                                 color = "blue"       # 🟦 콜드 (파란색)
+                            else:
+                                color = "lightgrey"  # 데이터 오류 시 회색
+                                
                             ball_html += f"![{n}](https://img.shields.io/badge/-{n}-{color}?style=flat-square&border_radius=50) "
                         st.markdown(ball_html, unsafe_allow_html=True)
                             
