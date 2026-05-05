@@ -518,9 +518,9 @@ elif menu == "🎯 추천번호 분석":
                     with st.spinner('최적의 조합을 계산 중...'):
                         results = generate_strategic_combinations(
                             selected_df, 
-                            ratio_filter=sel_oe, # UI 입력값 (멀티셀렉트)
+                            ratio_filters = sel_oe, # UI 입력값 (멀티셀렉트)
                             sum_range = sum_range,      # UI 입력값 
-                            skip_weights=st.session_state.get('skip_weight_df'), #사용자가 설정한 주기별 가중치 표 전달
+                            skip_weights_df = st.session_state.get('skip_weight_df'), #사용자가 설정한 주기별 가중치 표 전달
                             fixed_nums = st.session_state.fixed_nums,  # UI 입력값
                             exclude_nums = st.session_state.exclude_nums,  # UI 입력값
                             min_ac=sel_ac,     # UI 입력값
