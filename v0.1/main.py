@@ -674,6 +674,11 @@ elif menu == "당첨번호 주기 분석":
     if not df_raw.empty:
         results_df, skip_stats = analyze_winning_skip_distribution(df_raw, analyze_range)
         
+        # [추가] 엔진이 번호별 색상과 가중치를 판별할 수 있도록 skip_dict 저장
+        # results_df에서 각 번호의 가장 최근 주기(최신 회차 기준)를 추출하여 딕셔너리로 만듭니다.
+        latest_run = results_df.sort_values('회차', ascending=False).drop_duplicates('번호')
+        st.session_state.skip_dict = dict(zip(latest_run['번호'], latest_run['주기']))
+        
         # 그래프 표시
         fig = px.bar(skip_stats, x='주기', y='출현빈도', 
                      title=f"최근 {analyze_range}회차 당첨번호 출현 주기 분포",
