@@ -509,6 +509,26 @@ elif menu == "🎯 추천번호 분석":
                 # 여기서 itertools.combinations 등을 활용해 필터를 통과한 조합만 출력
                 # 이후 AC값, 동끝수 필터 등을 여기에 추가할 수 있음
                 st.info("선택된 번호들로 필터를 만족하는 최적의 조합을 생성합니다.")
+                
+                # [근본 해결 1] 엔진 실행 직전, 현재 df_raw를 바탕으로 최신 주기 데이터를 즉시 계산
+                if not df_raw.empty:
+                    # 1. 현재 데이터로 주기 분석 재실행 (가장 최신 데이터 보장)
+                    results_df, _ = analyze_winning_skip_distribution(df_raw, analyze_range)
+                    latest_run = results_df.sort_values('회차', ascending=False).drop_duplicates('번호')
+                    
+                    # 2. 1~45 전체 번호에 대해 99(COLD)로 초기화 후 최신 데이터 덮어쓰기
+                    fresh_skips = {i: 99 for i in range(1, 46)}
+                    fresh_skips.update(dict(zip(latest_run['번호'], latest_run['주기'])))
+                    
+                    # 3. 이 최신 데이터를 세션에 즉시 반영 (엔진이 내부에서 참조할 수 있도록)
+                    st.session_state.skip_dict = fresh_skips
+                    
+                    # [확인용] 41번 주기가 0인지 로그 출력 (나중에 삭제 가능)
+                    st.write(f"DEBUG: 41번 현재 주기 -> {st.session_state.skip_dict.get(41)}")
+                else:
+                    st.error("데이터가 로드되지 않았습니다.")
+                    st.stop()
+                            
                 # 체크된 번호들의 로우데이터만 전달
                 selected_df = edited_df[edited_df['선택'] == True]
                 # 고정수가 6개 초과면 에러 처리

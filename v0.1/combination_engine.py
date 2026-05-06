@@ -106,7 +106,7 @@ def get_weight_by_skip(n, weight_map):
     사용자가 설정한 구간 가중치(weight_map)를 반환하는 독립 함수
     """
     # 세션 상태에 저장된 번호별 현재 스킵 주기 딕셔너리 참조
-    # 만약 skip_dict가 없다면 기본값 0주기로 처리
+    # 만약 skip_dict가 없다면 기본값 99주기로 처리
     skip = st.session_state.get('skip_dict', {}).get(n, 99)
     
     if skip == 0: label = "0주기"
