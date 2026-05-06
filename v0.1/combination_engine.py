@@ -124,7 +124,7 @@ def get_group_v2(n):
     사용자 정의 주기 기준에 따른 그룹 판별:
     0주기: 이월수 / 1~3주기: HOT / 4~14주기: WARM / 15주기 이상: COLD
     """
-    skip = st.session_state.get('skip_dict', {}).get(n, 0)
+    skip = st.session_state.get('skip_dict', {}).get(n, 99)
     
     if skip == 0:
         return '이월수'  # 전회차 당첨번호
