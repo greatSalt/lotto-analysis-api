@@ -690,6 +690,8 @@ elif menu == "당첨번호 주기 분석":
         st.plotly_chart(fig)
         
         final_weight_table = render_skip_group_weight_ui(skip_stats)
+        if final_weight_table is not None:
+            st.session_state['skip_weight_df'] = final_weight_table
     
     else:
         st.error("데이터가 없습니다.")
