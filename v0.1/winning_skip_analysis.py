@@ -1,24 +1,26 @@
-import pandas as pd
-import plotly.express as px
-import streamlit as st
-
-#당첨번호 주기(Skip) 분석 및 시각화 로직
 def analyze_winning_skip_distribution(history_df, target_rounds=10):
     """
-    history_df: 전체 당첨 번호 데이터 (회차, 번호1~6 포함)
-    target_rounds: 분석할 최근 회차 범위 (사용자 입력값)
+    사용자 제안: 회차별 주기 구간 비중을 합산하여 확률(가중치) 산출
     """
-    skip_data = []
+    # 1. 구간 정의 (labels는 UI와 일치시킴)
+    bins = [-1, 0, 3, 6, 9, 14, 24, 1000]
+    labels = ["0주기", "1~3주기", "4~6주기", "7~9주기", "10~14주기", "15~24주기", "25주기 이상"]
     
-    # 최근 n회차의 당첨 번호들만 순회
+    # 각 회차의 비중 데이터를 담을 리스트
+    round_ratios = []
+    # 개별 당첨 기록 (표시용)
+    all_individual_results = []
+
     recent_rounds = history_df.head(target_rounds)
     
     for idx, row in recent_rounds.iterrows():
         round_num = row['round']
         winning_nums = [row['n1'], row['n2'], row['n3'], row['n4'], row['n5'], row['n6']]
         
+        # 현재 회차의 구간별 카운트 초기화
+        current_counts = {label: 0 for label in labels}
+        
         for num in winning_nums:
-            # 해당 번호가 이 회차(idx) 이전에는 언제 나왔는지 찾기
             prev_appearances = history_df.iloc[idx+1:]
             last_idx = prev_appearances[(prev_appearances['n1'] == num) | 
                                         (prev_appearances['n2'] == num) | 
@@ -27,71 +29,63 @@ def analyze_winning_skip_distribution(history_df, target_rounds=10):
                                         (prev_appearances['n5'] == num) | 
                                         (prev_appearances['n6'] == num)].index
             
-            if not last_idx.empty:
-                skip_val = last_idx[0] - idx - 1 # 주기 계산
-            else:
-                skip_val = target_rounds+10 # 아주 오래된 미출현수
-                
-            skip_data.append({"회차": round_num, "번호": num, "주기": skip_val})
+            skip_val = last_idx[0] - idx - 1 if not last_idx.empty else 100 # 콜드는 큰 값 부여
             
-    analysis_results = pd.DataFrame(skip_data)
-    
-    # 주기별 출현 빈도 계산 (0, 1, 2, 3...)
-    skip_counts = analysis_results['주기'].value_counts().sort_index().reset_index()
-    skip_counts.columns = ['주기', '출현빈도']
-    
-    # 확률(가중치) 계산: 해당 주기의 빈도 / 전체 번호 수
-    total_nums = len(analysis_results)
-    skip_counts['확률'] = (skip_counts['출현빈도'] / total_nums).round(4)
-    
-    return analysis_results, skip_counts
+            # 구간 판별
+            for i in range(len(bins)-1):
+                if bins[i] < skip_val <= bins[i+1]:
+                    current_counts[labels[i]] += 1
+                    break
+            
+            all_individual_results.append({"회차": round_num, "번호": num, "주기": skip_val})
+            
+        # [핵심] 회차별 비중 계산 (개수 / 6.0)
+        round_ratio = {label: count / 6.0 for label in labels}
+        round_ratios.append(round_ratio)
 
-def render_skip_group_weight_ui(skip_stats):
+    # 2. 결과 데이터프레임 생성
+    analysis_results = pd.DataFrame(all_individual_results)
+    
+    # 3. [핵심] 모든 회차의 비중을 합산하여 평균값 산출
+    # 이 과정에서 콜드번호가 하나라도 포함된 회차의 지분(16.6%)이 통계에 정확히 반영됩니다.
+    avg_ratios = pd.DataFrame(round_ratios).mean().reset_index()
+    avg_ratios.columns = ['구간', '확률']
+    
+    # 기존 코드와의 호환성을 위해 빈도수 역산 (표시용)
+    total_samples = target_rounds * 6
+    avg_ratios['출현빈도'] = (avg_ratios['확률'] * total_samples).round(0).astype(int)
+    
+    return analysis_results, avg_ratios
+
+def render_skip_group_weight_ui(group_stats):
     """
-    skip_stats: 개별 주기(0, 1, 2...)별 빈도가 담긴 데이터프레임
+    group_stats: 이미 구간별 평균 비중(확률)이 계산된 데이터프레임
     """
-    st.markdown("### ⚙️ 구간별 당첨 통계 및 가중치 설정")
-    
-    # 1. 사용자 정의 구간 설정
-    bins = [-1, 0, 3, 6, 9, 14, 24, 100]
-    labels = ["0주기", "1~3주기", "4~6주기", "7~9주기", "10~14주기", "15~24주기", "25주기 이상"]
-    
-    # 개별 주기 데이터를 구간별로 그룹화
-    skip_stats['구간'] = pd.cut(skip_stats['주기'], bins=bins, labels=labels)
-    group_stats = skip_stats.groupby('구간', observed=True).agg({
-        '출현빈도': 'sum'
-    }).reset_index()
-    
-    # 2. 확률 계산 (전체 대비 해당 구간의 비중)
-    total_hits = group_stats['출현빈도'].sum()
-    group_stats['확률'] = (group_stats['출현빈도'] / total_hits).round(4)
+    st.markdown("### ⚙️ 구간별 당첨 통계 및 가중치 설정 (회차 비중 방식)")
     
     # [핵심] 확률의 10배를 기본 가중치로 설정
     group_stats['가중치'] = (group_stats['확률'] * 10).round(2)
     
-    # 3. 세션 상태를 이용한 가중치 관리 (최초 1회 초기화)
+    # 세션 상태 관리
     if 'skip_weight_df' not in st.session_state:
         st.session_state.skip_weight_df = group_stats
     else:
-        # 기존에 수정하던 값이 있다면 빈도와 확률만 최신화
+        # 데이터 갱신
         st.session_state.skip_weight_df['출현빈도'] = group_stats['출현빈도']
         st.session_state.skip_weight_df['확률'] = group_stats['확률']
-        # 만약 '분석 회차'가 바뀌면 가중치도 다시 10배로 초기화하고 싶다면 아래 주석 해제
         st.session_state.skip_weight_df['가중치'] = group_stats['가중치']
         
-    # 4. st.data_editor를 이용한 편집 가능한 표 출력
-    st.info("💡 **가중치** 컬럼을 수정하여 조합 생성 시 비중을 조절하세요. (예: 1.5는 50% 강조)")
+    st.info("💡 **회차별 비중 합산 방식**으로 계산되었습니다. 콜드번호 구간의 확률이 더 합리적으로 산출됩니다.")
     
     edited_df = st.data_editor(
         st.session_state.skip_weight_df,
         column_config={
             "구간": st.column_config.TextColumn("스킵 주기 구간", disabled=True),
-            "출현빈도": st.column_config.NumberColumn("당첨 빈도수", format="%d회", disabled=True),
-            "확률": st.column_config.ProgressColumn("당첨 확률", format="%.2f", min_value=0, max_value=1),
+            "출현빈도": st.column_config.NumberColumn("추정 빈도수", format="%d회", disabled=True),
+            "확률": st.column_config.ProgressColumn("평균 점유율(비중)", format="%.4f", min_value=0, max_value=1),
             "가중치": st.column_config.NumberColumn(
-                "가중치(확률x10)", 
-                help="값이 클수록 해당 구간 번호가 더 많이 뽑힙니다.",
-                min_value=0.0, max_value=5.0, step=0.1, format="%.1f"
+                "가중치(비중x10)", 
+                min_value=0.0, max_value=10.0, step=0.1, format="%.1f"
             )
         },
         hide_index=True,
@@ -99,10 +93,5 @@ def render_skip_group_weight_ui(skip_stats):
         key="skip_editor"
     )
     
-    # 수정된 결과 저장
     st.session_state.skip_weight_df = edited_df
     return edited_df
-
-# 사용 예시:
-# skip_stats = analyze_winning_skip_distribution(...) 에서 나온 결과 전달
-# final_weight_table = render_skip_group_weight_ui(skip_stats)
