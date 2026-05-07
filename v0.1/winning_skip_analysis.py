@@ -1,3 +1,6 @@
+import pandas as pd 
+import streamlit as st
+
 def analyze_winning_skip_distribution(history_df, target_rounds=10):
     """
     사용자 제안: 회차별 주기 구간 비중을 합산하여 확률(가중치) 산출
