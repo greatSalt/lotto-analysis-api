@@ -431,21 +431,22 @@ elif menu == "🎯 추천번호 분석":
             # --- 실전 필터 적용 섹션 ---
             st.divider()
             with st.expander("🚀 필터링 조건 설정 (생성 시 적용)", expanded=True):
-                f_col1, f_col2, f_col3, f_col4 = st.columns([1, 1.5, 0.8, 1.2])
-                with f_col1:
+                row1_col1, row1_col2 = st.columns(2)
+                with row1_col1:
                     sel_ac = st.number_input(
                         "최소 AC값", 
                         min_value=0, 
                         max_value=10, 
                         value=st.session_state.get('sel_ac', 7) # 로드된 값 사용
                     )
-                with f_col2:
+                with row1_col2:
                     sel_hl = st.multiselect(
                         "허용 고저비율", 
                         ["3:3", "2:4", "4:2", "1:5", "5:1", "0:6", "6:0"], # 0:6, 6:0 추가
                         default=st.session_state.get('sel_hl', ["3:3", "2:4", "4:2"]) # 로드된 값 사용
-                    )
-                with f_col3:
+                        )
+                row1_col1, row1_col2 = st.columns(2)    
+                with row1_col1:
                     # index를 세션값에 맞춰 계산
                     con_options = [0, 1, 2]
                     saved_con = st.session_state.get('sel_con', 1)
@@ -453,7 +454,7 @@ elif menu == "🎯 추천번호 분석":
                     con_index = con_options.index(saved_con) if saved_con in con_options else 1
                     
                     sel_con = st.selectbox("최대 연번허용", con_options, index=con_index)
-                with f_col4:
+                with row1_col2:
                     # [신규 추가] 동끝수 쌍 설정
                     # 보통 1~2쌍이 가장 많이 나오므로 기본값을 [1, 2]로 추천
                     pair_options = [0, 1, 2, 3]
