@@ -686,10 +686,12 @@ elif menu == "당첨번호 주기 분석":
         st.session_state.skip_dict = dict(zip(df_crazy['번호'], df_crazy['현재스킵']))
         
         # 그래프 표시
-        fig = px.bar(skip_stats, x='주기', y='출현빈도', 
+        fig = px.bar(skip_stats, x='구간', y='확률', 
                      title=f"최근 {analyze_range}회차 당첨번호 출현 주기 분포",
-                     labels={'주기': '스킵 주기 (Skip Interval)', '출현빈도': '당첨 횟수'},
-                     text='출현빈도')
+                     labels={'구간': '스킵 주기 구간', '확률': '평균 당첨 비중'},
+                     text='확률')
+        # 텍스트 포맷을 소수점 1자리 혹은 퍼센트로 보기 좋게 변경 (선택사항)
+        fig.update_traces(texttemplate='%{text:.1f}', textposition='outside')
         st.plotly_chart(fig)
         
         final_weight_table = render_skip_group_weight_ui(skip_stats)
