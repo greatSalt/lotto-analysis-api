@@ -42,7 +42,15 @@ def init_all_saved_data(conn, sheet_url):
                     # [고저 비율 리스트]
                     hl_rows = df[df['유형'] == 'F_HL']
                     st.session_state.sel_hl = hl_rows['번호'].tolist() if not hl_rows.empty else ["3:3", "2:4", "4:2"]
-                        
+                    
+                    # [동끝수 쌍 개수 리스트]
+                    end_rows = df[df['유형'] == 'F_END']
+                    st.session_state.sel_end = [int(float(x)) for x in end_rows['번호'].tolist()] if not end_rows.empty else [1, 2]
+                    
+                    # [지정 특정 끝수 리스트]
+                    target_end_rows = df[df['유형'] == 'F_TARGET_END']
+                    st.session_state.sel_target_end = [int(float(x)) for x in target_end_rows['번호'].tolist()] if not target_end_rows.empty else []
+                                            
                     # [총합 범위]
                     sum_rows = df[df['유형'] == 'F_SUM']
                     if not sum_rows.empty:
@@ -94,6 +102,8 @@ def set_default_session_values():
     st.session_state.sel_con = 1
     st.session_state.sel_hl = ["3:3", "2:4", "4:2"]
     st.session_state.sum_range = (100, 175)
+    st.session_state.sel_end = [1, 2] # 보통 1~2쌍이 가장 흔함
+    st.session_state.sel_target_end = [] # 지정 끝수는 기본적으로 없음
 
 def save_recommended_picks(conn, sheet_url, selected_picks):
     """체크된 추천 조합들을 'COMBI' 유형으로 구글 시트에 저장"""
@@ -160,6 +170,8 @@ def save_to_sheets_by_type(conn, sheet_url, new_nums, type_code):
             elif type_code == 'F_CON': st.session_state.sel_con = int(new_nums[0])
             elif type_code == 'F_HL': st.session_state.sel_hl = new_nums # ['3:3', '4:2'] 형태
             elif type_code == 'F_SUM': st.session_state.sum_range = (int(new_nums[0]), int(new_nums[1]))
+            elif type_code == 'F_END': st.session_state.sel_end = [int(float(x)) for x in new_nums]
+            elif type_code == 'F_TARGET_END': st.session_state.sel_target_end = [int(float(x)) for x in new_nums]
             # PICK, FIX 등 단일 번호 관리 유형은 번호 중복을 제거
             final_df = final_df.drop_duplicates(subset=['번호', '유형'], keep='last')
 
@@ -255,5 +267,10 @@ def get_highlight_style(row):
         if row['번호'] in st.session_state.my_saved_picks:
             # !important를 추가하여 테두리가 다른 스타일에 밀리지 않게 강조
             base_style += ' font-weight: 900; font-size: 1.15em; border: 2.5px solid #000000 !important;'
+            
+    if 'sel_target_end' in st.session_state:
+    if row['번호'] % 10 in st.session_state.sel_target_end:
+        # 내가 지정한 끝수 번호들에 연한 보라색 테두리 추가
+        base_style += ' border: 1.5px dashed #9370DB;'
     
     return [base_style] * len(row)

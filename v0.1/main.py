@@ -14,6 +14,7 @@ from iteration_predictor import render_carryover_analysis
 from empty_zone_engine import get_confirmed_empty_zone, color_rows, apply_strategy_style
 from combination_engine import generate_strategic_combinations, get_advanced_stat_analysis, get_comprehensive_analysis
 from winning_skip_analysis import analyze_winning_skip_distribution, render_skip_group_weight_ui
+from target_end_analysis import render_target_end_analysis
 
 st.set_page_config(page_title="로또 분석 프로 v0.1", layout="wide")
 conn = st.connection("gsheets", type=GSheetsConnection)
@@ -44,7 +45,7 @@ analyze_range = st.sidebar.slider(
 df = df_raw.head(analyze_range).copy()
 
 with st.sidebar:
-    menu = st.sidebar.radio("기능 선택", ["데이터 입력", "크레이지 번호 추출", "콜드 번호 추출", "특정 번호 분석", "📊 이월수 예측", "🎯 추천번호 분석", "당첨번호 주기 분석"])
+    menu = st.sidebar.radio("기능 선택", ["데이터 입력", "크레이지 번호 추출", "콜드 번호 추출", "특정 번호 분석", "📊 이월수 예측", "🎯 추천번호 분석", "당첨번호 주기 분석", "동끝수 상세 분석"])
     display_sidebar_picks(conn, SHEET_URL) # 👈 어떤 메뉴에서든 내 번호가 보임
 
 if menu == "데이터 입력":
@@ -445,7 +446,7 @@ elif menu == "🎯 추천번호 분석":
                         ["3:3", "2:4", "4:2", "1:5", "5:1", "0:6", "6:0"], # 0:6, 6:0 추가
                         default=st.session_state.get('sel_hl', ["3:3", "2:4", "4:2"]) # 로드된 값 사용
                         )
-                row1_col1, row1_col2 = st.columns(2)    
+                row1_col1, row1_col2, row2_col3 = st.columns(3)    
                 with row1_col1:
                     # index를 세션값에 맞춰 계산
                     con_options = [0, 1, 2]
@@ -466,7 +467,18 @@ elif menu == "🎯 추천번호 분석":
                         default=saved_end,
                         help="한 조합 내에 끝자리가 같은 숫자가 몇 쌍 있는지 설정합니다. (예: 12, 22는 1쌍)"
                     )
-            
+                with row2_col3:
+                    # 2. [신규] 특정 동끝수 지정 (선택사항)
+                    # 예: 7을 선택하면 (7, 17, 27, 37) 중 2개 이상이 포함된 조합을 우선시함
+                    digit_options = list(range(10)) # 0~9까지
+                    saved_target_end = st.session_state.get('sel_target_end', []) 
+                    sel_target_end = st.multiselect(
+                        "강제 지정 끝수 (선택)", 
+                        digit_options, 
+                        default=saved_target_end,
+                        help="특정 끝수가 반드시 동끝수로 나오길 원할 때 선택하세요."
+                    )
+                        
             if st.button("📌 필터 설정값 저장"):
                 with st.spinner("모든 필터 설정을 저장 중..."):
                     # 각 필터값을 리스트 형태로 변환하여 저장 함수 호출
@@ -476,7 +488,8 @@ elif menu == "🎯 추천번호 분석":
                     save_to_sheets_by_type(conn, SHEET_URL, sel_hl, 'F_HL') # 리스트 그대로 전달
                     save_to_sheets_by_type(conn, SHEET_URL, [sum_range[0], sum_range[1]], 'F_SUM')
                     save_to_sheets_by_type(conn, SHEET_URL, sel_end, 'F_END') # 동끝수 필터값 저장
-        
+                    save_to_sheets_by_type(conn, SHEET_URL, sel_target_end, 'F_TARGET_END')
+                    
                     # 고정수와 제외수도 함께 저장 (선택 사항)
                     #save_to_sheets_by_type(conn, SHEET_URL, fixed_nums, 'FIX')
                     #save_to_sheets_by_type(conn, SHEET_URL, exclude_nums, 'EX')
@@ -682,6 +695,10 @@ elif menu == "당첨번호 주기 분석":
     
     else:
         st.error("데이터가 없습니다.")
+
+elif menu == "동끝수 상세 분석":
+    # 세션에 저장된 로또 히스토리와 입력 회차 범위를 전달
+    render_target_end_analysis(st.session_state.lotto_history, st.session_state.target_rounds)
 
 st.sidebar.divider()
 st.sidebar.caption("v0.1 - 통계 분석 시스템")
