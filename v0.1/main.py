@@ -272,39 +272,6 @@ elif menu == "콜드 번호 추출":
             # 세션 초기화 후 리런
             #del st.session_state.cold_edited_df
             st.rerun()
-            '''    
-            # 현재 에디터 상태에서 선택된 번호 추출
-            #current_df = st.session_state.cold_edited_df
-            # 체크된 번호들만 리스트로 추출
-            selected_nums = edited_output[edited_output['선택'] == True]['번호'].tolist()
-            
-            if not selected_nums:
-                st.warning("공유할 번호를 먼저 선택해주세요.")
-            else:
-                # [수정 포인트] 1. 기존에 저장되어 있는 모든 번호를 먼저 불러옵니다.
-                try:
-                    current_saved_df = conn.read(spreadsheet=SHEET_URL, worksheet="SavedPicks")
-                    if not current_saved_df.empty and "번호" in current_saved_df.columns:
-                        existing_nums = pd.to_numeric(current_saved_df["번호"], errors='coerce').dropna().astype(int).tolist()
-                    else:
-                        existing_nums = []
-                except:
-                    existing_nums = []
-
-                # [핵심 3] 기존 번호 + 새로 선택한 번호 합친 후 중복 제거
-                final_nums = list(set(existing_nums + selected_nums))
-
-                # [핵심 4] 최종 리스트를 시트에 기록 (덮어쓰기 되더라도 합쳐진 리스트라 안전)
-                save_to_sheets_by_type(conn, SHEET_URL, final_nums, "PICK")
-                
-                st.success(f"✅ 총 {len(final_nums)}개의 번호가 안전하게 통합 저장되었습니다!")
-                
-                # 저장 완료 후 세션 데이터 강제 갱신을 위해 삭제
-                if "cold_edited_df" in st.session_state:
-                    del st.session_state.cold_edited_df
-                
-                # 화면 갱신 (저장된 체크 상태가 다시 로드됨)
-                st.rerun()'''
     else:
         st.error("데이터를 불러올 수 없습니다.")         
         
@@ -464,7 +431,7 @@ elif menu == "🎯 추천번호 분석":
             # --- 실전 필터 적용 섹션 ---
             st.divider()
             with st.expander("🚀 필터링 조건 설정 (생성 시 적용)", expanded=True):
-                f_col1, f_col2, f_col3 = st.columns(3)
+                f_col1, f_col2, f_col3, f_col4 = st.columns(4)
                 with f_col1:
                     sel_ac = st.number_input(
                         "최소 AC값", 
@@ -486,6 +453,18 @@ elif menu == "🎯 추천번호 분석":
                     con_index = con_options.index(saved_con) if saved_con in con_options else 1
                     
                     sel_con = st.selectbox("최대 연번허용", con_options, index=con_index)
+                with f_col4:
+                # [신규 추가] 동끝수 쌍 설정
+                # 보통 1~2쌍이 가장 많이 나오므로 기본값을 [1, 2]로 추천
+                pair_options = [0, 1, 2, 3]
+                saved_end = st.session_state.get('sel_end', [1, 2]) # 리스트 형태로 저장/로드
+                
+                sel_end = st.multiselect(
+                    "허용 동끝수 쌍",
+                    pair_options,
+                    default=saved_end,
+                    help="한 조합 내에 끝자리가 같은 숫자가 몇 쌍 있는지 설정합니다. (예: 12, 22는 1쌍)"
+                )
             
             if st.button("📌 필터 설정값 저장"):
                 with st.spinner("모든 필터 설정을 저장 중..."):
@@ -495,7 +474,8 @@ elif menu == "🎯 추천번호 분석":
                     save_to_sheets_by_type(conn, SHEET_URL, [sel_con], 'F_CON')
                     save_to_sheets_by_type(conn, SHEET_URL, sel_hl, 'F_HL') # 리스트 그대로 전달
                     save_to_sheets_by_type(conn, SHEET_URL, [sum_range[0], sum_range[1]], 'F_SUM')
-                    
+                    save_to_sheets_by_type(conn, SHEET_URL, sel_end, 'F_END') # 동끝수 필터값 저장
+        
                     # 고정수와 제외수도 함께 저장 (선택 사항)
                     #save_to_sheets_by_type(conn, SHEET_URL, fixed_nums, 'FIX')
                     #save_to_sheets_by_type(conn, SHEET_URL, exclude_nums, 'EX')
