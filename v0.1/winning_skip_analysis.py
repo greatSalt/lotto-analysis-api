@@ -40,7 +40,7 @@ def analyze_winning_skip_distribution(history_df, target_rounds=10):
             all_individual_results.append({"회차": round_num, "번호": num, "주기": skip_val})
             
         # [핵심] 회차별 비중 계산 (개수 / 6.0)
-        round_ratio = {label: count / 6.0 for label in labels}
+        round_ratio = {label: current_counts[label] / 6.0 for label in labels}
         round_ratios.append(round_ratio)
 
     # 2. 결과 데이터프레임 생성
