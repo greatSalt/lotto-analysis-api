@@ -269,8 +269,8 @@ def get_highlight_style(row):
             base_style += ' font-weight: 900; font-size: 1.15em; border: 2.5px solid #000000 !important;'
             
     if 'sel_target_end' in st.session_state:
-    if row['번호'] % 10 in st.session_state.sel_target_end:
-        # 내가 지정한 끝수 번호들에 연한 보라색 테두리 추가
-        base_style += ' border: 1.5px dashed #9370DB;'
+        if row['번호'] % 10 in st.session_state.sel_target_end:
+            # 내가 지정한 끝수 번호들에 연한 보라색 테두리 추가
+            base_style += ' border: 1.5px dashed #9370DB;'
     
     return [base_style] * len(row)
