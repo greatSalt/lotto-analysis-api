@@ -431,7 +431,7 @@ elif menu == "🎯 추천번호 분석":
             # --- 실전 필터 적용 섹션 ---
             st.divider()
             with st.expander("🚀 필터링 조건 설정 (생성 시 적용)", expanded=True):
-                f_col1, f_col2, f_col3, f_col4 = st.columns(4)
+                f_col1, f_col2, f_col3, f_col4 = st.columns([1, 1.5, 0.8, 1.2])
                 with f_col1:
                     sel_ac = st.number_input(
                         "최소 AC값", 
