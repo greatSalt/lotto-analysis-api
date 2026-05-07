@@ -454,17 +454,17 @@ elif menu == "🎯 추천번호 분석":
                     
                     sel_con = st.selectbox("최대 연번허용", con_options, index=con_index)
                 with f_col4:
-                # [신규 추가] 동끝수 쌍 설정
-                # 보통 1~2쌍이 가장 많이 나오므로 기본값을 [1, 2]로 추천
-                pair_options = [0, 1, 2, 3]
-                saved_end = st.session_state.get('sel_end', [1, 2]) # 리스트 형태로 저장/로드
-                
-                sel_end = st.multiselect(
-                    "허용 동끝수 쌍",
-                    pair_options,
-                    default=saved_end,
-                    help="한 조합 내에 끝자리가 같은 숫자가 몇 쌍 있는지 설정합니다. (예: 12, 22는 1쌍)"
-                )
+                    # [신규 추가] 동끝수 쌍 설정
+                    # 보통 1~2쌍이 가장 많이 나오므로 기본값을 [1, 2]로 추천
+                    pair_options = [0, 1, 2, 3]
+                    saved_end = st.session_state.get('sel_end', [1, 2]) # 리스트 형태로 저장/로드
+                    
+                    sel_end = st.multiselect(
+                        "허용 동끝수 쌍",
+                        pair_options,
+                        default=saved_end,
+                        help="한 조합 내에 끝자리가 같은 숫자가 몇 쌍 있는지 설정합니다. (예: 12, 22는 1쌍)"
+                    )
             
             if st.button("📌 필터 설정값 저장"):
                 with st.spinner("모든 필터 설정을 저장 중..."):
@@ -489,9 +489,6 @@ elif menu == "🎯 추천번호 분석":
                 # 여기서 itertools.combinations 등을 활용해 필터를 통과한 조합만 출력
                 # 이후 AC값, 동끝수 필터 등을 여기에 추가할 수 있음
                 st.info("선택된 번호들로 필터를 만족하는 최적의 조합을 생성합니다.")
-                
-                # [확인용] 41번 주기가 0인지 로그 출력 (나중에 삭제 가능)
-                st.write(f"DEBUG: 41번 현재 주기 -> {st.session_state.skip_dict.get(41)}")
                             
                 # 체크된 번호들의 로우데이터만 전달
                 selected_df = edited_df[edited_df['선택'] == True]
@@ -512,6 +509,10 @@ elif menu == "🎯 추천번호 분석":
                             max_con=sel_con,   # UI 입력값 (셀렉트박스)
                             count=5
                         )
+                        
+                        # [확인용] 41번 주기가 0인지 로그 출력 (나중에 삭제 가능)
+                        st.write(f"DEBUG: 41번 현재 주기 -> {st.session_state.skip_dict.get(41)}")
+                        
                         # [핵심] 결과를 세션 상태에 저장하여 화면에 고정
                         st.session_state.reco_results = results
                     if not st.session_state.reco_results:
