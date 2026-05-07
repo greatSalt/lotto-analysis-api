@@ -510,24 +510,8 @@ elif menu == "🎯 추천번호 분석":
                 # 이후 AC값, 동끝수 필터 등을 여기에 추가할 수 있음
                 st.info("선택된 번호들로 필터를 만족하는 최적의 조합을 생성합니다.")
                 
-                # [근본 해결 1] 엔진 실행 직전, 현재 df_raw를 바탕으로 최신 주기 데이터를 즉시 계산
-                if not df_raw.empty:
-                    # 1. 현재 데이터로 주기 분석 재실행 (가장 최신 데이터 보장)
-                    results_df, _ = analyze_winning_skip_distribution(df_raw, analyze_range)
-                    latest_run = results_df.sort_values('회차', ascending=False).drop_duplicates('번호')
-                    
-                    # 2. 1~45 전체 번호에 대해 99(COLD)로 초기화 후 최신 데이터 덮어쓰기
-                    fresh_skips = {i: 99 for i in range(1, 46)}
-                    fresh_skips.update(dict(zip(latest_run['번호'], latest_run['주기'])))
-                    
-                    # 3. 이 최신 데이터를 세션에 즉시 반영 (엔진이 내부에서 참조할 수 있도록)
-                    st.session_state.skip_dict = fresh_skips
-                    
-                    # [확인용] 41번 주기가 0인지 로그 출력 (나중에 삭제 가능)
-                    st.write(f"DEBUG: 41번 현재 주기 -> {st.session_state.skip_dict.get(41)}")
-                else:
-                    st.error("데이터가 로드되지 않았습니다.")
-                    st.stop()
+                # [확인용] 41번 주기가 0인지 로그 출력 (나중에 삭제 가능)
+                st.write(f"DEBUG: 41번 현재 주기 -> {st.session_state.skip_dict.get(41)}")
                             
                 # 체크된 번호들의 로우데이터만 전달
                 selected_df = edited_df[edited_df['선택'] == True]
@@ -559,7 +543,7 @@ elif menu == "🎯 추천번호 분석":
                 st.divider()
                 st.subheader("✨ AI 추천 조합 (2-3-1 비율 적용)")
                 # 🎨 범례(Legend) 표시 - 사용자가 색상의 의미를 알 수 있도록
-                st.info("🎨 **번호 색상 범례**: 🟥 핫 (상위 30%) / 🟨 웜 (중간 40%) / 🟦 콜드 (하위 30%)")
+                st.info("🎨 **번호 색상 범례**: ⬜ 이월수 (직전당첨) / 🟥 핫 (출현임박) / 🟨 웜 (일반) / 🟦 콜드 (장기미출)")
                 st.success(f"✅ 고정수 {fixed_nums} 포함, 제외수 {exclude_nums} 제거 완료!")
                         
                 # 폼을 사용하지 않고 개별 체크박스 상태를 추적하기 위해 리스트 생성
@@ -594,8 +578,6 @@ elif menu == "🎯 추천번호 분석":
                                 
                             ball_html += f"![{n}](https://img.shields.io/badge/-{n}-{color}?style=flat-square&border_radius=50) "
                         st.markdown(ball_html, unsafe_allow_html=True)
-                            
-                st.caption("※ 핫(상위점수 2개), 웜(중간점수 3개), 콜드(하위점수 1개) 비율로 생성되었습니다.")
                         
                 st.divider()
 
@@ -697,21 +679,11 @@ elif menu == "당첨번호 주기 분석":
     if not df_raw.empty:
         results_df, skip_stats = analyze_winning_skip_distribution(df_raw, analyze_range)
         
-        # 2. [수정 포인트] 1~45번 전체 번호를 아우르는 skip_dict 생성
-        # 기본값을 아주 큰 값(예: 99)으로 채운 딕셔너리를 먼저 만듭니다.
-        all_nums_skip = {i: 99 for i in range(1, 46)}
+        # 통계와 별개로, 현재 1~45번이 '지금' 몇 주기에 있는지 크레이지 로직으로 계산합니다.
+        df_crazy = get_crazy_analysis(df_raw) # 크레이지 엔진 호출
         
-        # 엔진이 번호별 색상과 가중치를 판별할 수 있도록 skip_dict 저장
-        # results_df에서 각 번호의 가장 최근 주기(최신 회차 기준)를 추출하여 딕셔너리로 만듭니다.
-        # 실제 분석 결과에서 나온 최신 주기 정보를 덮어씌웁니다.
-        latest_run = results_df.sort_values('회차', ascending=False).drop_duplicates('번호')
-        actual_skips = dict(zip(latest_run['번호'], latest_run['주기']))
-        
-        # 전체 딕셔너리에 실제 값 업데이트
-        all_nums_skip.update(actual_skips)
-        
-        # 최종적으로 세션에 저장 (이제 2번은 2주기라는 값이 확실히 담깁니다)
-        st.session_state.skip_dict = all_nums_skip
+        # 1~45번 전체의 실시간 현재스킵을 딕셔너리로 저장 (41번: 0)
+        st.session_state.skip_dict = dict(zip(df_crazy['번호'], df_crazy['현재스킵']))
         
         # 그래프 표시
         fig = px.bar(skip_stats, x='주기', y='출현빈도', 
