@@ -698,7 +698,7 @@ elif menu == "당첨번호 주기 분석":
 
 elif menu == "동끝수 상세 분석":
     # 세션에 저장된 로또 히스토리와 입력 회차 범위를 전달
-    render_target_end_analysis(st.session_state.lotto_history, st.session_state.target_rounds)
+    render_target_end_analysis(df_raw, analyze_range)
 
 st.sidebar.divider()
 st.sidebar.caption("v0.1 - 통계 분석 시스템")
