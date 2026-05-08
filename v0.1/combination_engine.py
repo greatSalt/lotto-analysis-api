@@ -2,8 +2,9 @@ import random
 import pandas as pd
 import streamlit as st
 from target_end_analysis import check_same_end_digit_filter
+from iteration_predictior import check_carryover_filter
 
-def generate_strategic_combinations(selected_df, ratio_filters, sum_range, skip_weights_df, fixed_nums, exclude_nums, target_digits, allowed_pairs, allowed_carry, last_win_nums, min_ac=7, allowed_hl=None, max_con=1, count=5):
+def generate_strategic_combinations(selected_df, ratio_filters, sum_range, skip_weights_df, fixed_nums, exclude_nums, target_digits, allowed_pairs=1, allowed_carry, last_win_nums, min_ac=7, allowed_hl=None, max_con=1, count=5):
     """
     selected_df: 사용자가 체크한 번호들의 데이터프레임
     ratio_filters: ['3:3', '2:4'] 형태의 홀짝 비율 리스트
@@ -47,7 +48,7 @@ def generate_strategic_combinations(selected_df, ratio_filters, sum_range, skip_
     need_count = 6 - len(fixed_nums) # 고정수를 제외하고 더 뽑아야 할 개수
     
     # 2. 조합 생성 및 필터링 루프
-    while len(final_combinations) < count and attempts < 10000:
+    while len(final_combinations) < count and attempts < 100000:
         attempts += 1
         
         # 가중치 기반 비복원 추출
