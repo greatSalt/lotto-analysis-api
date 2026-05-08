@@ -2,7 +2,7 @@ import random
 import pandas as pd
 import streamlit as st
 from target_end_analysis import check_same_end_digit_filter
-from iteration_predictior import check_carryover_filter
+from iteration_predictor import check_carryover_filter
 
 def generate_strategic_combinations(selected_df, ratio_filters, sum_range, skip_weights_df, fixed_nums, exclude_nums, target_digits, allowed_pairs, allowed_carry, last_win_nums, min_ac=7, allowed_hl=None, max_con=1, count=5):
     """
