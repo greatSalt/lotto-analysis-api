@@ -43,7 +43,10 @@ def render_target_end_analysis(history_df, target_rounds):
     st.subheader("1️⃣ 회차별 동끝수 현황 (최신순)")
     # 리스트 형태를 문자열로 예쁘게 변환
     df_display1 = df_base[["회차", "동끝수", "동끝수갯수"]].copy()
-    df_display1["동끝수"] = df_display1["동끝수"].apply(lambda x: str(x).replace('[','').replace(']','') if x != "-" else x)
+    # 리스트 내부의 숫자들도 소수점 없이 문자열화 (None인 경우 '-' 처리)
+    df_display1["동끝수"] = df_display1["동끝수"].apply(
+        lambda x: ", ".join(map(str, x)) if x is not None else "-"
+    )
     # 동끝수갯수에 Int64 적용 (None이 생겨도 정수형 유지)
     df_display1["동끝수갯수"] = df_display1["동끝수갯수"].astype("Int64")
     
