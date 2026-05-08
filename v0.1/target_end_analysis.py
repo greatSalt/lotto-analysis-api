@@ -78,3 +78,35 @@ def render_target_end_analysis(history_df, target_rounds):
     df_pairs.columns = ["동끝수갯수", "횟수"]
     st.table(df_pairs) # 내림차순 정렬됨
 
+def check_same_end_digit_filter(nums, allowed_pairs, target_digits):
+    """
+    nums: 생성된 6개 번호 리스트
+    allowed_pairs: 허용된 동끝수 쌍 개수 리스트 (예: [1, 2])
+    target_digits: 강제 지정 끝수 리스트 (예: [7])
+    """
+    # 1. 끝수 리스트 추출 (예: [7, 17, 23, 34, 41, 45] -> [7, 7, 3, 4, 1, 5])
+    end_digits = [n % 10 for n in nums]
+    
+    # 2. 끝수별 빈도 계산
+    from collections import Counter
+    counts = Counter(end_digits)
+    
+    # 3. 동끝수(2개 이상 출현)인 끝수들만 추출
+    # 예: 끝수가 [7, 7, 3, 4, 1, 5] 라면 active_ends는 [7]이 됨
+    active_ends = [digit for digit, count in counts.items() if count >= 2]
+    current_pair_count = len(active_ends)
+    
+    # --- [조건 1] 동끝수 쌍 개수 검사 ---
+    if current_pair_count not in allowed_pairs:
+        return False
+    
+    # --- [조건 2] 지정 끝수 포함 여부 검사 (설정이 있을 경우만) ---
+    if target_digits:
+        # 지정한 끝수 중 하나라도 실제 동끝수(active_ends)에 포함되어 있는지 확인
+        # 예: target_digits가 [7]인데 active_ends에 7이 있으면 통과
+        has_target = any(td in active_ends for td in target_digits)
+        if not has_target:
+            return False
+            
+    return True
+

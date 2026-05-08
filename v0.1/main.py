@@ -518,6 +518,8 @@ elif menu == "🎯 추천번호 분석":
                             skip_weights_df = st.session_state.get('skip_weight_df'), #사용자가 설정한 주기별 가중치 표 전달
                             fixed_nums = st.session_state.fixed_nums,  # UI 입력값
                             exclude_nums = st.session_state.exclude_nums,  # UI 입력값
+                            target_digits=sel_target_end,   # 화면에서 선택한 강제 지정 끝수
+                            allowed_pairs=sel_end,        # 화면에서 선택한 동끝수 쌍 개수
                             min_ac=sel_ac,     # UI 입력값
                             allowed_hl=sel_hl, # UI 입력값 (멀티셀렉트)
                             max_con=sel_con,   # UI 입력값 (셀렉트박스)
