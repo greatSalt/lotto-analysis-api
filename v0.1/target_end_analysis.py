@@ -48,7 +48,8 @@ def render_target_end_analysis(history_df, target_rounds):
         lambda x: ", ".join(map(str, x)) if x is not None else "-"
     )
     # 동끝수갯수에 Int64 적용 (None이 생겨도 정수형 유지)
-    df_display1["동끝수갯수"] = df_display1["동끝수갯수"].astype("Int64")
+    #df_display1["동끝수갯수"] = df_display1["동끝수갯수"].astype("Int64")
+    df_display1["동끝수갯수"] = df_display1["동끝수갯수"].astype(str)
     
     st.table(df_display1.sort_values(by="회차", ascending=False))
 
