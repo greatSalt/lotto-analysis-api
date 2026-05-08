@@ -44,12 +44,13 @@ def render_target_end_analysis(history_df, target_rounds):
     # 리스트 형태를 문자열로 예쁘게 변환
     df_display1 = df_base[["회차", "동끝수", "동끝수갯수"]].copy()
     # 리스트 내부의 숫자들도 소수점 없이 문자열화 (None인 경우 '-' 처리)
+    # 반드시 int()를 먼저 거쳐서 소수점을 완전히 제거한 후 str로 변환합니다.
     df_display1["동끝수"] = df_display1["동끝수"].apply(
-        lambda x: ", ".join(map(str, x)) if x is not None else "-"
+        lambda x: ", ".join(map(str, [int(n) for n in x])) if isinstance(x, list) else "-"
     )
+    
     # 동끝수갯수에 Int64 적용 (None이 생겨도 정수형 유지)
-    #df_display1["동끝수갯수"] = df_display1["동끝수갯수"].astype("Int64")
-    df_display1["동끝수갯수"] = df_display1["동끝수갯수"].astype(str)
+    df_display1["동끝수갯수"] = df_display1["동끝수갯수"].astype("Int64")
     
     st.table(df_display1.sort_values(by="회차", ascending=False))
 
