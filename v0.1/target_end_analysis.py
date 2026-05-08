@@ -44,6 +44,8 @@ def render_target_end_analysis(history_df, target_rounds):
     # 리스트 형태를 문자열로 예쁘게 변환
     df_display1 = df_base[["회차", "동끝수", "동끝수갯수"]].copy()
     df_display1["동끝수"] = df_display1["동끝수"].apply(lambda x: str(x).replace('[','').replace(']','') if x != "-" else x)
+    # 동끝수갯수에 Int64 적용 (None이 생겨도 정수형 유지)
+    df_display1["동끝수갯수"] = df_display1["동끝수갯수"].astype("Int64")
     
     st.table(df_display1.sort_values(by="회차", ascending=False))
 
@@ -56,6 +58,11 @@ def render_target_end_analysis(history_df, target_rounds):
     if all_appeared_ends:
         df_ends = pd.Series(all_appeared_ends).value_counts().reset_index()
         df_ends.columns = ["동끝수", "횟수"]
+        
+        # [핵심] Int64 타입으로 소수점 강제 제거
+        df_ends["동끝수"] = df_ends["동끝수"].astype("Int64")
+        df_ends["횟수"] = df_ends["횟수"].astype("Int64")
+        
         st.table(df_ends) # Series.value_counts()는 이미 내림차순 정렬됨
     else:
         st.write("분석 범위 내에 동끝수가 없습니다.")
