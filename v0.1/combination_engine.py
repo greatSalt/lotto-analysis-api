@@ -3,7 +3,7 @@ import pandas as pd
 import streamlit as st
 from target_end_analysis import check_same_end_digit_filter
 
-def generate_strategic_combinations(selected_df, ratio_filters, sum_range, skip_weights_df, fixed_nums, exclude_nums, target_digits, allowed_pairs=1, min_ac=7, allowed_hl=None, max_con=1, count=5):
+def generate_strategic_combinations(selected_df, ratio_filters, sum_range, skip_weights_df, fixed_nums, exclude_nums, target_digits, allowed_pairs=1, allowed_carry, last_win_nums, min_ac=7, allowed_hl=None, max_con=1, count=5):
     """
     selected_df: 사용자가 체크한 번호들의 데이터프레임
     ratio_filters: ['3:3', '2:4'] 형태의 홀짝 비율 리스트
@@ -84,6 +84,10 @@ def generate_strategic_combinations(selected_df, ratio_filters, sum_range, skip_
             # 필터 2: 총합 범위 검증
             curr_sum = sum(just_nums)
             if not (sum_range[0] <= curr_sum <= sum_range[1]): continue
+
+            # [신규] 이월수 필터 적용
+            if not check_carryover_filter(just_nums, last_win_nums, allowed_carry):
+                continue
             
             # 2. 동끝수 필터 적용
             if not check_same_end_digit_filter(just_nums, allowed_pairs, target_digits):

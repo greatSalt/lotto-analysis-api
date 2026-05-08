@@ -432,7 +432,7 @@ elif menu == "🎯 추천번호 분석":
             # --- 실전 필터 적용 섹션 ---
             st.divider()
             with st.expander("🚀 필터링 조건 설정 (생성 시 적용)", expanded=True):
-                row1_col1, row1_col2 = st.columns(2)
+                row1_col1, row1_col2, row3_col3 = st.columns(3)
                 with row1_col1:
                     sel_ac = st.number_input(
                         "최소 AC값", 
@@ -446,6 +446,17 @@ elif menu == "🎯 추천번호 분석":
                         ["3:3", "2:4", "4:2", "1:5", "5:1", "0:6", "6:0"], # 0:6, 6:0 추가
                         default=st.session_state.get('sel_hl', ["3:3", "2:4", "4:2"]) # 로드된 값 사용
                         )
+                with row3_col3:
+                    # [신규] 이월수(직전회차 번호) 개수 설정
+                    carry_options = [0, 1, 2, 3]
+                    saved_carry = st.session_state.get('sel_carry', [0, 1, 2])
+                    sel_carry = st.multiselect(
+                        "허용 이월수 개수",
+                        carry_options,
+                        default=saved_carry,
+                        help="직전 회차 당첨번호 중 몇 개를 포함할지 결정합니다. (보통 0~2개 권장)"
+                    )        
+                
                 row1_col1, row1_col2, row2_col3 = st.columns(3)    
                 with row1_col1:
                     # index를 세션값에 맞춰 계산
@@ -489,6 +500,7 @@ elif menu == "🎯 추천번호 분석":
                     save_to_sheets_by_type(conn, SHEET_URL, [sum_range[0], sum_range[1]], 'F_SUM')
                     save_to_sheets_by_type(conn, SHEET_URL, sel_end, 'F_END') # 동끝수 필터값 저장
                     save_to_sheets_by_type(conn, SHEET_URL, sel_target_end, 'F_TARGET_END')
+                    save_to_sheets_by_type(conn, SHEET_URL, sel_carry, 'F_CARRY')
                     
                     # 고정수와 제외수도 함께 저장 (선택 사항)
                     #save_to_sheets_by_type(conn, SHEET_URL, fixed_nums, 'FIX')
@@ -510,6 +522,13 @@ elif menu == "🎯 추천번호 분석":
                 if len(fixed_nums) > 6:
                     st.error("고정수는 최대 6개까지만 입력 가능합니다.")
                 else:
+                    # 초기 실행 시 생성된 df(분석 대상 데이터프레임)의 첫 번째 행이 최신 회차입니다.
+                    last_row = df.iloc[0] # 가장 최신 당첨 정보
+                    last_nums = [
+                        int(last_row['n1']), int(last_row['n2']), int(last_row['n3']), 
+                        int(last_row['n4']), int(last_row['n5']), int(last_row['n6'])
+                    ]
+                    
                     with st.spinner('최적의 조합을 계산 중...'):
                         results = generate_strategic_combinations(
                             selected_df, 
@@ -520,6 +539,8 @@ elif menu == "🎯 추천번호 분석":
                             exclude_nums = st.session_state.exclude_nums,  # UI 입력값
                             target_digits=sel_target_end,   # 화면에서 선택한 강제 지정 끝수
                             allowed_pairs=sel_end,        # 화면에서 선택한 동끝수 쌍 개수
+                            allowed_carry=sel_carry,  # 신규 인자
+                            last_win_nums=last_nums    # 신규 인자
                             min_ac=sel_ac,     # UI 입력값
                             allowed_hl=sel_hl, # UI 입력값 (멀티셀렉트)
                             max_con=sel_con,   # UI 입력값 (셀렉트박스)

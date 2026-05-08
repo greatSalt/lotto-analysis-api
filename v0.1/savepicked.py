@@ -50,6 +50,10 @@ def init_all_saved_data(conn, sheet_url):
                     # [지정 특정 끝수 리스트]
                     target_end_rows = df[df['유형'] == 'F_TARGET_END']
                     st.session_state.sel_target_end = [int(float(x)) for x in target_end_rows['번호'].tolist()] if not target_end_rows.empty else []
+                    
+                    # [이월수 로드]
+                    carry_rows = df[df['유형'] == 'F_CARRY']
+                    st.session_state.sel_carry = [int(float(x)) for x in carry_rows['번호'].tolist()] if not carry_rows.empty else [0, 1, 2]
                                             
                     # [총합 범위]
                     sum_rows = df[df['유형'] == 'F_SUM']
@@ -104,6 +108,7 @@ def set_default_session_values():
     st.session_state.sum_range = (100, 175)
     st.session_state.sel_end = [1, 2] # 보통 1~2쌍이 가장 흔함
     st.session_state.sel_target_end = [] # 지정 끝수는 기본적으로 없음
+    st.session_state.sel_carry = [0, 1, 2] # [이월수 기본값 추가]
 
 def save_recommended_picks(conn, sheet_url, selected_picks):
     """체크된 추천 조합들을 'COMBI' 유형으로 구글 시트에 저장"""
@@ -172,6 +177,8 @@ def save_to_sheets_by_type(conn, sheet_url, new_nums, type_code):
             elif type_code == 'F_SUM': st.session_state.sum_range = (int(new_nums[0]), int(new_nums[1]))
             elif type_code == 'F_END': st.session_state.sel_end = [int(float(x)) for x in new_nums]
             elif type_code == 'F_TARGET_END': st.session_state.sel_target_end = [int(float(x)) for x in new_nums]
+            elif type_code == 'F_CARRY': st.session_state.sel_carry = [int(float(x)) for x in new_nums]   # [이월수 동기화 추가]
+            
             # PICK, FIX 등 단일 번호 관리 유형은 번호 중복을 제거
             final_df = final_df.drop_duplicates(subset=['번호', '유형'], keep='last')
 
