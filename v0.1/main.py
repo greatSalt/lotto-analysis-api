@@ -447,7 +447,7 @@ elif menu == "🎯 추천번호 분석":
                         default=st.session_state.get('sel_hl', ["3:3", "2:4", "4:2"]) # 로드된 값 사용
                         )
                 with row3_col3:
-                    # [신규] 이월수(직전회차 번호) 개수 설정
+                    # 이월수(직전회차 번호) 개수 설정
                     carry_options = [0, 1, 2, 3]
                     saved_carry = st.session_state.get('sel_carry', [0, 1, 2])
                     sel_carry = st.multiselect(
@@ -479,7 +479,7 @@ elif menu == "🎯 추천번호 분석":
                         help="한 조합 내에 끝자리가 같은 숫자가 몇 쌍 있는지 설정합니다. (예: 12, 22는 1쌍)"
                     )
                 with row2_col3:
-                    # 2. [신규] 특정 동끝수 지정 (선택사항)
+                    # 특정 동끝수 지정 (선택사항)
                     # 예: 7을 선택하면 (7, 17, 27, 37) 중 2개 이상이 포함된 조합을 우선시함
                     digit_options = list(range(10)) # 0~9까지
                     saved_target_end = st.session_state.get('sel_target_end', []) 
@@ -539,8 +539,8 @@ elif menu == "🎯 추천번호 분석":
                             exclude_nums = st.session_state.exclude_nums,  # UI 입력값
                             target_digits=sel_target_end,   # 화면에서 선택한 강제 지정 끝수
                             allowed_pairs=sel_end,        # 화면에서 선택한 동끝수 쌍 개수
-                            allowed_carry=sel_carry,  # 신규 인자
-                            last_win_nums=last_nums    # 신규 인자
+                            allowed_carry=sel_carry,  # 이월수(직전회차 번호) 개수 설정
+                            last_win_nums=last_nums,    # 이월수(직전회차 번호)
                             min_ac=sel_ac,     # UI 입력값
                             allowed_hl=sel_hl, # UI 입력값 (멀티셀렉트)
                             max_con=sel_con,   # UI 입력값 (셀렉트박스)
