@@ -53,16 +53,12 @@ def render_comprehensive_analysis(df_raw, analyze_range, display_count=20):
         # 번호별 공 디자인 (HTML)
         balls_html = ""
         for n in curr_nums:
-            # 핫(빨강), 콜드(파랑)
             bg = "#FF4B4B" if n in hot_nums else "#1E90FF"
-            # 이월수 강조 테두리
-            border = "border: 2.5px solid #FFD700;" if n in carry_nums else "border: 1px solid #777777;"
+            border = "2.5px solid #FFD700" if n in carry_nums else "1px solid #777777"
             
-            balls_html += f'''
-                <span style="background-color:{bg}; color:white; padding:2px 8px; margin:2px; 
-                border-radius:12px; {border} font-weight:bold; display:inline-block; font-size:13px;">
-                {n}</span>
-            '''
+            # f-string 내부의 줄바꿈을 없애고 한 줄로 작성합니다.
+            ball_style = f"background-color:{bg}; color:white; padding:2px 8px; margin:2px; border-radius:12px; border:{border}; font-weight:bold; display:inline-block; font-size:13px;"
+            balls_html += f'<span style="{ball_style}">{n}</span>'
         
         analysis_data.append({
             "회차": f"<b>{int(row['round'])}회</b>",
@@ -74,3 +70,20 @@ def render_comprehensive_analysis(df_raw, analyze_range, display_count=20):
     # 결과 테이블 렌더링
     final_df = pd.DataFrame(analysis_data)
     st.markdown(final_df.to_html(escape=False, index=False), unsafe_allow_html=True)
+    
+    st.markdown("""
+    <style>
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    th {
+        background-color: #f0f2f6;
+        text-align: center !important;
+    }
+    td {
+        text-align: center !important;
+        vertical-align: middle !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
