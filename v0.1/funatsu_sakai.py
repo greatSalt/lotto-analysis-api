@@ -7,13 +7,15 @@ def render_sakai_analysis(df_raw):
     analysis_data = []
     
     latest_row = df_raw.iloc[0]
+    
+    next_round = int(latest_row['round']) + 1
     last_winning_numbers = [int(latest_row[f'n{i}']) for i in range(1,7)]
     last_bonus_number = int(latest_row['bonus'])
     
     magic_pool = make_funatsu_sakai_pool(last_winning_numbers, last_bonus_number)
     
     analysis_data.append({
-        "회차": f"<b>{int(latest_row['round'])}</b>",
+        "예측 회차": f"<b>{next_round}</b>",
         "선별된 번호": ", ".join(map(str, magic_pool))
     })
     
@@ -31,10 +33,24 @@ def make_funatsu_sakai_pool(last_winning_numbers, last_bonus_number):
         # 본수, 이전수, 다음수를 하나의 후보 리스트로 묶음
         candidates = [n - 1, n, n + 1]
         
+        cal = n%7
+        if cal == 1:
+            temp = [n+6, n+8]
+        elif cal == 0:
+            temp = [n-8, n-6]
+        else:
+            temp = [n-8, n-6, n+6, n+8]
+        
+        candidates.extend(temp)
         # 후보 번호들을 하나씩 꺼내서 검사 후 세트에 추가
         for c in candidates:
             if 1 <= c <= 45: # 로또 번호 범위(1~45)인 경우에만!
                 magic_pool.add(c) # set에 추가 (중복은 알아서 제거됨)
                 
+    candidates = [last_bonus_number-1, last_bonus_number+1]
+    for c in candidates:
+        if 1 <= c <= 45: # 로또 번호 범위(1~45)인 경우에만!
+                magic_pool.add(c) # set에 추가 (중복은 알아서 제거됨)
+            
     # 나중에 정렬된 상태로 보기 편하게 리스트로 바꾸어 리턴합니다.
     return sorted(list(magic_pool))
