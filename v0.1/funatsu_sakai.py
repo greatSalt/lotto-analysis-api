@@ -15,28 +15,28 @@ def render_sakai_analysis(df_raw):
     magic_pool = make_funatsu_sakai_pool(last_winning_numbers, last_bonus_number)
     
     analysis_data.append({
-        "예측 회차": f"<b>{next_round}</b>",
+        "예측 회차": f"{next_round}",
         "선별된 번호": ", ".join(map(str, magic_pool))
     })
     
     final_df = pd.DataFrame(analysis_data)
     
 # 2. Streamlit 자체 dataframe 기능을 사용해 표 렌더링
-    st.dataframe(
+    st.data_editor(
         final_df,
         use_container_width=True,  # 매끄럽게 화면 꽉 채우기
         hide_index=True,           # 왼쪽 인덱스 번호 숨기기
         column_config={            # 💡 각 열의 너비와 정렬 스타일 지정
             "예측 회차": st.column_config.TextColumn(
                 "예측 회차",
-                width="small",
-                required=True
+                width="small"
             ),
             "선별된 번호 (Magic Pool)": st.column_config.TextColumn(
                 "선별된 번호 (Magic Pool)",
                 width="large"
             )
-        }
+        },
+        disabled=True
     )
     
 def make_funatsu_sakai_pool(last_winning_numbers, last_bonus_number):
