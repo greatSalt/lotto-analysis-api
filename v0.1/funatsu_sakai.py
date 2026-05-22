@@ -20,8 +20,31 @@ def render_sakai_analysis(df_raw):
     })
     
     final_df = pd.DataFrame(analysis_data)
-    st.markdown(final_df.to_html(escape=False, index=False), unsafe_allow_html=True)
     
+    # 1. 표에 적용할 CSS 스타일 정의
+    table_style = """
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse; /* 선이 중복되어 두꺼워지는 것 방지 */
+        }
+        th {
+            text-align: center !important; /* 제목 컬럼 무조건 중앙 정렬 */
+            background-color: #f1f3f5;
+            border: 1px solid #ced4da !important;
+            padding: 8px;
+        }
+        td {
+            /*text-align: center;*/ /* 내용도 중앙 정렬 */
+            border: 1px solid #ced4da !important;
+            padding: 8px;
+        }
+    </style>
+    """
+    
+    # 2. 스타일과 HTML 표를 합쳐서 출력
+    html_content = table_style + final_df.to_html(escape=False, index=False)
+    st.markdown(html_content, unsafe_allow_html=True)
     
 def make_funatsu_sakai_pool(last_winning_numbers, last_bonus_number):
     
