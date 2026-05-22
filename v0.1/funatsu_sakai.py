@@ -20,7 +20,7 @@ def render_sakai_analysis(df_raw):
     })
     
     final_df = pd.DataFrame(analysis_data)
-    
+'''    
 # 2. Streamlit 자체 dataframe 기능을 사용해 표 렌더링
     st.data_editor(
         final_df,
@@ -37,7 +37,7 @@ def render_sakai_analysis(df_raw):
             )
         },
         disabled=True
-    )
+    )'''
     
 def make_funatsu_sakai_pool(last_winning_numbers, last_bonus_number):
     
