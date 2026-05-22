@@ -24,27 +24,34 @@ def render_sakai_analysis(df_raw):
     # 1. 표에 적용할 CSS 스타일 정의
     table_style = """
     <style>
-        table {
+        .sakai-table {
             width: 100%;
-            border-collapse: collapse; /* 선이 중복되어 두꺼워지는 것 방지 */
+            border-collapse: collapse !important;
+            margin-top: 10px;
         }
-        th {
-            text-align: center !important; /* 제목 컬럼 무조건 중앙 정렬 */
-            background-color: #f1f3f5;
+        .sakai-table th {
+            text-align: center !important;
+            background-color: #f1f3f5 !important;
             border: 1px solid #ced4da !important;
-            padding: 8px;
+            padding: 12px !important;
+            color: #333333 !important;
         }
-        td {
-            text-align: center; /* 내용도 중앙 정렬 */
+        .sakai-table td {
+            text-align: center !important;
             border: 1px solid #ced4da !important;
-            padding: 8px;
+            padding: 12px !important;
         }
     </style>
     """
     
-    # 2. 스타일과 HTML 표를 합쳐서 출력
-    html_content = table_style + final_df.to_html(escape=False, index=False)
-    st.markdown(html_content, unsafe_allow_html=True)
+    # Pandas가 생성하는 table 태그에 우리가 정의한 고유 클래스(sakai-table)를 주입합니다.
+    html_table = final_df.to_html(escape=False, index=False, classes="sakai-table")
+    
+    # 스타일과 표를 합쳐서 출력
+    st.markdown(table_style + html_table, unsafe_allow_html=True)
+    
+    
+    
     
 def make_funatsu_sakai_pool(last_winning_numbers, last_bonus_number):
     
