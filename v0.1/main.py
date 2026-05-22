@@ -16,6 +16,7 @@ from combination_engine import generate_strategic_combinations, get_advanced_sta
 from winning_skip_analysis import analyze_winning_skip_distribution, render_skip_group_weight_ui
 from target_end_analysis import render_target_end_analysis
 from comprehensive_analysis import render_comprehensive_analysis
+from funatsu_sakai import render_sakai_analysis 
 
 st.set_page_config(page_title="로또 분석 프로 v0.1", layout="wide")
 conn = st.connection("gsheets", type=GSheetsConnection)
@@ -46,7 +47,7 @@ analyze_range = st.sidebar.slider(
 df = df_raw.head(analyze_range).copy()
 
 with st.sidebar:
-    menu = st.sidebar.radio("기능 선택", ["데이터 입력", "크레이지 번호 추출", "콜드 번호 추출", "특정 번호 분석", "📊 이월수 예측", "🎯 추천번호 분석", "당첨번호 주기 분석", "동끝수 상세 분석", "종합 분석"])
+    menu = st.sidebar.radio("기능 선택", ["데이터 입력", "크레이지 번호 추출", "콜드 번호 추출", "특정 번호 분석", "📊 이월수 예측", "🎯 추천번호 분석", "당첨번호 주기 분석", "동끝수 상세 분석", "종합 분석", "후나츠 사카이 분류"])
     display_sidebar_picks(conn, SHEET_URL) # 👈 어떤 메뉴에서든 내 번호가 보임
 
 if menu == "데이터 입력":
@@ -726,6 +727,9 @@ elif menu == "동끝수 상세 분석":
     
 elif menu == "종합 분석":
     render_comprehensive_analysis(df_raw, analyze_range)
+
+elif menu == "후나츠 사카이 분류":
+    render_sakai_analysis(df_raw)
     
 st.sidebar.divider()
 st.sidebar.caption("v0.1 - 통계 분석 시스템")
