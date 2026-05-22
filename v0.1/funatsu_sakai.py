@@ -31,8 +31,8 @@ def render_sakai_analysis(df_raw):
                 "예측 회차",
                 width="small"
             ),
-            "선별된 번호 (Magic Pool)": st.column_config.TextColumn(
-                "선별된 번호 (Magic Pool)",
+            "선별된 번호": st.column_config.TextColumn(
+                "선별된 번호",
                 width="large"
             )
         },
