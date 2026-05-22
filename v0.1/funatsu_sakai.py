@@ -21,37 +21,23 @@ def render_sakai_analysis(df_raw):
     
     final_df = pd.DataFrame(analysis_data)
     
-    # 1. 표에 적용할 CSS 스타일 정의
-    table_style = """
-    <style>
-        .sakai-table {
-            width: 100%;
-            border-collapse: collapse !important;
-            margin-top: 10px;
+# 2. Streamlit 자체 dataframe 기능을 사용해 표 렌더링
+    st.dataframe(
+        final_df,
+        use_container_width=True,  # 매끄럽게 화면 꽉 채우기
+        hide_index=True,           # 왼쪽 인덱스 번호 숨기기
+        column_config={            # 💡 각 열의 너비와 정렬 스타일 지정
+            "예측 회차": st.column_config.TextColumn(
+                "예측 회차",
+                width="small",
+                required=True
+            ),
+            "선별된 번호 (Magic Pool)": st.column_config.TextColumn(
+                "선별된 번호 (Magic Pool)",
+                width="large"
+            )
         }
-        .sakai-table th {
-            text-align: center !important;
-            background-color: #f1f3f5 !important;
-            border: 1px solid #ced4da !important;
-            padding: 12px !important;
-            color: #333333 !important;
-        }
-        .sakai-table td {
-            text-align: center !important;
-            border: 1px solid #ced4da !important;
-            padding: 12px !important;
-        }
-    </style>
-    """
-    
-    # Pandas가 생성하는 table 태그에 우리가 정의한 고유 클래스(sakai-table)를 주입합니다.
-    html_table = final_df.to_html(escape=False, index=False, classes="sakai-table")
-    
-    # 스타일과 표를 합쳐서 출력
-    st.markdown(table_style + html_table, unsafe_allow_html=True)
-    
-    
-    
+    )
     
 def make_funatsu_sakai_pool(last_winning_numbers, last_bonus_number):
     
