@@ -35,7 +35,7 @@ def render_sakai_analysis(df_raw):
             padding: 8px;
         }
         td {
-            /*text-align: center;*/ /* 내용도 중앙 정렬 */
+            text-align: center; /* 내용도 중앙 정렬 */
             border: 1px solid #ced4da !important;
             padding: 8px;
         }
