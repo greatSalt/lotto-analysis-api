@@ -20,6 +20,7 @@ def render_sakai_analysis(df_raw):
     })
     
     final_df = pd.DataFrame(analysis_data)
+    st.markdown(final_df.to_html(escape=False, index=False), unsafe_allow_html=True)
 '''    
 # 2. Streamlit 자체 dataframe 기능을 사용해 표 렌더링
     st.data_editor(
