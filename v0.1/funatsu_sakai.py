@@ -6,7 +6,7 @@ def render_sakai_analysis(df_raw, target_round=30):
     
     analysis_data = []
     
-    for idx in target_round
+    for idx in range(0,target_round):
         latest_row = df_raw.iloc[idx]
     
         next_round = int(latest_row['round']) + 1
