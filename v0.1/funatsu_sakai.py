@@ -24,13 +24,13 @@ def render_sakai_analysis(df_raw, target_round=30):
         })
         
         next_winning_numbers = last_winning_numbers
-        next_bonus_number = f"({last_bonus_number})"
+        next_bonus_number = f" ({last_bonus_number})"
         
     final_df = pd.DataFrame(analysis_data)
-    st.markdown(final_df.to_html(escape=False, index=False), unsafe_allow_html=True)
+    #st.markdown(final_df.to_html(escape=False, index=False), unsafe_allow_html=True)
 
 # 2. Streamlit 자체 dataframe 기능을 사용해 표 렌더링
-    '''st.dataframe(
+    st.dataframe(
         final_df,
         use_container_width=True,  # 매끄럽게 화면 꽉 채우기
         hide_index=True,           # 왼쪽 인덱스 번호 숨기기
@@ -42,9 +42,13 @@ def render_sakai_analysis(df_raw, target_round=30):
             "선별된 번호": st.column_config.TextColumn(
                 "선별된 번호",
                 width="large"
+            ),
+            "예측 당첨번호": st.column_config.TextColumn(
+                "예측 당첨번호",
+                width="medium"
             )
         }
-    )'''
+    )
     
 def make_funatsu_sakai_pool(last_winning_numbers, last_bonus_number):
     
