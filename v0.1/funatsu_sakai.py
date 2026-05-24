@@ -4,6 +4,33 @@ import streamlit as st
 def render_sakai_analysis(df_raw, target_round=30):
     st.header("📊 회차별 종합 상세 분석")
     
+    # 💡 1. HTML 표(to_html)가 화면 안에서 터지지 않고 이쁘게 줄바꿈되도록 CSS 주입
+    st.markdown("""
+        <style>
+            table { 
+                width: 100%; 
+                border-collapse: collapse; 
+                table-layout: fixed; 
+            }
+            th, td { 
+                border: 1px solid #ced4da; 
+                padding: 10px; 
+                text-align: center; 
+            }
+            /* 첫 번째 열(예측 회차) 너비 고정 및 강조 */
+            th:nth-child(1), td:nth-child(1) {
+                width: 20%;
+                font-weight: bold;
+            }
+            /* 두 번째 열(선별된 번호)은 왼쪽 정렬 및 화면 폭에 따른 자동 줄바꿈 강제 */
+            td:nth-child(2) { 
+                text-align: left !important; 
+                word-break: break-all !important; 
+                white-space: normal !important; 
+            }
+        </style>
+    """, unsafe_allow_html=True)
+    
     analysis_data = []
     
     for idx in range(0,target_round):
@@ -24,7 +51,7 @@ def render_sakai_analysis(df_raw, target_round=30):
     st.markdown(final_df.to_html(escape=False, index=False), unsafe_allow_html=True)
 
 # 2. Streamlit 자체 dataframe 기능을 사용해 표 렌더링
-    st.dataframe(
+    '''st.dataframe(
         final_df,
         use_container_width=True,  # 매끄럽게 화면 꽉 채우기
         hide_index=True,           # 왼쪽 인덱스 번호 숨기기
@@ -38,7 +65,7 @@ def render_sakai_analysis(df_raw, target_round=30):
                 width="large"
             )
         }
-    )
+    )'''
     
 def make_funatsu_sakai_pool(last_winning_numbers, last_bonus_number):
     
