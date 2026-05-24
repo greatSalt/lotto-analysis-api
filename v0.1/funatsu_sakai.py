@@ -4,9 +4,24 @@ import streamlit as st
 def render_sakai_analysis(df_raw, target_round=30):
     st.header("📊 회차별 종합 상세 분석")
     
+    # 💡 1. HTML 표 자동 줄바꿈 및 스타일 설정 (파란색 강조 가독성을 위해 테두리 정돈)
+    st.markdown("""
+        <style>
+            table { width: 100%; border-collapse: collapse; table-layout: fixed; font-family: sans-serif; }
+            th, td { border: 1px solid #ced4da; padding: 10px; text-align: center; font-size: 14px; }
+            th { background-color: #f8f9fa; font-weight: bold; }
+            th:nth-child(1), td:nth-child(1) { width: 12%; font-weight: bold; } 
+            td:nth-child(2), td:nth-child(3) { text-align: left !important; word-break: break-all !important; white-space: normal !important; line-height: 1.5; }
+            /* 파란색 강조 글자 스타일 */
+            .match-hit { color: #1b6ca8 !important; font-weight: bold !important; background-color: #e8f4fd; padding: 2px 4px; border-radius: 4px; }
+            /* 주황색 강조 글자 스타일 (보너스 당첨) */
+            .bonus-hit { color: #fd7e14 !important; font-weight: bold !important; background-color: #fff3cd; padding: 2px 4px; border-radius: 4px; }
+        </style>
+    """, unsafe_allow_html=True)
+    
     analysis_data = []
     next_winning_numbers = []
-    next_bonus_number = ""
+    next_bonus_number = None
     
     for idx in range(0,target_round):
         latest_row = df_raw.iloc[idx]
@@ -17,20 +32,51 @@ def render_sakai_analysis(df_raw, target_round=30):
         
         magic_pool = make_funatsu_sakai_pool(last_winning_numbers, last_bonus_number)
         
+        # 이번 회차의 당첨번호 세트 (비교를 위해 set으로 변환)
+        win_set = set(next_winning_numbers)
+            
+        # [선별된 번호 칸] 당첨번호와 일치하면 파란색 입히기
+        pool_elements = []
+        for num in magic_pool:
+            if num in win_set:
+                pool_elements.append(f"<span class='match-hit'>{num}</span>")
+            elif next_bonus_number is not None and num == next_bonus_number: # 보너스 번호와 일치하는 경우
+                pool_elements.append(f"<span class='bonus-hit' style='color: #fd7e14 !important; background-color: #fff3cd;'>{num}</span>") # 보너스는 주황색 포인트
+            else:
+                pool_elements.append(str(num))
+        pool_html = ", ".join(pool_elements)
+            
+        # [예측 당첨번호 칸] 선별번호에 포함되어 맞춘 번호만 파란색 입히기
+        win_elements = []
+        magic_set = set(magic_pool)
+        for num in next_winning_numbers:
+            if num in magic_set:
+                win_elements.append(f"<span class='match-hit'>{num}</span>")
+            else:
+                win_elements.append(str(num))
+            
+        # 보너스 번호 적중 여부 체크
+        if next_bonus_number is not None and next_bonus_number in magic_set:
+            bonus_html = f" <span class='bonus-hit' style='color: #fd7e14 !important; background-color: #fff3cd;'>({next_bonus_number})</span>"
+        else:
+            bonus_html = f" ({next_bonus_number})" if next_bonus_number is not None else ""
+                
+        actual_result_html = ", ".join(win_elements) + bonus_html
+        
         analysis_data.append({
             "예측 회차": f"{next_round}",
-            "선별된 번호": ", ".join(map(str, magic_pool)),
-            "예측 당첨번호": ", ".join(map(str, next_winning_numbers)) + next_bonus_number
+            "선별된 번호": pool_html,
+            "예측 당첨번호": actual_result_html
         })
         
         next_winning_numbers = last_winning_numbers
-        next_bonus_number = f" ({last_bonus_number})"
+        next_bonus_number = last_bonus_number
         
     final_df = pd.DataFrame(analysis_data)
-    #st.markdown(final_df.to_html(escape=False, index=False), unsafe_allow_html=True)
+    st.markdown(final_df.to_html(escape=False, index=False), unsafe_allow_html=True)
 
 # 2. Streamlit 자체 dataframe 기능을 사용해 표 렌더링
-    st.data_editor(
+    '''st.data_editor(
         final_df,
         use_container_width=True,  # 매끄럽게 화면 꽉 채우기
         hide_index=True,           # 왼쪽 인덱스 번호 숨기기
@@ -49,7 +95,7 @@ def render_sakai_analysis(df_raw, target_round=30):
             )
         },
         disabled=True 
-    )
+    )'''
     
 def make_funatsu_sakai_pool(last_winning_numbers, last_bonus_number):
     
