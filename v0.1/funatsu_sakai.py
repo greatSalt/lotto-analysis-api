@@ -4,34 +4,9 @@ import streamlit as st
 def render_sakai_analysis(df_raw, target_round=30):
     st.header("📊 회차별 종합 상세 분석")
     
-    # 💡 1. HTML 표(to_html)가 화면 안에서 터지지 않고 이쁘게 줄바꿈되도록 CSS 주입
-    st.markdown("""
-        <style>
-            table { 
-                width: 100%; 
-                border-collapse: collapse; 
-                table-layout: fixed; 
-            }
-            th, td { 
-                border: 1px solid #ced4da; 
-                padding: 10px; 
-                text-align: center; 
-            }
-            /* 첫 번째 열(예측 회차) 너비 고정 및 강조 */
-            th:nth-child(1), td:nth-child(1) {
-                width: 20%;
-                font-weight: bold;
-            }
-            /* 두 번째 열(선별된 번호)은 왼쪽 정렬 및 화면 폭에 따른 자동 줄바꿈 강제 */
-            td:nth-child(2) { 
-                text-align: left !important; 
-                word-break: break-all !important; 
-                white-space: normal !important; 
-            }
-        </style>
-    """, unsafe_allow_html=True)
-    
     analysis_data = []
+    next_winning_numbers = []
+    next_bonus_number = ""
     
     for idx in range(0,target_round):
         latest_row = df_raw.iloc[idx]
@@ -44,8 +19,12 @@ def render_sakai_analysis(df_raw, target_round=30):
         
         analysis_data.append({
             "예측 회차": f"{next_round}",
-            "선별된 번호": ", ".join(map(str, magic_pool))
+            "선별된 번호": ", ".join(map(str, magic_pool)),
+            "예측 당첨번호": ", ".join(map(str, next_winning_numbers)) + next_bonus_number
         })
+        
+        next_winning_numbers = last_winning_numbers
+        next_bonus_number = f"({last_bonus_number})"
         
     final_df = pd.DataFrame(analysis_data)
     st.markdown(final_df.to_html(escape=False, index=False), unsafe_allow_html=True)
