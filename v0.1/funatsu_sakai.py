@@ -9,7 +9,7 @@ def render_sakai_analysis(df_raw, target_round=30):
         <style>
             table { width: 100%; border-collapse: collapse; table-layout: fixed; font-family: sans-serif; }
             th, td { border: 1px solid #ced4da; padding: 10px; text-align: center; font-size: 14px; }
-            th { background-color: #f8f9fa; font-weight: bold; }
+            th { background-color: #f8f9fa; color: #212529 !important; font-weight: bold; }
             th:nth-child(1), td:nth-child(1) { width: 12%; font-weight: bold; } 
             td:nth-child(2), td:nth-child(3) { text-align: left !important; word-break: break-all !important; white-space: normal !important; line-height: 1.5; }
             /* 파란색 강조 글자 스타일 */
