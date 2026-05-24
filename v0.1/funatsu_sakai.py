@@ -1,24 +1,25 @@
 import pandas as pd
 import streamlit as st
 
-def render_sakai_analysis(df_raw):
+def render_sakai_analysis(df_raw, target_round=30):
     st.header("📊 회차별 종합 상세 분석")
     
     analysis_data = []
     
-    latest_row = df_raw.iloc[0]
+    for idx in target_round
+        latest_row = df_raw.iloc[idx]
     
-    next_round = int(latest_row['round']) + 1
-    last_winning_numbers = [int(latest_row[f'n{i}']) for i in range(1,7)]
-    last_bonus_number = int(latest_row['bonus'])
-    
-    magic_pool = make_funatsu_sakai_pool(last_winning_numbers, last_bonus_number)
-    
-    analysis_data.append({
-        "예측 회차": f"{next_round}",
-        "선별된 번호": ", ".join(map(str, magic_pool))
-    })
-    
+        next_round = int(latest_row['round']) + 1
+        last_winning_numbers = [int(latest_row[f'n{i}']) for i in range(1,7)]
+        last_bonus_number = int(latest_row['bonus'])
+        
+        magic_pool = make_funatsu_sakai_pool(last_winning_numbers, last_bonus_number)
+        
+        analysis_data.append({
+            "예측 회차": f"{next_round}",
+            "선별된 번호": ", ".join(map(str, magic_pool))
+        })
+        
     final_df = pd.DataFrame(analysis_data)
     st.markdown(final_df.to_html(escape=False, index=False), unsafe_allow_html=True)
 

@@ -729,7 +729,7 @@ elif menu == "종합 분석":
     render_comprehensive_analysis(df_raw, analyze_range)
 
 elif menu == "후나츠 사카이 분류":
-    render_sakai_analysis(df_raw)
+    render_sakai_analysis(df_raw, analyze_range)
     
 st.sidebar.divider()
 st.sidebar.caption("v0.1 - 통계 분석 시스템")
