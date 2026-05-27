@@ -77,7 +77,7 @@ def init_all_saved_data(conn, sheet_url, force_reload=False):
                 set_default_session_values()
             
             # 데이터를 완벽하게 에러 없이 로드했을 때만 플래그를 비활성화합니다.
-            st.session_state.menu_change_reload = False #force_reload = False       
+            st.session_state.menu_changed_reload = False #force_reload = False       
         except Exception:
             # 시트가 없거나 오류 발생 시 빈 리스트로 안전하게 초기화
             set_default_session_values()
