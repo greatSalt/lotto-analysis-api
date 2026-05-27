@@ -9,7 +9,6 @@ def init_all_saved_data(conn, sheet_url, force_reload=False):
     
     # 최초 실행이거나, 사용자가 강제로 새로고침을 요청했을 때만 로드 수행
     if is_not_initialized or force_reload:
-        st.session_state.menu_change_reload = False  #force_reload = False
         try:
             # ttl=0으로 설정하여 항상 최신 데이터를 읽어옴
             df = conn.read(spreadsheet=sheet_url, worksheet="SavedPicks", ttl=0)
@@ -76,7 +75,9 @@ def init_all_saved_data(conn, sheet_url, force_reload=False):
             else:
                 # 시트가 비어있을 때
                 set_default_session_values()
-                    
+            
+            # 데이터를 완벽하게 에러 없이 로드했을 때만 플래그를 비활성화합니다.
+            st.session_state.menu_change_reload = False #force_reload = False       
         except Exception:
             # 시트가 없거나 오류 발생 시 빈 리스트로 안전하게 초기화
             set_default_session_values()
