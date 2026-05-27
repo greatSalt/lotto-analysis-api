@@ -1,10 +1,15 @@
 import streamlit as st
 import pandas as pd
 
-def init_all_saved_data(conn, sheet_url):
+def init_all_saved_data(conn, sheet_url, force_reload=False):
     """앱 시작 시 구글 시트에서 PICK, FIX, EX 번호들을 모두 로드"""
+    
     # 세션 상태가 하나라도 없으면 로드 시도
-    if 'my_saved_picks' not in st.session_state or 'fixed_nums' not in st.session_state:
+    is_not_initialized = 'my_saved_picks' not in st.session_state or 'fixed_nums' not in st.session_state
+    
+    # 최초 실행이거나, 사용자가 강제로 새로고침을 요청했을 때만 로드 수행
+    if is_not_initialized or force_reload:
+        st.session_state.menu_change_reload = False  #force_reload = False
         try:
             # ttl=0으로 설정하여 항상 최신 데이터를 읽어옴
             df = conn.read(spreadsheet=sheet_url, worksheet="SavedPicks", ttl=0)
@@ -75,6 +80,7 @@ def init_all_saved_data(conn, sheet_url):
         except Exception:
             # 시트가 없거나 오류 발생 시 빈 리스트로 안전하게 초기화
             set_default_session_values()
+        
 
 def get_safe_int(df, type_code, default_val):
     """구글 시트 데이터프레임에서 특정 유형의 정수값을 안전하게 추출"""

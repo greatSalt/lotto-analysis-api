@@ -22,9 +22,12 @@ st.set_page_config(page_title="로또 분석 프로 v0.1", layout="wide")
 conn = st.connection("gsheets", type=GSheetsConnection)
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1q8P3SClxNSYsAXwBgk3__y44XxZwI_FTj-eE9uQeVHE/edit?gid=0#gid=0"
 
+# 앱이 처음 켜질 때 강제 리로드 플래그를 False로 방 만들기
+if 'menu_changed_reload' not in st.session_state:
+    st.session_state.menu_changed_reload = False
+
 # 1. 초기화 및 사이드바 표시 (최상단)
-#init_saved_picks(conn, SHEET_URL)
-init_all_saved_data(conn, SHEET_URL)
+init_all_saved_data(conn, SHEET_URL, force_reload=st.session_state.menu_changed_reload)
 
 # --- 데이터 로드 및 사이드바 공통 설정 ---
 # 분석에 필요한 데이터를 넉넉하게 한 번만 가져옵니다.
@@ -46,8 +49,12 @@ analyze_range = st.sidebar.slider(
 # 모든 메뉴에서 사용할 공통 분석 데이터 (슬라이싱)
 df = df_raw.head(analyze_range).copy()
 
+# 메뉴가 바뀌었으므로 다음 화면 갱신 때 시트를 강제로 읽으라고 신호를 줌
+def trigger_reload():
+    st.session_state.menu_changed_reload = True
+
 with st.sidebar:
-    menu = st.sidebar.radio("기능 선택", ["데이터 입력", "크레이지 번호 추출", "콜드 번호 추출", "특정 번호 분석", "📊 이월수 예측", "🎯 추천번호 분석", "당첨번호 주기 분석", "동끝수 상세 분석", "종합 분석", "후나츠 사카이 분류"])
+    menu = st.sidebar.radio("기능 선택", ["데이터 입력", "크레이지 번호 추출", "콜드 번호 추출", "특정 번호 분석", "📊 이월수 예측", "🎯 추천번호 분석", "당첨번호 주기 분석", "동끝수 상세 분석", "종합 분석", "후나츠 사카이 분류"], on_change=trigger_reload)
     display_sidebar_picks(conn, SHEET_URL) # 👈 어떤 메뉴에서든 내 번호가 보임
 
 if menu == "데이터 입력":
