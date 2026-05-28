@@ -12,7 +12,7 @@ from formular_description import display_formula_guide
 import analysis_to_gsheet as saver
 from iteration_predictor import render_carryover_analysis
 from empty_zone_engine import get_confirmed_empty_zone, color_rows, apply_strategy_style
-from combination_engine import generate_strategic_combinations, get_advanced_stat_analysis, get_comprehensive_analysis
+from combination_engine import generate_strategic_combinations, get_advanced_stat_analysis, get_comprehensive_analysis, display_filter_setting
 from winning_skip_analysis import analyze_winning_skip_distribution, render_skip_group_weight_ui
 from target_end_analysis import render_target_end_analysis
 from comprehensive_analysis import render_comprehensive_analysis
@@ -382,140 +382,8 @@ elif menu == "🎯 추천번호 분석":
         
         if len(selected_numbers) >= 6:
             st.success(f"현재 선택된 번호 ({len(selected_numbers)}개): {sorted(selected_numbers)}")
+            display_filter_setting()
             
-            col_input1, col_input2 = st.columns(2)
-            with col_input1:
-                # 고정수 입력 UI
-                fixed_nums = st.multiselect(
-                    "📌 고정수 (FIX)", 
-                    options=range(1, 46), 
-                    default=st.session_state.get('fixed_nums', []),
-                    key="fixed_multiselect" # 키 추가
-                )
-
-                if st.button("💾 고정수 시트 갱신", key="btn_fix_save"):
-                    # 현재 선택된 fixed_nums를 시트에 덮어쓰기
-                    save_to_sheets_by_type(conn, SHEET_URL, fixed_nums, "FIX")
-                    # 세션 상태 업데이트 및 리런
-                    st.session_state.fixed_nums = fixed_nums
-                    st.rerun()
-                    
-            with col_input2:
-                # 제외수 입력 UI
-                exclude_nums = st.multiselect(
-                    "🚫 제외수 (EX)", 
-                    options=range(1, 46), 
-                    default=st.session_state.get('exclude_nums', []),
-                    key="exclude_multiselect" # 키 추가
-                )
-                
-                if st.button("💾 제외수 시트 갱신", key="btn_ex_save"):
-                    #현재 선택된 exclude_nums를 시트에 덮어쓰기
-                    save_to_sheets_by_type(conn, SHEET_URL, exclude_nums, "EX")
-                    
-                    # 세션 상태 업데이트 및 리런
-                    st.session_state.exclude_nums = exclude_nums
-                    st.rerun()
-                    
-            col_f1, col_f2 = st.columns(2)
-            with col_f1:
-                st.write("**추가 필터 1: 홀짝 비율**")
-                ratio_options = ["0:6", "1:5", "2:4", "3:3", "4:2", "5:1", "6:0"]
-                sel_oe = st.multiselect(
-                    "허용 비율", 
-                    options=ratio_options, 
-                    default=st.session_state.get('sel_oe', ["3:3", "2:4"]), 
-                    key='oe_input'
-                )
-            with col_f2:
-                st.write("**추가 필터 2: 총합 범위**")
-                sum_range = st.slider(
-                    "총합 범위 설정", 
-                    min_value=80, 
-                    max_value=200, 
-                    value=st.session_state.get('sum_range', (100, 170)), # 세션값이 있으면 사용, 없으면 기본값
-                    step=1,
-                    key='sum_input'
-                )
-                            
-            # --- 실전 필터 적용 섹션 ---
-            st.divider()
-            with st.expander("🚀 필터링 조건 설정 (생성 시 적용)", expanded=True):
-                row1_col1, row1_col2, row3_col3 = st.columns(3)
-                with row1_col1:
-                    sel_ac = st.number_input(
-                        "최소 AC값", 
-                        min_value=0, 
-                        max_value=10, 
-                        value=st.session_state.get('sel_ac', 7) # 로드된 값 사용
-                    )
-                with row1_col2:
-                    sel_hl = st.multiselect(
-                        "허용 고저비율", 
-                        ["3:3", "2:4", "4:2", "1:5", "5:1", "0:6", "6:0"], # 0:6, 6:0 추가
-                        default=st.session_state.get('sel_hl', ["3:3", "2:4", "4:2"]) # 로드된 값 사용
-                        )
-                with row3_col3:
-                    # 이월수(직전회차 번호) 개수 설정
-                    carry_options = [0, 1, 2, 3]
-                    saved_carry = st.session_state.get('sel_carry', [0, 1, 2])
-                    sel_carry = st.multiselect(
-                        "허용 이월수 개수",
-                        carry_options,
-                        default=saved_carry,
-                        help="직전 회차 당첨번호 중 몇 개를 포함할지 결정합니다. (보통 0~2개 권장)"
-                    )        
-                
-                row1_col1, row1_col2, row2_col3 = st.columns(3)    
-                with row1_col1:
-                    # index를 세션값에 맞춰 계산
-                    con_options = [0, 1, 2]
-                    saved_con = st.session_state.get('sel_con', 1)
-                    # 만약 저장된 값이 옵션 리스트에 없으면 기본값 1번 인덱스 사용
-                    con_index = con_options.index(saved_con) if saved_con in con_options else 1
-                    
-                    sel_con = st.selectbox("최대 연번허용", con_options, index=con_index)
-                with row1_col2:
-                    # [신규 추가] 동끝수 쌍 설정
-                    # 보통 1~2쌍이 가장 많이 나오므로 기본값을 [1, 2]로 추천
-                    pair_options = [0, 1, 2, 3]
-                    saved_end = st.session_state.get('sel_end', [1, 2]) # 리스트 형태로 저장/로드
-                    
-                    sel_end = st.multiselect(
-                        "허용 동끝수 쌍",
-                        pair_options,
-                        default=saved_end,
-                        help="한 조합 내에 끝자리가 같은 숫자가 몇 쌍 있는지 설정합니다. (예: 12, 22는 1쌍)"
-                    )
-                with row2_col3:
-                    # 특정 동끝수 지정 (선택사항)
-                    # 예: 7을 선택하면 (7, 17, 27, 37) 중 2개 이상이 포함된 조합을 우선시함
-                    digit_options = list(range(10)) # 0~9까지
-                    saved_target_end = st.session_state.get('sel_target_end', []) 
-                    sel_target_end = st.multiselect(
-                        "강제 지정 끝수 (선택)", 
-                        digit_options, 
-                        default=saved_target_end,
-                        help="특정 끝수가 반드시 동끝수로 나오길 원할 때 선택하세요."
-                    )
-                        
-            if st.button("📌 필터 설정값 저장"):
-                with st.spinner("모든 필터 설정을 저장 중..."):
-                    # 각 필터값을 리스트 형태로 변환하여 저장 함수 호출
-                    save_to_sheets_by_type(conn, SHEET_URL, sel_oe, 'F_OE')
-                    save_to_sheets_by_type(conn, SHEET_URL, [sel_ac], 'F_AC')
-                    save_to_sheets_by_type(conn, SHEET_URL, [sel_con], 'F_CON')
-                    save_to_sheets_by_type(conn, SHEET_URL, sel_hl, 'F_HL') # 리스트 그대로 전달
-                    save_to_sheets_by_type(conn, SHEET_URL, [sum_range[0], sum_range[1]], 'F_SUM')
-                    save_to_sheets_by_type(conn, SHEET_URL, sel_end, 'F_END') # 동끝수 필터값 저장
-                    save_to_sheets_by_type(conn, SHEET_URL, sel_target_end, 'F_TARGET_END')
-                    save_to_sheets_by_type(conn, SHEET_URL, sel_carry, 'F_CARRY')
-                    
-                    # 고정수와 제외수도 함께 저장 (선택 사항)
-                    #save_to_sheets_by_type(conn, SHEET_URL, fixed_nums, 'FIX')
-                    #save_to_sheets_by_type(conn, SHEET_URL, exclude_nums, 'EX')
-        
-                    st.success("🎉 모든 분석 전략이 SavedPicks 시트에 통합 저장되었습니다!")
             # 1. 세션 상태 초기화 (코드 상단에 위치)
             if 'reco_results' not in st.session_state:
                 st.session_state.reco_results = None
@@ -546,7 +414,7 @@ elif menu == "🎯 추천번호 분석":
                             skip_weights_df = st.session_state.get('skip_weight_df'), #사용자가 설정한 주기별 가중치 표 전달
                             fixed_nums = st.session_state.fixed_nums,  # UI 입력값
                             exclude_nums = st.session_state.exclude_nums,  # UI 입력값
-                            target_digits=sel_target_end,   # 화면에서 선택한 강제 지정 끝수
+                            target_digits=st.session_state.get('sel_target_end',[]),   # 화면에서 선택한 강제 지정 끝수
                             allowed_pairs=sel_end,        # 화면에서 선택한 동끝수 쌍 개수
                             allowed_carry=sel_carry,  # 이월수(직전회차 번호) 개수 설정
                             last_win_nums=last_nums,    # 이월수(직전회차 번호)
@@ -557,7 +425,7 @@ elif menu == "🎯 추천번호 분석":
                         )
                         
                         # [확인용] 41번 주기가 0인지 로그 출력 (나중에 삭제 가능)
-                        st.write(f"DEBUG: 41번 현재 주기 -> {st.session_state.skip_dict.get(41)}")
+                        #st.write(f"DEBUG: 41번 현재 주기 -> {st.session_state.skip_dict.get(41)}")
                         
                         # [핵심] 결과를 세션 상태에 저장하여 화면에 고정
                         st.session_state.reco_results = results

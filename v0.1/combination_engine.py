@@ -372,3 +372,163 @@ def check_advanced_filters(nums, min_ac=7, allowed_hl=None, max_consecutive=1):
         return False
 
     return True
+
+def display_filter_setting():
+    col_input1, col_input2 = st.columns(2)
+    with col_input1:
+        if 'fixed_nums' not in st.session_state:
+            st.session_state.fixed_nums = []
+        # 고정수 입력 UI
+        st.multiselect(
+            "📌 고정수 (FIX)", 
+            options=range(1, 46), 
+            default=st.session_state.fixed_nums,
+            key="fixed_nums" # 키 추가
+        )
+
+        if st.button("💾 고정수 시트 갱신", key="btn_fix_save"):
+            # 현재 선택된 fixed_nums를 시트에 덮어쓰기
+            save_to_sheets_by_type(conn, SHEET_URL, st.session_state.fixed_nums, "FIX")
+            # UI 강제 새로고침
+            st.rerun()
+                    
+    with col_input2:
+        if 'exclude_nums' not in st.session_state:
+            st.session_state.exclude_nums = []
+        # 제외수 입력 UI
+        st.multiselect(
+            "🚫 제외수 (EX)", 
+            options=range(1, 46), 
+            default=st.session_state.exclude_nums,
+            key="exclude_nums" # 키 추가
+        )
+                
+        if st.button("💾 제외수 시트 갱신", key="btn_ex_save"):
+            #현재 선택된 exclude_nums를 시트에 덮어쓰기
+            save_to_sheets_by_type(conn, SHEET_URL, st.session_state.exclude_nums, "EX")
+            # UI 강제 새로고침
+            st.rerun()
+                    
+    col_f1, col_f2 = st.columns(2)
+    with col_f1:
+        if 'sel_oe' not in st.session_state:
+            st.session_state.sel_oe = ["3:3", "2:4"]
+            
+        st.write("**추가 필터 1: 홀짝 비율**")
+        ratio_options = ["0:6", "1:5", "2:4", "3:3", "4:2", "5:1", "6:0"]
+        st.multiselect(
+            "허용 비율",    
+            options=ratio_options, 
+            default=st.session_state.sel_oe, 
+            key='sel_oe'
+        )
+    with col_f2:
+        if 'sum_range' not in st.session_state:
+            st.session_state.sum_range = (100, 170)
+            
+        st.write("**추가 필터 2: 총합 범위**")
+        st.slider(
+            "총합 범위 설정", 
+            min_value=80, 
+            max_value=200, 
+            value=st.session_state.sum_range, # 세션값이 있으면 사용, 없으면 기본값
+            step=1,
+            key='sum_range'
+        )
+                            
+    # --- 실전 필터 적용 섹션 ---
+    st.divider()
+    with st.expander("🚀 필터링 조건 설정 (생성 시 적용)", expanded=True):
+        row1_col1, row1_col2, row3_col3 = st.columns(3)
+        with row1_col1:
+            if 'sel_ac' not in st.session_state:
+                st.session_state.sel_ac = 7
+            st.number_input(
+                "최소 AC값", 
+                min_value=0, 
+                max_value=10, 
+                value=st.session_state.sel_ac, # 로드된 값 사용
+                key='sel_ac'
+            )
+        with row1_col2:
+            if 'sel_hl' not in st.session_state:
+                st.session_state.sel_hl = ["3:3", "2:4", "4:2"]
+            st.multiselect(
+                "허용 고저비율", 
+                ["3:3", "2:4", "4:2", "1:5", "5:1", "0:6", "6:0"], # 0:6, 6:0 추가
+                default=st.session_state.sel_hl, # 로드된 값 사용
+                key = 'sel_hl'
+            )
+        with row3_col3:
+            if 'sel_carry' not in st.session_state:
+                st.session_state.sel_carry = [0, 1, 2]
+            # 이월수(직전회차 번호) 개수 설정
+            carry_options = [0, 1, 2, 3]
+            st.multiselect(
+                "허용 이월수 개수",
+                carry_options,
+                default=st.session_state.sel_carry,
+                key = 'sel_carry',
+                help="직전 회차 당첨번호 중 몇 개를 포함할지 결정합니다. (보통 0~2개 권장)"
+            )        
+                
+        row1_col1, row1_col2, row2_col3 = st.columns(3)    
+        with row1_col1:
+            if 'sel_con' not in st.session_state or st.session_state.sel_con not in [0,1,2]:
+                st.session_state.sel_con = 1
+            # index를 세션값에 맞춰 계산
+            con_options = [0, 1, 2]
+            
+            st.selectbox(
+                "최대 연번허용", 
+                con_options, 
+                key = 'sel_con'
+            )
+        with row1_col2:
+            if 'sel_end' not in st.session_state:
+                st.session_state.sel_end = [1, 2]
+            # [신규 추가] 동끝수 쌍 설정
+            # 보통 1~2쌍이 가장 많이 나오므로 기본값을 [1, 2]로 추천
+            pair_options = [0, 1, 2, 3]
+            st.multiselect(
+                "허용 동끝수 쌍",
+                pair_options,
+                default=st.session_state.sel_end, # 리스트 형태로 저장/로드
+                key = 'sel_end',
+                help="한 조합 내에 끝자리가 같은 숫자가 몇 쌍 있는지 설정합니다. (예: 12, 22는 1쌍)"
+            )
+        with row2_col3:
+            # 특정 동끝수 지정 (선택사항)
+            # 예: 7을 선택하면 (7, 17, 27, 37) 중 2개 이상이 포함된 조합을 우선시함
+            digit_options = list(range(10)) # 0~9까지
+                    
+            if 'sel_target_end' not in st.session_state:
+                st.session_state.sel_target_end = []
+                     
+            st.multiselect(
+                "강제 지정 끝수 (선택)", 
+                digit_options, 
+                default=st.session_state.sel_target_end,
+                key='sel_target_end',
+                help="특정 끝수가 반드시 동끝수로 나오길 원할 때 선택하세요."
+            )
+                        
+    if st.button("📌 필터 설정값 저장"):
+        with st.spinner("모든 필터 설정을 저장 중..."):
+            # 각 필터값을 리스트 형태로 변환하여 저장 함수 호출
+            save_to_sheets_by_type(conn, SHEET_URL, st.session_state.sel_oe, 'F_OE')
+            save_to_sheets_by_type(conn, SHEET_URL, [st.session_state.sel_ac], 'F_AC')
+            save_to_sheets_by_type(conn, SHEET_URL, [st.session_state.sel_con], 'F_CON')
+            save_to_sheets_by_type(conn, SHEET_URL, st.session_state.sel_hl, 'F_HL') # 리스트 그대로 전달
+            save_to_sheets_by_type(conn, SHEET_URL, [st.session_state.sum_range[0], st.session_state.sum_range[1]], 'F_SUM')
+            save_to_sheets_by_type(conn, SHEET_URL, st.session_state.sel_end, 'F_END') # 동끝수 필터값 저장
+            save_to_sheets_by_type(conn, SHEET_URL, st.session_state.sel_target_end, 'F_TARGET_END')
+            save_to_sheets_by_type(conn, SHEET_URL, st.session_state.sel_carry, 'F_CARRY')
+                    
+            # 고정수와 제외수도 함께 저장 (선택 사항)
+            #save_to_sheets_by_type(conn, SHEET_URL, fixed_nums, 'FIX')
+            #save_to_sheets_by_type(conn, SHEET_URL, exclude_nums, 'EX')
+        
+            st.success("🎉 모든 분석 전략이 SavedPicks 시트에 통합 저장되었습니다!")
+
+
