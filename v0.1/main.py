@@ -409,18 +409,18 @@ elif menu == "🎯 추천번호 분석":
                     with st.spinner('최적의 조합을 계산 중...'):
                         results = generate_strategic_combinations(
                             selected_df, 
-                            ratio_filters = sel_oe, # UI 입력값 (멀티셀렉트)
-                            sum_range = sum_range,      # UI 입력값 
+                            ratio_filters = st.session_state.sel_oe, # UI 입력값 (멀티셀렉트)
+                            sum_range = st.session_state.sum_range,      # UI 입력값 
                             skip_weights_df = st.session_state.get('skip_weight_df'), #사용자가 설정한 주기별 가중치 표 전달
                             fixed_nums = st.session_state.fixed_nums,  # UI 입력값
                             exclude_nums = st.session_state.exclude_nums,  # UI 입력값
-                            target_digits=st.session_state.get('sel_target_end',[]),   # 화면에서 선택한 강제 지정 끝수
-                            allowed_pairs=sel_end,        # 화면에서 선택한 동끝수 쌍 개수
-                            allowed_carry=sel_carry,  # 이월수(직전회차 번호) 개수 설정
+                            target_digits=st.session_state.sel_target_end,   # 화면에서 선택한 강제 지정 끝수
+                            allowed_pairs=st.session_state.sel_end,        # 화면에서 선택한 동끝수 쌍 개수
+                            allowed_carry=st.session_state.sel_carry,  # 이월수(직전회차 번호) 개수 설정
                             last_win_nums=last_nums,    # 이월수(직전회차 번호)
-                            min_ac=sel_ac,     # UI 입력값
-                            allowed_hl=sel_hl, # UI 입력값 (멀티셀렉트)
-                            max_con=sel_con,   # UI 입력값 (셀렉트박스)
+                            min_ac=st.session_state.sel_ac,     # UI 입력값
+                            allowed_hl=st.session_state.sel_hl, # UI 입력값 (멀티셀렉트)
+                            max_con=st.session_state.sel_con,   # UI 입력값 (셀렉트박스)
                             count=5
                         )
                         
