@@ -396,7 +396,7 @@ elif menu == "🎯 추천번호 분석":
                 # 체크된 번호들의 로우데이터만 전달
                 selected_df = edited_df[edited_df['선택'] == True]
                 # 고정수가 6개 초과면 에러 처리
-                if len(fixed_nums) > 6:
+                if len(st.session_state.fixed_nums) > 6:
                     st.error("고정수는 최대 6개까지만 입력 가능합니다.")
                 else:
                     # 초기 실행 시 생성된 df(분석 대상 데이터프레임)의 첫 번째 행이 최신 회차입니다.
