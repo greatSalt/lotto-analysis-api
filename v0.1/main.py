@@ -439,7 +439,7 @@ elif menu == "🎯 추천번호 분석":
                 st.subheader("✨ AI 추천 조합 (2-3-1 비율 적용)")
                 # 🎨 범례(Legend) 표시 - 사용자가 색상의 의미를 알 수 있도록
                 st.info("🎨 **번호 색상 범례**: ⬜ 이월수 (직전당첨) / 🟥 핫 (출현임박) / 🟨 웜 (일반) / 🟦 콜드 (장기미출)")
-                st.success(f"✅ 고정수 {fixed_nums} 포함, 제외수 {exclude_nums} 제거 완료!")
+                st.success(f"✅ 고정수 {st.session_state.fixed_nums} 포함, 제외수 {st.session_state.exclude_nums} 제거 완료!")
                         
                 # 폼을 사용하지 않고 개별 체크박스 상태를 추적하기 위해 리스트 생성
                 to_save_picks = []
