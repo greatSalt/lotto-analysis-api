@@ -5,6 +5,8 @@ from target_end_analysis import check_same_end_digit_filter
 from iteration_predictor import check_carryover_filter
 from funatsu_sakai import make_funatsu_sakai_pool
 from empty_zone_engine import apply_strategy_style
+from crazyLogic import get_crazy_analysis
+from savepicked import display_sidebar_picks, get_highlight_style, init_all_saved_data, save_to_sheets_by_type, save_recommended_picks
 
 def generate_strategic_combinations(selected_df, ratio_filters, sum_range, skip_weights_df, fixed_nums, exclude_nums, target_digits, allowed_pairs, allowed_carry, last_win_nums, min_ac=7, allowed_hl=None, max_con=1, count=5):
     """
