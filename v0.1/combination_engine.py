@@ -3,6 +3,8 @@ import pandas as pd
 import streamlit as st
 from target_end_analysis import check_same_end_digit_filter
 from iteration_predictor import check_carryover_filter
+from funatsu_sakai import make_funatsu_sakai_pool
+from empty_zone_engine import apply_strategy_style
 
 def generate_strategic_combinations(selected_df, ratio_filters, sum_range, skip_weights_df, fixed_nums, exclude_nums, target_digits, allowed_pairs, allowed_carry, last_win_nums, min_ac=7, allowed_hl=None, max_con=1, count=5):
     """
@@ -531,4 +533,72 @@ def display_filter_setting():
         
             st.success("🎉 모든 분석 전략이 SavedPicks 시트에 통합 저장되었습니다!")
 
+disp_recommended_nums_table(df_raw, decision):
+    
+    # 1. 번호 필터링 및 우선순위 분석 데이터프레임 생성
+    analysis_df = get_crazy_analysis(df_raw)
+    filtered_df = analysis_df.copy()
+        
+    # --- 전체 번호 선택 / 자동 분류 로직 ---
+    col_select_all, col_sakai_nums = st.columns(2)
+    with col_select_all:
+        select_all = st.checkbox("🔄 모든 번호 선택", value=False, key="all_nums_toggle")
+    with col_sakai_nums:
+        select_sakai_nums = st.checkbox("후나츠 사카이 분류", value=False, key='sakai_nums_toggle')
+    
+    # 체크박스 상태에 따른 '선택' 열 초기화 알고리즘
+    if select_all:
+        filtered_df['선택'] = True
+    elif select_sakai_nums:
+        latest_row = df_raw.iloc[0] # 데이터프레임의 첫 번째 행(iloc[0])이 최신 회차
+    
+        # 직전 회차 당첨번호 및 보너스 번호 정수 파싱
+        last_winning_numbers = [int(latest_row[f'n{i}']) for i in range(1,7)]
+        last_bonus_number = int(latest_row['bonus'])
+        
+        # 사카이 기법 특수 풀(Pool) 생성 후 포함 여부 매핑
+        magic_pool = make_funatsu_sakai_pool(last_winning_numbers, last_bonus_number)
+        filtered_df['선택'] = filtered_df['번호'].isin(magic_pool)
+    else:
+        # 아무것도 체크되지 않았다면 세션에 로드되어 있는 기존 PICK 데이터 복원
+        filtered_df['선택'] = filtered_df['번호'].isin(st.session_state.get('my_saved_picks', []))
+            
+    # 2. UI 레이아웃 및 캡션 설정
+    st.subheader("📊 전략 분석 테이블")
+    st.info("🔵 **파란색**: 역사적 확률에 따른 **멸 확정** 구간 / 🟡 **노란색**: 멸 확률 40% 초과 **주의** 구간")
+        
+    # 데이터 에디터에 노출할 유효 컬럼 필터링
+    cols = ['선택', '번호', '통합크레이지점수', '출현수', '출현율', '현재연속', '최대연속', '반등지수', '에너지지수', '탄성점수', '리듬점수', '박자상태']
+    available_cols = [c for c in cols if c in filtered_df.columns]
+    
+    # 3. 대화형 데이터 에디터 렌더링 (전달받은 decision 인자로 스타일링 적용)    
+    edited_df = st.data_editor(
+        apply_strategy_style(filtered_df[available_cols], decision),
+        hide_index=True,
+        use_container_width=True,
+        column_config={
+            "선택": st.column_config.CheckboxColumn(required=True),
+            "번호": st.column_config.NumberColumn(format="%d"),
+            "통합크레이지점수": st.column_config.NumberColumn(format="%.1f")
+        },
+        disabled=[c for c in available_cols if c != '선택'] # 선택 컬럼만 수정 가능
+    )
 
+    # 4. 사용자가 최종 선택한 번호 리스트 추출
+    selected_numbers = edited_df[edited_df['선택'] == True]['번호'].tolist()
+        
+    # 5. 저장 컨트롤러 및 세션/시트 데이터 동기화
+    st.divider()
+    if st.button("💾 선택 번호 저장", use_container_width=True):
+        # 체크된 번호들 추출 및 정수형 변환
+        new_picks = [int(n) for n in edited_df[edited_df['선택'] == True]['번호'].tolist()]
+            
+        # 구글 시트 백엔드 반영
+        save_to_sheets_by_type(conn, SHEET_URL, new_picks, "PICK")
+        # 세션 상태 즉시 갱신 (사이드바 즉시 반영)
+        st.session_state.my_saved_picks = new_picks
+            
+        st.toast(f"🎯 {len(new_picks)}개 번호 저장 완료!")
+        st.rerun()
+        
+    return selected_numbers

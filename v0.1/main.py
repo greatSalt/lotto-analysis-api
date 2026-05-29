@@ -12,7 +12,7 @@ from formular_description import display_formula_guide
 import analysis_to_gsheet as saver
 from iteration_predictor import render_carryover_analysis
 from empty_zone_engine import get_confirmed_empty_zone, color_rows, apply_strategy_style
-from combination_engine import generate_strategic_combinations, get_advanced_stat_analysis, get_comprehensive_analysis, display_filter_setting
+from combination_engine import generate_strategic_combinations, get_advanced_stat_analysis, get_comprehensive_analysis, display_filter_setting, disp_recommended_nums_table
 from winning_skip_analysis import analyze_winning_skip_distribution, render_skip_group_weight_ui
 from target_end_analysis import render_target_end_analysis
 from comprehensive_analysis import render_comprehensive_analysis
@@ -297,12 +297,8 @@ elif menu == "📊 이월수 예측":
     st.bar_chart(chart_data)
 
 elif menu == "🎯 추천번호 분석":
-    st.sidebar.subheader("⚙️ 멸 엔진 설정")
-    #analyze_range = st.sidebar.slider("역사적 확률 분석 범위", 5, 300, 30) #range:min5~max300,default:30
-    
     st.title("🎯 v2.5 전략 추천번호")
     
-    #df = get_recent_data(conn, SHEET_URL)
     if not df.empty:
         decision = get_confirmed_empty_zone(df, analyze_range)
         
@@ -314,68 +310,10 @@ elif menu == "🎯 추천번호 분석":
             elif data['prob'] > 40:
                 st.warning(f"⚠️ **{zone} 주의** : 멸 확률 {data['prob']:.1f}% (관찰 필요)")
         
-        # 번호 필터링 및 우선순위 표시
-        analysis_df = get_crazy_analysis(df)
-        
         # 확정된 멸구간 번호 제외
         excluded_zones = [z for z, d in decision.items() if d['is_empty']]
-        #zones_map = {'단번대':(1,10), '10번대':(11,20), '20번대':(21,30), '30번대':(31,40), '40번대':(41,45)}
-        filtered_df = analysis_df.copy()
         
-        # --- [추가] 전체 번호 선택 로직 시작 ---
-        col_select_all, _ = st.columns([1, 4])
-        with col_select_all:
-            # 세션 상태를 활용하여 전체 선택 여부 관리
-            select_all = st.checkbox("🔄 모든 번호 선택", value=False, key="all_nums_toggle")
-        
-        # 전체 선택이 체크되면 모든 행의 '선택' 컬럼을 True로 초기화
-        if select_all:
-            filtered_df['선택'] = True
-        else:
-            # 기존 저장된 픽이 있으면 그것만 체크, 없으면 False
-            filtered_df['선택'] = filtered_df['번호'].isin(st.session_state.get('my_saved_picks', []))
-        # --- 전체 번호 선택 로직 끝 ---
-            
-        # 4. 테이블 출력 세팅
-        st.subheader("📊 전략 분석 테이블")
-        st.info("🔵 **파란색**: 역사적 확률에 따른 **멸 확정** 구간 / 🟡 **노란색**: 멸 확률 40% 초과 **주의** 구간")
-        
-        # 4. 체크박스가 포함된 대화형 테이블 (st.data_editor 활용)
-        # 컬럼 순서 및 편집 가능 여부 설정
-        analysis_df['선택'] = False
-        
-        cols = ['선택', '번호', '통합크레이지점수', '출현수', '출현율', '현재연속', '최대연속', '반등지수', '에너지지수', '탄성점수', '리듬점수', '박자상태']
-        available_cols = [c for c in cols if c in filtered_df.columns]
-        
-        edited_df = st.data_editor(
-            apply_strategy_style(filtered_df[available_cols], decision),
-            hide_index=True,
-            use_container_width=True,
-            column_config={
-                "선택": st.column_config.CheckboxColumn(required=True),
-                "번호": st.column_config.NumberColumn(format="%d"),
-                "통합크레이지점수": st.column_config.NumberColumn(format="%.1f")
-            },
-            disabled=[c for c in available_cols if c != '선택'] # 선택 컬럼만 수정 가능
-        )
-
-        # 5. 선택된 번호로 조합 생성 섹션
-        selected_numbers = edited_df[edited_df['선택'] == True]['번호'].tolist()
-        
-        # 6. 저장 버튼 및 데이터 업데이트
-        st.divider()
-        if st.button("💾 선택 번호 저장", use_container_width=True):
-            # 체크된 번호들 추출 및 정수형 변환
-            new_picks = [int(n) for n in edited_df[edited_df['선택'] == True]['번호'].tolist()]
-            
-            # 구글 시트에 저장
-            #save_picks_to_sheets(conn, SHEET_URL, new_picks)
-            save_to_sheets_by_type(conn, SHEET_URL, new_picks, "PICK")
-            # 세션 상태 업데이트 (사이드바 즉시 반영)
-            st.session_state.my_saved_picks = new_picks
-            
-            st.toast(f"🎯 {len(new_picks)}개 번호 저장 완료!")
-            st.rerun()
+        selected_numbers = disp_recommended_nums_table(df, decision)
         
         st.divider()
         st.subheader("🎲 실전 조합 생성기 (확장 필터)")
