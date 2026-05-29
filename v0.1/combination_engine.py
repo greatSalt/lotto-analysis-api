@@ -535,7 +535,7 @@ def display_filter_setting():
         
             st.success("🎉 모든 분석 전략이 SavedPicks 시트에 통합 저장되었습니다!")
 
-disp_recommended_nums_table(df_raw, decision):
+def disp_recommended_nums_table(df_raw, decision):
     
     # 1. 번호 필터링 및 우선순위 분석 데이터프레임 생성
     analysis_df = get_crazy_analysis(df_raw)
