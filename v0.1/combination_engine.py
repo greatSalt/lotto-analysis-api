@@ -445,9 +445,27 @@ def display_filter_setting(conn):
         with st.expander("후나츠 사카이 분류 설정", expanded=True):
             row_col1, row_col2 = st.columns(2)
             with row_col1:  #후나츠 사카이 분류 번호 포함 갯수 (1~6)
+                if 'sakai_cnt' not in st.session_state or st.session_state.sakaicnt not in [0,1,2,3,4,5]:
+                    st.session_state.sakai_cnt = 3
+                # index를 세션값에 맞춰 계산
+                con_options = [0, 1, 2, 3, 4, 5]
                 
+                st.selectbox(
+                    "포함할 번호 갯수", 
+                    con_options, 
+                    key = 'sakai_cnt'
+                )
             with row_col2:  # 후나츠 사카이 분류 조합 비율 선택(3:2:1,2:3:1,...)
-            
+                if 'sakai_ratio' not in st.session_state:
+                    st.session_state.sakai_ratio = ["3:3:3"]
+                    
+                ratio_options = ["6:0:0", "5:0:1", "4:0:2", "3:3:3"]
+                st.multiselect(
+                    "조합 비율",    
+                    options=ratio_options, 
+                    default=st.session_state.sakai_ratio, 
+                    key='sakai_ratio'
+                )
                             
     # --- 실전 필터 적용 섹션 ---
     st.divider()
