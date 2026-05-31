@@ -39,7 +39,13 @@ def init_all_saved_data(conn, sheet_url, force_reload=False):
                     
                     # [AC값]
                     st.session_state.sel_ac = get_safe_int(df, 'F_AC', 7)
-                        
+                    
+                    # funatsu sakai
+                    st.session_state.sakai_cnt = get_safe_int(df, 'F_SAKAI_CNT', 3)
+                    # funatsu sakai
+                    sakai_ratio_rows = df[df['유형'] == 'F_SAKAI_RATIO']
+                    st.session_state.sakai_ratio = sakai_ratio_rows['번호'].tolist() if not sakai_ratio_rows.empty else ["3:3:3"]
+                    
                     # [최대 연번]
                     st.session_state.sel_con = get_safe_int(df, 'F_CON', 1)
                         
@@ -110,6 +116,8 @@ def set_default_session_values():
     st.session_state.exclude_nums = []
     st.session_state.sel_oe = ["3:3", "2:4", "4:2"]
     st.session_state.sel_ac = 7
+    st.session_state.sakai_cnt = 3
+    st.session_state.sakai_ratio = ["3:3:3"]
     st.session_state.sel_con = 1
     st.session_state.sel_hl = ["3:3", "2:4", "4:2"]
     st.session_state.sum_range = (100, 175)
@@ -142,7 +150,9 @@ def save_to_sheets_by_type(conn, sheet_url, new_nums, type_code):
             full_df['유형'] = 'PICK' # 기존 데이터는 모두 일반 저장으로 간주
             
         # --- [추가/수정] 삭제 로직: new_nums가 비어있는 경우 ---
-        if not new_nums:
+        #if not new_nums:
+        # 💡 [보안 및 교정] 명확한 빈 리스트([]) 체크 및 동기화 누수 방지
+        if new_nums is None or (isinstance(new_nums, list) and len(new_nums) == 0):
             # 해당 유형이 아닌 것들만 남겨서 저장 (즉, 해당 유형 전체 삭제)
             final_df = full_df[full_df["유형"] != type_code]
             conn.update(spreadsheet=sheet_url, worksheet="SavedPicks", data=final_df)
@@ -151,6 +161,9 @@ def save_to_sheets_by_type(conn, sheet_url, new_nums, type_code):
             if type_code == 'COMBI': st.session_state.my_combi_sets = []
             elif type_code == 'PICK': st.session_state.my_saved_picks = []
             # (필요에 따라 FIX, EX 등도 추가)
+            elif type_code == 'FIX': st.session_state.fixed_nums = []
+            elif type_code == 'EX': st.session_state.exclude_nums = []
+            elif type_code == 'F_TARGET_END': st.session_state.sel_target_end = []
             
             st.toast(f"🗑️ {type_code} 데이터가 삭제되었습니다.")
             return # 삭제 후 함수 종료
@@ -179,6 +192,8 @@ def save_to_sheets_by_type(conn, sheet_url, new_nums, type_code):
             # [추가] 홀짝(Odd-Even) 설정이 필요하다면 별도 코드로 관리 (예: F_OE)
             elif type_code == 'F_OE': st.session_state.sel_oe = new_nums
             elif type_code == 'F_AC': st.session_state.sel_ac = int(new_nums[0])
+            elif type_code == 'F_SAKAI_CNT': st.session_state.sakai_cnt = int(new_nums[0])
+            elif type_code == 'F_SAKAI_RATIO': st.session_state.sakai_ratio = new_nums
             elif type_code == 'F_CON': st.session_state.sel_con = int(new_nums[0])
             elif type_code == 'F_HL': st.session_state.sel_hl = new_nums # ['3:3', '4:2'] 형태
             elif type_code == 'F_SUM': st.session_state.sum_range = (int(new_nums[0]), int(new_nums[1]))
@@ -239,7 +254,7 @@ def display_sidebar_picks(conn, sheet_url):
             # 개별 번호는 리스트 형태로 한눈에 표시
             pick_html = "".join([
                 f"![{n}](https://img.shields.io/badge/-{n}-lightgrey?style=flat-square&border_radius=50) " 
-                for n in sorted(picks)
+                for n in sorted(valid_picks)
             ])
             st.markdown(pick_html, unsafe_allow_html=True)
             

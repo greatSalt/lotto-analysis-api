@@ -377,7 +377,7 @@ def check_advanced_filters(nums, min_ac=7, allowed_hl=None, max_consecutive=1):
 
     return True
 
-def display_filter_setting(conn):
+def display_filter_setting(conn, sheet_url):
     col_input1, col_input2 = st.columns(2)
     with col_input1:
         if 'fixed_nums' not in st.session_state:
@@ -392,7 +392,7 @@ def display_filter_setting(conn):
 
         if st.button("💾 고정수 시트 갱신", key="btn_fix_save"):
             # 현재 선택된 fixed_nums를 시트에 덮어쓰기
-            save_to_sheets_by_type(conn, SHEET_URL, st.session_state.fixed_nums, "FIX")
+            save_to_sheets_by_type(conn, sheet_url, st.session_state.fixed_nums, "FIX")
             # UI 강제 새로고침
             st.rerun()
                     
@@ -409,7 +409,7 @@ def display_filter_setting(conn):
                 
         if st.button("💾 제외수 시트 갱신", key="btn_ex_save"):
             #현재 선택된 exclude_nums를 시트에 덮어쓰기
-            save_to_sheets_by_type(conn, SHEET_URL, st.session_state.exclude_nums, "EX")
+            save_to_sheets_by_type(conn, sheet_url, st.session_state.exclude_nums, "EX")
             # UI 강제 새로고침
             st.rerun()
                     
@@ -445,7 +445,7 @@ def display_filter_setting(conn):
         with st.expander("후나츠 사카이 분류 설정", expanded=True):
             row_col1, row_col2 = st.columns(2)
             with row_col1:  #후나츠 사카이 분류 번호 포함 갯수 (1~6)
-                if 'sakai_cnt' not in st.session_state or st.session_state.sakaicnt not in [0,1,2,3,4,5]:
+                if 'sakai_cnt' not in st.session_state or st.session_state.sakai_cnt not in [0,1,2,3,4,5]:
                     st.session_state.sakai_cnt = 3
                 # index를 세션값에 맞춰 계산
                 con_options = [0, 1, 2, 3, 4, 5]
@@ -547,22 +547,24 @@ def display_filter_setting(conn):
     if st.button("📌 필터 설정값 저장"):
         with st.spinner("모든 필터 설정을 저장 중..."):
             # 각 필터값을 리스트 형태로 변환하여 저장 함수 호출
-            save_to_sheets_by_type(conn, SHEET_URL, st.session_state.sel_oe, 'F_OE')
-            save_to_sheets_by_type(conn, SHEET_URL, [st.session_state.sel_ac], 'F_AC')
-            save_to_sheets_by_type(conn, SHEET_URL, [st.session_state.sel_con], 'F_CON')
-            save_to_sheets_by_type(conn, SHEET_URL, st.session_state.sel_hl, 'F_HL') # 리스트 그대로 전달
-            save_to_sheets_by_type(conn, SHEET_URL, [st.session_state.sum_range[0], st.session_state.sum_range[1]], 'F_SUM')
-            save_to_sheets_by_type(conn, SHEET_URL, st.session_state.sel_end, 'F_END') # 동끝수 필터값 저장
-            save_to_sheets_by_type(conn, SHEET_URL, st.session_state.sel_target_end, 'F_TARGET_END')
-            save_to_sheets_by_type(conn, SHEET_URL, st.session_state.sel_carry, 'F_CARRY')
+            save_to_sheets_by_type(conn, sheet_url, st.session_state.sel_oe, 'F_OE')
+            save_to_sheets_by_type(conn, sheet_url, [st.session_state.sel_ac], 'F_AC')
+            save_to_sheets_by_type(conn, sheet_url, [st.session_state.sel_con], 'F_CON')
+            save_to_sheets_by_type(conn, sheet_url, st.session_state.sel_hl, 'F_HL') # 리스트 그대로 전달
+            save_to_sheets_by_type(conn, sheet_url, [st.session_state.sum_range[0], st.session_state.sum_range[1]], 'F_SUM')
+            save_to_sheets_by_type(conn, sheet_url, st.session_state.sel_end, 'F_END') # 동끝수 필터값 저장
+            save_to_sheets_by_type(conn, sheet_url, st.session_state.sel_target_end, 'F_TARGET_END')
+            save_to_sheets_by_type(conn, sheet_url, st.session_state.sel_carry, 'F_CARRY')
+            save_to_sheets_by_type(conn, sheet_url, [st.session_state.sakai_cnt], 'F_SAKAI_CNT')
+            save_to_sheets_by_type(conn, sheet_url, st.session_state.sakai_ratio, 'F_SAKAI_RATIO')
                     
             # 고정수와 제외수도 함께 저장 (선택 사항)
-            #save_to_sheets_by_type(conn, SHEET_URL, fixed_nums, 'FIX')
-            #save_to_sheets_by_type(conn, SHEET_URL, exclude_nums, 'EX')
+            #save_to_sheets_by_type(conn, sheet_url, fixed_nums, 'FIX')
+            #save_to_sheets_by_type(conn, sheet_url, exclude_nums, 'EX')
         
             st.success("🎉 모든 분석 전략이 SavedPicks 시트에 통합 저장되었습니다!")
 
-def disp_recommended_nums_table(conn, df_raw, decision):
+def disp_recommended_nums_table(conn, sheet_url, df_raw, decision):
     
     # 1. 번호 필터링 및 우선순위 분석 데이터프레임 생성
     analysis_df = get_crazy_analysis(df_raw)
@@ -627,7 +629,7 @@ def disp_recommended_nums_table(conn, df_raw, decision):
         new_picks = [int(n) for n in edited_df[edited_df['선택'] == True]['번호'].tolist()]
             
         # 구글 시트 백엔드 반영
-        save_to_sheets_by_type(conn, SHEET_URL, new_picks, "PICK")
+        save_to_sheets_by_type(conn, sheet_url, new_picks, "PICK")
         # 세션 상태 즉시 갱신 (사이드바 즉시 반영)
         st.session_state.my_saved_picks = new_picks
             
