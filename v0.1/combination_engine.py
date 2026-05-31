@@ -377,7 +377,7 @@ def check_advanced_filters(nums, min_ac=7, allowed_hl=None, max_consecutive=1):
 
     return True
 
-def display_filter_setting():
+def display_filter_setting(conn):
     col_input1, col_input2 = st.columns(2)
     with col_input1:
         if 'fixed_nums' not in st.session_state:
@@ -439,6 +439,15 @@ def display_filter_setting():
             step=1,
             key='sum_range'
         )
+    
+    if st.session_state.enable_sakai == True:
+        st.divider()
+        with st.expander("후나츠 사카이 분류 설정", expanded=True):
+            row_col1, row_col2 = st.columns(2)
+            with row_col1:  #후나츠 사카이 분류 번호 포함 갯수 (1~6)
+                
+            with row_col2:  # 후나츠 사카이 분류 조합 비율 선택(3:2:1,2:3:1,...)
+            
                             
     # --- 실전 필터 적용 섹션 ---
     st.divider()
@@ -535,7 +544,7 @@ def display_filter_setting():
         
             st.success("🎉 모든 분석 전략이 SavedPicks 시트에 통합 저장되었습니다!")
 
-def disp_recommended_nums_table(df_raw, decision):
+def disp_recommended_nums_table(conn, df_raw, decision):
     
     # 1. 번호 필터링 및 우선순위 분석 데이터프레임 생성
     analysis_df = get_crazy_analysis(df_raw)
@@ -547,6 +556,8 @@ def disp_recommended_nums_table(df_raw, decision):
         select_all = st.checkbox("🔄 모든 번호 선택", value=False, key="all_nums_toggle")
     with col_sakai_nums:
         select_sakai_nums = st.checkbox("후나츠 사카이 분류", value=False, key='sakai_nums_toggle')
+    
+    st.session_state.enable_sakai = False
     
     # 체크박스 상태에 따른 '선택' 열 초기화 알고리즘
     if select_all:
@@ -561,6 +572,8 @@ def disp_recommended_nums_table(df_raw, decision):
         # 사카이 기법 특수 풀(Pool) 생성 후 포함 여부 매핑
         magic_pool = make_funatsu_sakai_pool(last_winning_numbers, last_bonus_number)
         filtered_df['선택'] = filtered_df['번호'].isin(magic_pool)
+        
+        st.session_state.enable_sakai = True
     else:
         # 아무것도 체크되지 않았다면 세션에 로드되어 있는 기존 PICK 데이터 복원
         filtered_df['선택'] = filtered_df['번호'].isin(st.session_state.get('my_saved_picks', []))
