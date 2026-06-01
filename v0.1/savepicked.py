@@ -214,7 +214,7 @@ def save_to_sheets_by_type(conn, sheet_url, new_nums, type_code):
         
         st.toast(f"✅ {type_code} 설정이 저장되었습니다.")
         #st.rerun() # UI 즉시 갱신
-        
+        st.session_state.menu_changed_reload = True #저장후 데이터 리로드
     except Exception as e:
         st.error(f"저장 중 오류 발생: {e}")
         
