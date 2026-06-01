@@ -19,14 +19,22 @@ from comprehensive_analysis import render_comprehensive_analysis
 from funatsu_sakai import render_sakai_analysis 
 
 import sys
+import traceback
 
-# 💡 에러가 발생하면 화면 맨 위에 무조건 로그를 찍어버리는 임시 코드
-def exception_logger(exception_type, exception, traceback):
-    st.error(f"🚨 잡아냈다 에러!: {exception_type.__name__}: {exception}")
-    # 원래 에러 처리도 수행
-    sys.__excepthook__(exception_type, exception, traceback)
+# 💡 에러를 절대 놓치지 않고 화면에 강제로 멈춰 세우는 로깅 함수
+def freeze_on_error(exception_type, exception, tb):
+    # 에러의 상세 추적 내용(Traceback)을 문자열로 추출
+    error_details = "".join(traceback.format_exception(exception_type, exception, tb))
+    
+    # 화면 맨 위에 에러 내용을 거대하고 빨간 박스로 출력
+    st.error(f"🎯 [에러 포착] 시스템이 에러를 잡고 화면을 고정했습니다!")
+    st.code(f"{exception_type.__name__}: {exception}\n\n{error_details}", language="python")
+    
+    # 🛑 핵심: Streamlit이 화면을 더 이상 새로고침(Rerun)하지 못하도록 그 자리에서 앱을 정지시킵니다.
+    st.stop()
 
-sys.excepthook = exception_logger
+# 시스템 에러 감지기에 내 함수를 등록
+sys.excepthook = freeze_on_error
 
 st.set_page_config(page_title="로또 분석 프로 v0.1", layout="wide")
 conn = st.connection("gsheets", type=GSheetsConnection)
