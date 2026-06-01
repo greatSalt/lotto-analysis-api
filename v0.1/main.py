@@ -18,6 +18,16 @@ from target_end_analysis import render_target_end_analysis
 from comprehensive_analysis import render_comprehensive_analysis
 from funatsu_sakai import render_sakai_analysis 
 
+import sys
+
+# 💡 에러가 발생하면 화면 맨 위에 무조건 로그를 찍어버리는 임시 코드
+def exception_logger(exception_type, exception, traceback):
+    st.error(f"🚨 잡아냈다 에러!: {exception_type.__name__}: {exception}")
+    # 원래 에러 처리도 수행
+    sys.__excepthook__(exception_type, exception, traceback)
+
+sys.excepthook = exception_logger
+
 st.set_page_config(page_title="로또 분석 프로 v0.1", layout="wide")
 conn = st.connection("gsheets", type=GSheetsConnection)
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1q8P3SClxNSYsAXwBgk3__y44XxZwI_FTj-eE9uQeVHE/edit?gid=0#gid=0"
