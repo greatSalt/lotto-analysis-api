@@ -459,7 +459,7 @@ def display_filter_setting(conn, sheet_url):
                 if 'sakai_ratio' not in st.session_state:
                     st.session_state.sakai_ratio = ["3:3:3"]
                     
-                ratio_options = ["6:0:0", "5:0:1", "4:0:2", "3:3:3"]
+                ratio_options = ["non_option", "3:3:3"]
                 st.multiselect(
                     "조합 비율",    
                     options=ratio_options, 
