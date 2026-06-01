@@ -180,7 +180,17 @@ def save_to_sheets_by_type(conn, sheet_url, new_nums, type_code):
         else:
             # [덮어쓰기형] 해당 유형만 제거 후 교체
             other_types_df = full_df[full_df["유형"] != type_code]
-            new_type_df = pd.DataFrame({"번호": new_nums, "유형": type_code})
+            
+            # 만약 들어온 데이터 유형이 사카이 비율 비율이라면 문자열 앞에 '를 붙여서 자동 시간 변환 방지
+            if type_code == 'F_SAKAI_RATIO':
+                processed_nums = [f"'{x}" if not str(x).startswith("'") else x for x in new_nums]
+            else:
+                processed_nums = new_nums
+            
+            # 가공된 데이터를 데이터프레임으로 생성
+            new_type_df = pd.DataFrame({"번호": processed_nums, "유형": type_code})
+            #new_type_df = pd.DataFrame({"번호": new_nums, "유형": type_code})
+            
             # 3. 합치기 및 중복 제거
             final_df = pd.concat([other_types_df, new_type_df], ignore_index=True)
             
