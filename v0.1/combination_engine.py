@@ -463,7 +463,7 @@ def display_filter_setting(conn, sheet_url):
                 st.multiselect(
                     "조합 비율",    
                     options=ratio_options, 
-                    #default = st.session_state.sakai_ratio, 
+                    default = st.session_state.sakai_ratio, 
                     key='sakai_ratio'
                 )
                             
