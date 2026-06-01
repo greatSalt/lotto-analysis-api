@@ -386,7 +386,7 @@ def display_filter_setting(conn, sheet_url):
         st.multiselect(
             "📌 고정수 (FIX)", 
             options=range(1, 46), 
-            default=st.session_state.fixed_nums,
+            #default=st.session_state.fixed_nums,
             key="fixed_nums" # 키 추가
         )
 
@@ -403,7 +403,7 @@ def display_filter_setting(conn, sheet_url):
         st.multiselect(
             "🚫 제외수 (EX)", 
             options=range(1, 46), 
-            default=st.session_state.exclude_nums,
+            #default=st.session_state.exclude_nums,
             key="exclude_nums" # 키 추가
         )
                 
@@ -423,7 +423,7 @@ def display_filter_setting(conn, sheet_url):
         st.multiselect(
             "허용 비율",    
             options=ratio_options, 
-            default=st.session_state.sel_oe, 
+            #default=st.session_state.sel_oe, 
             key='sel_oe'
         )
     with col_f2:
@@ -463,7 +463,7 @@ def display_filter_setting(conn, sheet_url):
                 st.multiselect(
                     "조합 비율",    
                     options=ratio_options, 
-                    default = st.session_state.sakai_ratio, 
+                    #default = st.session_state.sakai_ratio, 
                     key='sakai_ratio'
                 )
                             
@@ -487,7 +487,7 @@ def display_filter_setting(conn, sheet_url):
             st.multiselect(
                 "허용 고저비율", 
                 ["3:3", "2:4", "4:2", "1:5", "5:1", "0:6", "6:0"], # 0:6, 6:0 추가
-                default=st.session_state.sel_hl, # 로드된 값 사용
+                #default=st.session_state.sel_hl, # 로드된 값 사용
                 key = 'sel_hl'
             )
         with row3_col3:
@@ -498,7 +498,7 @@ def display_filter_setting(conn, sheet_url):
             st.multiselect(
                 "허용 이월수 개수",
                 carry_options,
-                default=st.session_state.sel_carry,
+                #default=st.session_state.sel_carry,
                 key = 'sel_carry',
                 help="직전 회차 당첨번호 중 몇 개를 포함할지 결정합니다. (보통 0~2개 권장)"
             )        
@@ -524,7 +524,7 @@ def display_filter_setting(conn, sheet_url):
             st.multiselect(
                 "허용 동끝수 쌍",
                 pair_options,
-                default=st.session_state.sel_end, # 리스트 형태로 저장/로드
+                #default=st.session_state.sel_end, # 리스트 형태로 저장/로드
                 key = 'sel_end',
                 help="한 조합 내에 끝자리가 같은 숫자가 몇 쌍 있는지 설정합니다. (예: 12, 22는 1쌍)"
             )
@@ -539,7 +539,7 @@ def display_filter_setting(conn, sheet_url):
             st.multiselect(
                 "강제 지정 끝수 (선택)", 
                 digit_options, 
-                default=st.session_state.sel_target_end,
+                #default=st.session_state.sel_target_end,
                 key='sel_target_end',
                 help="특정 끝수가 반드시 동끝수로 나오길 원할 때 선택하세요."
             )
@@ -610,7 +610,8 @@ def disp_recommended_nums_table(conn, sheet_url, df_raw, decision):
     edited_df = st.data_editor(
         apply_strategy_style(filtered_df[available_cols], decision),
         hide_index=True,
-        use_container_width=True,
+        #use_container_width=True,
+        width="stretch",
         column_config={
             "선택": st.column_config.CheckboxColumn(required=True),
             "번호": st.column_config.NumberColumn(format="%d"),

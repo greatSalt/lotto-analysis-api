@@ -18,25 +18,6 @@ from target_end_analysis import render_target_end_analysis
 from comprehensive_analysis import render_comprehensive_analysis
 from funatsu_sakai import render_sakai_analysis 
 
-# 💡 태블릿 브라우저 자체의 자바스크립트 에러를 가로채는 치트키 코드
-st.html("""
-<script>
-    // 브라우저 화면에서 발생하는 모든 에러를 가로챕니다.
-    window.onerror = function(message, source, lineno, colno, error) {
-        // 에러 내용을 담은 거대한 경고창을 화면에 강제로 띄웁니다.
-        alert(
-            "🚨 [브라우저가 숨긴 에러 포착]\\n\\n" + 
-            "메시지: " + message + "\\n" +
-            "파일: " + source + "\\n" +
-            "줄번호: " + lineno + "\\n" +
-            "상세내용: " + (error ? error.stack : '없음')
-        );
-        return false; // 에러를 무시하지 않고 브라우저에 그대로 전달
-    };
-    console.log("✅ 태블릿 브라우저 에러 감지기가 활성화되었습니다.");
-</script>
-""")
-
 st.set_page_config(page_title="로또 분석 프로 v0.1", layout="wide")
 conn = st.connection("gsheets", type=GSheetsConnection)
 SHEET_URL = "https://docs.google.com/spreadsheets/d/1q8P3SClxNSYsAXwBgk3__y44XxZwI_FTj-eE9uQeVHE/edit?gid=0#gid=0"
