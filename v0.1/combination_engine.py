@@ -637,4 +637,4 @@ def disp_recommended_nums_table(conn, sheet_url, df_raw, decision):
         st.toast(f"🎯 {len(new_picks)}개 번호 저장 완료!")
         st.rerun()
         
-    return selected_numbers
+    return selected_numbers, edited_df

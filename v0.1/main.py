@@ -317,7 +317,7 @@ elif menu == "🎯 추천번호 분석":
         # 확정된 멸구간 번호 제외
         excluded_zones = [z for z, d in decision.items() if d['is_empty']]
         
-        selected_numbers = disp_recommended_nums_table(conn, SHEET_URL, df, decision)
+        selected_numbers, edited_df = disp_recommended_nums_table(conn, SHEET_URL, df, decision)
         
         st.divider()
         st.subheader("🎲 실전 조합 생성기 (확장 필터)")
