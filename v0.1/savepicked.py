@@ -44,7 +44,26 @@ def init_all_saved_data(conn, sheet_url, force_reload=False):
                     st.session_state.sakai_cnt = get_safe_int(df, 'F_SAKAI_CNT', 3)
                     # funatsu sakai
                     sakai_ratio_rows = df[df['유형'] == 'F_SAKAI_RATIO']
-                    st.session_state.sakai_ratio = sakai_ratio_rows['번호'].tolist() if not sakai_ratio_rows.empty else ["3:3:3"]
+                    if not sakai_ratio_rows.empty:
+                        raw_list = []
+                        for x in sakai_ratio_rows['번호'].tolist():
+                            val = str(x).strip()
+                            # 💡 구글 시트가 시간으로 오인해 "3:03:03" 또는 "03:03:03"으로 바꾼 경우 "3:3:3"으로 역정제
+                            if ":" in val:
+                                # 날짜 정보가 섞여 들어오는 경우(예: '1899-12-30 03:03:03') 시간 부분만 분리
+                                if " " in val:  
+                                    val = val.split(" ")[1]
+                                # 콜론으로 쪼갠 뒤 각각을 정수형태로 바꿨다가 다시 묶으면 "03" -> "3"으로 바뀝니다.
+                                parts = [str(int(p)) for p in val.split(":") if p.isdigit()]
+                                val = ":".join(parts)
+                            raw_list.append(val)
+                            
+                        VALID_SAKAI_OPTIONS = ["3:3:3", "non_option"]
+                        safe_list = [x for x in raw_list if x in VALID_SAKAI_OPTIONS]
+                        st.session_state.sakai_ratio = safe_list if safe_list else ["3:3:3"]
+                    else:
+                        st.session_state.sakai_ratio = ["3:3:3"]
+                    #st.session_state.sakai_ratio = sakai_ratio_rows['번호'].tolist() if not sakai_ratio_rows.empty else ["3:3:3"]
                     
                     # [최대 연번]
                     st.session_state.sel_con = get_safe_int(df, 'F_CON', 1)
@@ -181,15 +200,8 @@ def save_to_sheets_by_type(conn, sheet_url, new_nums, type_code):
             # [덮어쓰기형] 해당 유형만 제거 후 교체
             other_types_df = full_df[full_df["유형"] != type_code]
             
-            # 만약 들어온 데이터 유형이 사카이 비율 비율이라면 문자열 앞에 '를 붙여서 자동 시간 변환 방지
-            if type_code == 'F_SAKAI_RATIO':
-                processed_nums = [f"'{x}" if not str(x).startswith("'") else x for x in new_nums]
-            else:
-                processed_nums = new_nums
-            
             # 가공된 데이터를 데이터프레임으로 생성
-            new_type_df = pd.DataFrame({"번호": processed_nums, "유형": type_code})
-            #new_type_df = pd.DataFrame({"번호": new_nums, "유형": type_code})
+            new_type_df = pd.DataFrame({"번호": new_nums, "유형": type_code})
             
             # 3. 합치기 및 중복 제거
             final_df = pd.concat([other_types_df, new_type_df], ignore_index=True)
