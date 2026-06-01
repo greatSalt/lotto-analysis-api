@@ -44,26 +44,7 @@ def init_all_saved_data(conn, sheet_url, force_reload=False):
                     st.session_state.sakai_cnt = get_safe_int(df, 'F_SAKAI_CNT', 3)
                     # funatsu sakai
                     sakai_ratio_rows = df[df['유형'] == 'F_SAKAI_RATIO']
-                    if not sakai_ratio_rows.empty:
-                        raw_list = []
-                        for x in sakai_ratio_rows['번호'].tolist():
-                            val = str(x).strip()
-                            # 💡 구글 시트가 시간으로 오인해 "3:03:03" 또는 "03:03:03"으로 바꾼 경우 "3:3:3"으로 역정제
-                            if ":" in val:
-                                # 날짜 정보가 섞여 들어오는 경우(예: '1899-12-30 03:03:03') 시간 부분만 분리
-                                if " " in val:  
-                                    val = val.split(" ")[1]
-                                # 콜론으로 쪼갠 뒤 각각을 정수형태로 바꿨다가 다시 묶으면 "03" -> "3"으로 바뀝니다.
-                                parts = [str(int(p)) for p in val.split(":") if p.isdigit()]
-                                val = ":".join(parts)
-                            raw_list.append(val)
-                            
-                        VALID_SAKAI_OPTIONS = ["3:3:3", "non_option"]
-                        safe_list = [x for x in raw_list if x in VALID_SAKAI_OPTIONS]
-                        st.session_state.sakai_ratio = safe_list if safe_list else ["3:3:3"]
-                    else:
-                        st.session_state.sakai_ratio = ["3:3:3"]
-                    #st.session_state.sakai_ratio = sakai_ratio_rows['번호'].tolist() if not sakai_ratio_rows.empty else ["3:3:3"]
+                    st.session_state.sakai_ratio = sakai_ratio_rows['번호'].tolist() if not sakai_ratio_rows.empty else ["3:3:3 비율"]
                     
                     # [최대 연번]
                     st.session_state.sel_con = get_safe_int(df, 'F_CON', 1)
@@ -136,7 +117,7 @@ def set_default_session_values():
     st.session_state.sel_oe = ["3:3", "2:4", "4:2"]
     st.session_state.sel_ac = 7
     st.session_state.sakai_cnt = 3
-    st.session_state.sakai_ratio = ["3:3:3"]
+    st.session_state.sakai_ratio = ["3:3:3 비율"]
     st.session_state.sel_con = 1
     st.session_state.sel_hl = ["3:3", "2:4", "4:2"]
     st.session_state.sum_range = (100, 175)
