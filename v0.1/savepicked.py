@@ -169,21 +169,22 @@ def save_to_sheets_by_type(conn, sheet_url, new_nums, type_code):
             full_df['유형'] = 'PICK' # 기존 데이터는 모두 일반 저장으로 간주
             
         # --- [추가/수정] 삭제 로직: new_nums가 비어있는 경우 ---
-        #if not new_nums:
+        if not new_nums:
         # 💡 [보안 및 교정] 명확한 빈 리스트([]) 체크 및 동기화 누수 방지
-        if new_nums is None or (isinstance(new_nums, list) and len(new_nums) == 0):
+        #if new_nums is None or (isinstance(new_nums, list) and len(new_nums) == 0):
             # 해당 유형이 아닌 것들만 남겨서 저장 (즉, 해당 유형 전체 삭제)
             final_df = full_df[full_df["유형"] != type_code]
             conn.update(spreadsheet=sheet_url, worksheet="SavedPicks", data=final_df)
             
-            # 세션 상태도 함께 비워줌
+            '''# 세션 상태도 함께 비워줌
             if type_code == 'COMBI': st.session_state.my_combi_sets = []
             elif type_code == 'PICK': st.session_state.my_saved_picks = []
             # (필요에 따라 FIX, EX 등도 추가)
             elif type_code == 'FIX': st.session_state.fixed_nums = []
             elif type_code == 'EX': st.session_state.exclude_nums = []
             elif type_code == 'F_TARGET_END': st.session_state.sel_target_end = []
-            
+            '''
+            st.session_state.menu_changed_reload = True
             st.toast(f"🗑️ {type_code} 데이터가 삭제되었습니다.")
             return # 삭제 후 함수 종료
         
