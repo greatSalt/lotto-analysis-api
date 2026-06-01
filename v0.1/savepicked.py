@@ -184,23 +184,6 @@ def save_to_sheets_by_type(conn, sheet_url, new_nums, type_code):
             # 3. 합치기 및 중복 제거
             final_df = pd.concat([other_types_df, new_type_df], ignore_index=True)
             
-            '''# [세션 동기화] 단일 리스트/값 교체
-            if type_code == 'PICK': st.session_state.my_saved_picks = sorted(new_nums)
-            elif type_code == 'FIX': st.session_state.fixed_nums = sorted(new_nums)
-            elif type_code == 'EX': st.session_state.exclude_nums = sorted(new_nums)
-             # 신규 필터 설정 동기화
-            # [추가] 홀짝(Odd-Even) 설정이 필요하다면 별도 코드로 관리 (예: F_OE)
-            elif type_code == 'F_OE': st.session_state.sel_oe = new_nums
-            elif type_code == 'F_AC': st.session_state.sel_ac = int(new_nums[0])
-            elif type_code == 'F_SAKAI_CNT': st.session_state.sakai_cnt = int(new_nums[0])
-            elif type_code == 'F_SAKAI_RATIO': st.session_state.sakai_ratio = new_nums
-            elif type_code == 'F_CON': st.session_state.sel_con = int(new_nums[0])
-            elif type_code == 'F_HL': st.session_state.sel_hl = new_nums # ['3:3', '4:2'] 형태
-            elif type_code == 'F_SUM': st.session_state.sum_range = (int(new_nums[0]), int(new_nums[1]))
-            elif type_code == 'F_END': st.session_state.sel_end = [int(float(x)) for x in new_nums]
-            elif type_code == 'F_TARGET_END': st.session_state.sel_target_end = [int(float(x)) for x in new_nums]
-            elif type_code == 'F_CARRY': st.session_state.sel_carry = [int(float(x)) for x in new_nums]   # [이월수 동기화 추가]'''
-            
             # PICK, FIX 등 단일 번호 관리 유형은 번호 중복을 제거
             final_df = final_df.drop_duplicates(subset=['번호', '유형'], keep='last')
 
