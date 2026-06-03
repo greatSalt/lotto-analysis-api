@@ -12,7 +12,7 @@ from formular_description import display_formula_guide
 import analysis_to_gsheet as saver
 from iteration_predictor import render_carryover_analysis
 from empty_zone_engine import get_confirmed_empty_zone, color_rows, apply_strategy_style
-from combination_engine import generate_strategic_combinations, get_advanced_stat_analysis, get_comprehensive_analysis, display_filter_setting, disp_recommended_nums_table
+from combination_engine import generate_strategic_combinations, get_advanced_stat_analysis, get_comprehensive_analysis, display_filter_setting, disp_recommended_nums_table, display_stat_report, combination_by_filter
 from winning_skip_analysis import analyze_winning_skip_distribution, render_skip_group_weight_ui
 from target_end_analysis import render_target_end_analysis
 from comprehensive_analysis import render_comprehensive_analysis
@@ -322,123 +322,11 @@ elif menu == "🎯 추천번호 분석":
         st.divider()
         st.subheader("🎲 실전 조합 생성기 (확장 필터)")
         
-        if len(selected_numbers) >= 6:
+        if len(selected_numbers) >= 6:  #선택된 번호가 6개이상일 때만 조합 가능
             st.success(f"현재 선택된 번호 ({len(selected_numbers)}개): {sorted(selected_numbers)}")
-            display_filter_setting(conn, SHEET_URL)
+            display_filter_setting(conn, SHEET_URL) #적용할 필터들을 표시 및 설정
+            combination_by_filter(edited_df)    #필터 적용 조합 추출
             
-            # 1. 세션 상태 초기화 (코드 상단에 위치)
-            if 'reco_results' not in st.session_state:
-                st.session_state.reco_results = None
-                
-            if st.button("🚀 필터 적용 조합 추출", use_container_width=True):
-                # 여기서 itertools.combinations 등을 활용해 필터를 통과한 조합만 출력
-                # 이후 AC값, 동끝수 필터 등을 여기에 추가할 수 있음
-                st.info("선택된 번호들로 필터를 만족하는 최적의 조합을 생성합니다.")
-                            
-                # 체크된 번호들의 로우데이터만 전달
-                selected_df = edited_df[edited_df['선택'] == True]
-                # 고정수가 6개 초과면 에러 처리
-                if len(st.session_state.fixed_nums) > 6:
-                    st.error("고정수는 최대 6개까지만 입력 가능합니다.")
-                else:
-                    # 초기 실행 시 생성된 df(분석 대상 데이터프레임)의 첫 번째 행이 최신 회차입니다.
-                    last_row = df.iloc[0] # 가장 최신 당첨 정보
-                    last_nums = [
-                        int(last_row['n1']), int(last_row['n2']), int(last_row['n3']), 
-                        int(last_row['n4']), int(last_row['n5']), int(last_row['n6'])
-                    ]
-                    
-                    with st.spinner('최적의 조합을 계산 중...'):
-                        results = generate_strategic_combinations(
-                            selected_df, 
-                            ratio_filters = st.session_state.sel_oe, # UI 입력값 (멀티셀렉트)
-                            sum_range = st.session_state.sum_range,      # UI 입력값 
-                            skip_weights_df = st.session_state.get('skip_weight_df'), #사용자가 설정한 주기별 가중치 표 전달
-                            fixed_nums = st.session_state.fixed_nums,  # UI 입력값
-                            exclude_nums = st.session_state.exclude_nums,  # UI 입력값
-                            target_digits=st.session_state.sel_target_end,   # 화면에서 선택한 강제 지정 끝수
-                            allowed_pairs=st.session_state.sel_end,        # 화면에서 선택한 동끝수 쌍 개수
-                            allowed_carry=st.session_state.sel_carry,  # 이월수(직전회차 번호) 개수 설정
-                            last_win_nums=last_nums,    # 이월수(직전회차 번호)
-                            min_ac=st.session_state.sel_ac,     # UI 입력값
-                            allowed_hl=st.session_state.sel_hl, # UI 입력값 (멀티셀렉트)
-                            max_con=st.session_state.sel_con,   # UI 입력값 (셀렉트박스)
-                            count=5
-                        )
-                        
-                        # [확인용] 41번 주기가 0인지 로그 출력 (나중에 삭제 가능)
-                        #st.write(f"DEBUG: 41번 현재 주기 -> {st.session_state.skip_dict.get(41)}")
-                        
-                        # [핵심] 결과를 세션 상태에 저장하여 화면에 고정
-                        st.session_state.reco_results = results
-                    if not st.session_state.reco_results:
-                        st.warning("⚠️ 필터 조건을 만족하는 조합을 찾지 못했습니다. 범위를 넓혀주세요.")            
-                    else:   st.balloons()
-            # 2. 버튼 외부에서 결과를 출력 (결과가 있을 때만 실행)
-            if st.session_state.reco_results:            
-                    #if results:
-                st.divider()
-                st.subheader("✨ AI 추천 조합 (2-3-1 비율 적용)")
-                # 🎨 범례(Legend) 표시 - 사용자가 색상의 의미를 알 수 있도록
-                st.info("🎨 **번호 색상 범례**: ⬜ 이월수 (직전당첨) / 🟥 핫 (출현임박) / 🟨 웜 (일반) / 🟦 콜드 (장기미출)")
-                st.success(f"✅ 고정수 {st.session_state.fixed_nums} 포함, 제외수 {st.session_state.exclude_nums} 제거 완료!")
-                        
-                # 폼을 사용하지 않고 개별 체크박스 상태를 추적하기 위해 리스트 생성
-                to_save_picks = []
-                        
-                for i, combo_data in enumerate(st.session_state.reco_results):
-                    combo_nums = sorted([n for n, group in combo_data])
-                    col_chk, col_label, col_balls = st.columns([0.1, 0.15, 0.75])
-                    # 1. 체크박스: 고유한 key를 부여하여 상태 유지
-                    with col_chk:
-                        if st.checkbox("", key=f"chk_reco_{i}"):
-                            to_save_picks.append(combo_nums)
-                            
-                    with col_label:
-                        st.markdown(f"**SET {i+1}**")
-                                
-                    # 번호별 색상 배지 (로또 공 색상 느낌)
-                    with col_balls:
-                        ball_html = ""
-                        for n, group in combo_data:
-                            # 🖍️ 그룹별 색상 매핑
-                            if group == '이월수':
-                                color = "white"      # ⬜ 이월수 (흰색 배경 + 검정 글자)
-                            elif group == 'HOT':
-                                color = "red"        # 🟥 핫 (빨간색)
-                            elif group == 'WARM':
-                                color = "yellow"     # 🟨 웜 (노란색/골드)
-                            elif group == 'COLD':
-                                color = "blue"       # 🟦 콜드 (파란색)
-                            else:
-                                color = "lightgrey"  # 데이터 오류 시 회색
-                                
-                            ball_html += f"![{n}](https://img.shields.io/badge/-{n}-{color}?style=flat-square&border_radius=50) "
-                        st.markdown(ball_html, unsafe_allow_html=True)
-                        
-                st.divider()
-
-                # 3. 저장 버튼: 'COMBI' 유형으로 저장
-                if st.button("💾 선택한 조합 My Lucky Picks에 저장 (유형: COMBI)", use_container_width=True):
-                    if not to_save_picks:
-                        st.warning("저장할 조합을 먼저 체크해주세요!")
-                    else:
-                        with st.spinner('구글 시트에 저장 중...'):
-                            # 기존 저장 함수 호출 (유형을 COMBI로 지정)
-                            for pick in to_save_picks:
-                                save_to_sheets_by_type(conn, SHEET_URL, pick, 'COMBI')
-                                    
-                            st.success(f"✅ {len(to_save_picks)}개의 조합이 COMBI 유형으로 저장되었습니다!")
-                            # 저장 후 결과 화면을 지우고 싶다면 아래 주석 해제
-                            st.session_state.reco_results = None
-                            # 사이드바 즉시 갱신을 위해 앱 재실행
-                            st.rerun()
-                                    
-                st.caption("※ 체크박스를 선택하고 저장 버튼을 누르면 사이드바에 즉시 반영됩니다.")
-                    
-        else:
-            st.warning("조합을 만들려면 최소 6개 이상의 번호를 위 테이블에서 체크해 주세요.")
-
         # 5. 하단 요약 리포트
         st.divider()
         col1, col2 = st.columns(2)
@@ -449,65 +337,7 @@ elif menu == "🎯 추천번호 분석":
             st.warning(f"⚠️ **멸 주의 구간**: {', '.join(warning_zones) if warning_zones else '없음'}")
         
         st.divider()
-        st.subheader("📊 정밀 통계 리포트 (수학적 확률 대조)")
-        
-        ratio_df, sum_df = get_advanced_stat_analysis(df)
-        
-        # 컬럼 설정 (편차 강조를 위한 스타일링은 간단히 텍스트로 처리)
-        st.write("### ⚖️ 홀짝 비율 정밀 분석")
-        st.dataframe(
-            ratio_df, 
-            use_container_width=True, 
-            hide_index=True,
-            column_config={
-                "실제%": st.column_config.NumberColumn("실제 출현 비중", format="%.1f%%"),
-                "이론%": st.column_config.NumberColumn("이론 확률", format="%.1f%%"),
-                "편차": st.column_config.NumberColumn("편차", format="%+.1f%%") # 부호(+/-) 표시
-            }
-        )
-        
-        st.write("### 🔢 총합 구간 정밀 분석")
-        st.dataframe(
-            sum_df, 
-            use_container_width=True, 
-            hide_index=True,
-            column_config={
-                "실제%": st.column_config.NumberColumn("실제 출현 비중", format="%.1f%%"),
-                "이론%": st.column_config.NumberColumn("이론 확률", format="%.1f%%"),
-                "편차": st.column_config.NumberColumn("편차", format="%+.1f%%") # 부호(+/-) 표시
-            }
-        )
-        
-        # 실전 베팅 가이드
-        with st.expander("💡 통계 수치 해석 가이드"):
-            st.markdown("""
-            * **편차가 (+)인 경우:** 해당 구간이 최근 유독 많이 나왔습니다. 조만간 출현 빈도가 줄어들 가능성(회귀)이 있습니다.
-            * **편차가 (-)인 경우:** 이론상 더 나와야 하는데 최근 뜸한 구간입니다. **'반등 포인트'**로 잡고 조합에 포함하는 것을 추천합니다.
-            * **황금 구간:** 홀짝 **3:3 / 2:4 / 4:2** 및 총합 **100~160** 사이가 전체 당첨의 약 80%를 차지합니다.
-            """)
-
-        st.divider()
-        st.subheader("🛡️ v2.5 고급 품질 분석 리포트")
-        
-        ac_df, hl_df, con_df = get_comprehensive_analysis(df)
-        
-        col_a, col_b, col_c = st.columns(3)
-        
-        with col_a:
-            st.write("**📐 AC값 분포 (복잡도)**")
-            st.dataframe(ac_df, use_container_width=True, hide_index=True)
-            st.caption("7 미만은 규칙적 조합으로 제외 권장")
-        
-        with col_b:
-            st.write("**🌓 고저 비율**")    # L:1~22, H:23~45
-            hl_df.columns = ["비율(L:H)", "출현"]
-            st.dataframe(hl_df, use_container_width=True, hide_index=True)
-            st.caption("3:3 비율이 가장 이상적")
-        
-        with col_c:
-            st.write("**🔗 연번 출현 빈도**")
-            st.dataframe(con_df, use_container_width=True, hide_index=True)
-            st.caption("보통 0~1쌍이 전체의 80%")
+        display_stat_report()
 
 elif menu == "당첨번호 주기 분석":
     
