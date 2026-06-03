@@ -792,7 +792,7 @@ def combination_by_filter(df, edited_df):
                     ball_html += f"![{n}](https://img.shields.io/badge/-{n}-{color}?style=flat-square&border_radius=50) "
                 st.markdown(ball_html, unsafe_allow_html=True)
                         
-            st.divider()
+        st.divider()
 
         # 3. 저장 버튼: 'COMBI' 유형으로 저장
         if st.button("💾 선택한 조합 My Lucky Picks에 저장 (유형: COMBI)", use_container_width=True):
@@ -810,7 +810,7 @@ def combination_by_filter(df, edited_df):
                     # 사이드바 즉시 갱신을 위해 앱 재실행
                     st.rerun()
                                     
-    st.caption("※ 체크박스를 선택하고 저장 버튼을 누르면 사이드바에 즉시 반영됩니다.")
+        st.caption("※ 체크박스를 선택하고 저장 버튼을 누르면 사이드바에 즉시 반영됩니다.")
                     
 
         
