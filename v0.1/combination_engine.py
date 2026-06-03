@@ -700,7 +700,7 @@ def display_stat_report():
         st.dataframe(con_df, use_container_width=True, hide_index=True)
         st.caption("보통 0~1쌍이 전체의 80%")    
         
-def combination_by_filter(edited_df):
+def combination_by_filter(df, edited_df):
     # 1. 세션 상태 초기화 (코드 상단에 위치)
     if 'reco_results' not in st.session_state:
         st.session_state.reco_results = None
