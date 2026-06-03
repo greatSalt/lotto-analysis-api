@@ -639,7 +639,7 @@ def disp_recommended_nums_table(conn, sheet_url, df_raw, decision):
         
     return selected_numbers, edited_df
 
-def display_stat_report():
+def display_stat_report(df):
     st.subheader("📊 정밀 통계 리포트 (수학적 확률 대조)")
         
     ratio_df, sum_df = get_advanced_stat_analysis(df)

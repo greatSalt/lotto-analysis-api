@@ -337,7 +337,7 @@ elif menu == "🎯 추천번호 분석":
             st.warning(f"⚠️ **멸 주의 구간**: {', '.join(warning_zones) if warning_zones else '없음'}")
         
         st.divider()
-        display_stat_report()
+        display_stat_report(df)
 
 elif menu == "당첨번호 주기 분석":
     
