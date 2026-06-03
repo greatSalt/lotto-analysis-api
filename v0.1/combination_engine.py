@@ -810,10 +810,7 @@ def combination_by_filter(df, edited_df):
                     # 사이드바 즉시 갱신을 위해 앱 재실행
                     st.rerun()
                                     
-        st.caption("※ 체크박스를 선택하고 저장 버튼을 누르면 사이드바에 즉시 반영됩니다.")
+    st.caption("※ 체크박스를 선택하고 저장 버튼을 누르면 사이드바에 즉시 반영됩니다.")
                     
-    else:
-        st.warning("조합을 만들려면 최소 6개 이상의 번호를 위 테이블에서 체크해 주세요.")
-
 
         

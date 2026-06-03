@@ -326,7 +326,9 @@ elif menu == "🎯 추천번호 분석":
             st.success(f"현재 선택된 번호 ({len(selected_numbers)}개): {sorted(selected_numbers)}")
             display_filter_setting(conn, SHEET_URL) #적용할 필터들을 표시 및 설정
             combination_by_filter(df, edited_df)    #필터 적용 조합 추출
-            
+        else:
+            st.warning("조합을 만들려면 최소 6개 이상의 번호를 위 테이블에서 체크해 주세요.")
+    
         # 5. 하단 요약 리포트
         st.divider()
         col1, col2 = st.columns(2)
