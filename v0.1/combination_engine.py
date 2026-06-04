@@ -8,7 +8,25 @@ from empty_zone_engine import apply_strategy_style
 from crazyLogic import get_crazy_analysis
 from savepicked import display_sidebar_picks, get_highlight_style, init_all_saved_data, save_to_sheets_by_type, save_recommended_picks
 
-def generate_strategic_combinations(selected_df, ratio_filters, sum_range, skip_weights_df, fixed_nums, exclude_nums, target_digits, allowed_pairs, allowed_carry, last_win_nums, min_ac=7, allowed_hl=None, max_con=1, count=5):
+def user_random_choice_func(need_count, temp_pool, temp_weights):
+    
+    sample_nums = []
+    
+    # 1. 가중치 확률에 따라 부족한 개수만큼 추출
+    for _ in range(need_count):
+        if not temp_pool: break
+        # random.choices로 가중치 적용 추출
+        picked = random.choices(temp_pool, weights=temp_weights, k=1)[0]
+        sample_nums.append(picked)
+        
+        # 비복원 추출을 위해 선택된 요소 제거
+        idx = temp_pool.index(picked)
+        temp_pool.pop(idx)
+        temp_weights.pop(idx)
+        
+    return sample_nums
+
+def generate_strategic_combinations(selected_df, ratio_filters, sum_range, skip_weights_df, fixed_nums, exclude_nums, target_digits, allowed_pairs, allowed_carry, last_win_nums, min_ac=7, allowed_hl=None, max_con=1, enable_sakai=False, sakai_ratio='선택 안 함', sakai_cnt=4, count=5):
     """
     selected_df: 사용자가 체크한 번호들의 데이터프레임
     ratio_filters: ['3:3', '2:4'] 형태의 홀짝 비율 리스트
@@ -35,21 +53,47 @@ def generate_strategic_combinations(selected_df, ratio_filters, sum_range, skip_
     # 가중치 계산을 위한 맵 생성
     weight_map = dict(zip(skip_weights_df['구간'], skip_weights_df['가중치']))
     
-    # 고정수가 선택된 번호에 없다면 강제로 추가 (사용자 의도 존중)
+    # 제외수를 제외한 선택 번호들
     selected_nums = base_pool_df['번호'].tolist()
-    
     # 추출 대상에서 고정수 제외 (고정수는 나중에 합류)
     pool_for_sampling = [n for n in selected_nums if n not in fixed_nums]
-    
     # 번호별 가중치 리스트 산출
     pool_weights = [get_weight_by_skip(n, weight_map) for n in pool_for_sampling]
-
-    if len(pool_for_sampling) < (6 - len(fixed_nums)):
+        
+    need_count = 6 - len(fixed_nums) # 고정수를 제외하고 더 뽑아야 할 개수
+    #더 뽑아야 할 개수보다 후보수가 '많을 때만' 아래 로직을 수행, 예를 들어 고정수가 4개이고 남은 후보수가 딱 2개라면 무작위 추출(random.choices)을 돌리는 의미가 없다.
+    if len(pool_for_sampling) <= need_count: 
         return []
+    
+    if enable_sakai == True:
+        rest_count = 0
+        
+        fixed_sakai_cnt = len(selected_nums) - len(pool_for_sampling)
+        sakai_cnt -= fixed_sakai_cnt
+        
+        if sakai_cnt < 0:   sakai_cnt = 0
+            
+         # 선택된 번호 외에 선택받지 못한 나머지 번호들만 쏙 골라내는 필터링
+        rested_nums = [n for n in range(1,46) if n not in selected_nums]
+        # 나머지 번호 추출 대상에서 고정수 제외 (고정수는 나중에 합류)
+        pool_for_resting = [n for n in rested_nums if n not in fixed_nums]
+        # 나머지 번호별 가중치 리스트 산출
+        rested_pool_weights = [get_weight_by_skip(n, weight_map) for n in pool_for_resting]
+        
+        if sakai_cnt <= need_count: # need_count = sakai_cnt + rest_count
+            rest_count = need_count - sakai_cnt
+        else:
+            sakai_cnt = need_count
+            rest_count = 0
+            
+        # 사카이 주머니가 뽑아야 할 개수(sakai_cnt) 이하이거나, 
+        # 외곽 주머니가 뽑아야 할 개수(rest_count) 이하이면 조합을 만들지 않고 안전하게 대피
+        if len(pool_for_sampling) <= sakai_cnt or len(pool_for_resting) <= rest_count:
+            st.error("⚠️ 사카이 분류 풀의 바구니가 부족합니다. 선택 번호를 늘려주세요.")
+            return []
     
     final_combinations = []
     attempts = 0
-    need_count = 6 - len(fixed_nums) # 고정수를 제외하고 더 뽑아야 할 개수
     
     # 2. 조합 생성 및 필터링 루프
     while len(final_combinations) < count and attempts < 50000:
@@ -57,24 +101,21 @@ def generate_strategic_combinations(selected_df, ratio_filters, sum_range, skip_
         
         # 가중치 기반 비복원 추출
         sample_nums = []
+        rested_nums = []
         temp_pool = list(pool_for_sampling)
         temp_weights = list(pool_weights)
-        
+
         try:
-            # 1. 가중치 확률에 따라 부족한 개수만큼 추출
-            for _ in range(need_count):
-                if not temp_pool: break
-                # random.choices로 가중치 적용 추출
-                picked = random.choices(temp_pool, weights=temp_weights, k=1)[0]
-                sample_nums.append(picked)
+            if enable_sakai:
+                sample_nums = user_random_choice_func(sakai_cnt, temp_pool, temp_weights)
+                temp_pool = list(pool_for_resting)
+                temp_weights = list(rested_pool_weights)
+                rested_nums = user_random_choice_func(rest_count, temp_pool, temp_weights)
+            else:
+                sample_nums = user_random_choice_func(need_count, temp_pool, temp_weights)
                 
-                # 비복원 추출을 위해 선택된 요소 제거
-                idx = temp_pool.index(picked)
-                temp_pool.pop(idx)
-                temp_weights.pop(idx)
-            
             # 2. 최종 번호 구성 (기존 just_nums 변수명 유지)
-            just_nums = sorted(fixed_nums + sample_nums)
+            just_nums = sorted(fixed_nums + sample_nums + rested_nums)
             
             # 3. 중복 조합 체크 (기존 로직 유지)
             if just_nums in [[n[0] for n in c] for c in final_combinations]:
@@ -700,7 +741,7 @@ def display_stat_report(df):
         st.dataframe(con_df, use_container_width=True, hide_index=True)
         st.caption("보통 0~1쌍이 전체의 80%")    
         
-def combination_by_filter(df, edited_df):
+def combination_by_filter(conn, sheet_url, df, edited_df):
     # 1. 세션 상태 초기화 (코드 상단에 위치)
     if 'reco_results' not in st.session_state:
         st.session_state.reco_results = None
@@ -738,6 +779,9 @@ def combination_by_filter(df, edited_df):
                     min_ac=st.session_state.sel_ac,     # UI 입력값
                     allowed_hl=st.session_state.sel_hl, # UI 입력값 (멀티셀렉트)
                     max_con=st.session_state.sel_con,   # UI 입력값 (셀렉트박스)
+                    enable_sakai=st.session_state.enable_sakai,
+                    sakai_ratio=st.session_state.sakai_ratio,
+                    sakai_cnt=st.session_state.sakai_cnt,
                     count=5
                 )
                         
@@ -754,7 +798,7 @@ def combination_by_filter(df, edited_df):
     # 2. 버튼 외부에서 결과를 출력 (결과가 있을 때만 실행)
     if st.session_state.reco_results:            
         st.divider()
-        st.subheader("✨ AI 추천 조합 (2-3-1 비율 적용)")
+        st.subheader("✨ AI 추천 조합 ")
         # 🎨 범례(Legend) 표시 - 사용자가 색상의 의미를 알 수 있도록
         st.info("🎨 **번호 색상 범례**: ⬜ 이월수 (직전당첨) / 🟥 핫 (출현임박) / 🟨 웜 (일반) / 🟦 콜드 (장기미출)")
         st.success(f"✅ 고정수 {st.session_state.fixed_nums} 포함, 제외수 {st.session_state.exclude_nums} 제거 완료!")
@@ -775,7 +819,7 @@ def combination_by_filter(df, edited_df):
                                 
             # 번호별 색상 배지 (로또 공 색상 느낌)
             with col_balls:
-                ball_html = ""
+                ball_html = "<div style='display: flex; gap: 4px; flex-wrap: wrap;'>"
                 for n, group in combo_data:
                     # 🖍️ 그룹별 색상 매핑
                     if group == '이월수':
@@ -789,7 +833,9 @@ def combination_by_filter(df, edited_df):
                     else:
                         color = "lightgrey"  # 데이터 오류 시 회색
                                 
-                    ball_html += f"![{n}](https://img.shields.io/badge/-{n}-{color}?style=flat-square&border_radius=50) "
+                    #ball_html += f"![{n}](https://img.shields.io/badge/-{n}-{color}?style=flat-square&border_radius=50) "
+                    ball_html += f"<img src='https://img.shields.io/badge/-{n}-{color}?style=flat-square&border_radius=50' style='margin-bottom:4px;'>"
+                ball_html += "</div>"
                 st.markdown(ball_html, unsafe_allow_html=True)
                         
         st.divider()
@@ -802,7 +848,7 @@ def combination_by_filter(df, edited_df):
                 with st.spinner('구글 시트에 저장 중...'):
                     # 기존 저장 함수 호출 (유형을 COMBI로 지정)
                     for pick in to_save_picks:
-                        save_to_sheets_by_type(conn, SHEET_URL, pick, 'COMBI')
+                        save_to_sheets_by_type(conn, sheet_url, pick, 'COMBI')
                                     
                     st.success(f"✅ {len(to_save_picks)}개의 조합이 COMBI 유형으로 저장되었습니다!")
                             # 저장 후 결과 화면을 지우고 싶다면 아래 주석 해제

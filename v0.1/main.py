@@ -325,7 +325,7 @@ elif menu == "🎯 추천번호 분석":
         if len(selected_numbers) >= 6:  #선택된 번호가 6개이상일 때만 조합 가능
             st.success(f"현재 선택된 번호 ({len(selected_numbers)}개): {sorted(selected_numbers)}")
             display_filter_setting(conn, SHEET_URL) #적용할 필터들을 표시 및 설정
-            combination_by_filter(df, edited_df)    #필터 적용 조합 추출
+            combination_by_filter(conn, SHEET_URL, df, edited_df)    #필터 적용 조합 추출
         else:
             st.warning("조합을 만들려면 최소 6개 이상의 번호를 위 테이블에서 체크해 주세요.")
     
