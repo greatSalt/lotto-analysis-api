@@ -82,8 +82,13 @@ if menu == "데이터 입력":
         if save_btn:
             data_to_save = {"round": int(col_drw), "n1": n1, "n2": n2, "n3": n3, "n4": n4, "n5": n5, "n6": n6, "bonus": bonus}
             save_to_gsheet(conn, SHEET_URL, data_to_save)
+            # 기존에 캐싱된 로또 raw 데이터(df_raw 등)를 메모리에서 강제 삭제
+            # (이렇게 해야 앱이 다시 켜질 때 구글 시트에서 최신 데이터를 처음부터 새로 긁어옵니다.)
+            st.cache_data.clear()
             st.success(f"{col_drw}회차 데이터 저장 완료!")
-    
+            # 저장 직후 앱을 강제로 처음(상단)부터 다시 실행시켜 UI와 사이드바를 즉시 동기화
+            st.rerun()
+            
         if analyze_btn:
             st.divider()
             df_analysis, metrics = analyze_combination(current_nums, df, analyze_range)
