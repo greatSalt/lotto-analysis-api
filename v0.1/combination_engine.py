@@ -121,6 +121,16 @@ def generate_strategic_combinations(selected_df, ratio_filters, sum_range, skip_
             if just_nums in [[n[0] for n in c] for c in final_combinations]:
                 continue
 
+            if enable_sakai == True:
+                rest_value = rest_is_zero = rest_is_one = rest_is_two = 0
+                for n in just_nums:
+                    rest_value = n%3
+                    if rest_value == 0: rest_is_zero += 1
+                    elif rest_value == 1: rest_is_one += 1
+                    else: rest_is_two += 1
+                    
+                if sakai_ratio == '3:3:3 비율' and (rest_is_zero > 3 or rest_is_one > 3 or rest_is_two > 3): continue
+            
             # 필터 1: 홀짝 비율 검증
             odd_count = len([n for n in just_nums if n % 2 != 0])
             even_count = 6 - odd_count
