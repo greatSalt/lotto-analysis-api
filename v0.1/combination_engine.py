@@ -8,21 +8,27 @@ from empty_zone_engine import apply_strategy_style
 from crazyLogic import get_crazy_analysis
 from savepicked import display_sidebar_picks, get_highlight_style, init_all_saved_data, save_to_sheets_by_type, save_recommended_picks
 
-def user_random_choice_func(need_count, temp_pool, temp_weights):
+def user_random_func(need_count, temp_pool, temp_weights=None, opt=0):
+    #if opt==1, random_choice_func  and if opt==2, random_sample_func
     
     sample_nums = []
     
-    # 1. 가중치 확률에 따라 부족한 개수만큼 추출
-    for _ in range(need_count):
-        if not temp_pool: break
-        # random.choices로 가중치 적용 추출
-        picked = random.choices(temp_pool, weights=temp_weights, k=1)[0]
-        sample_nums.append(picked)
-        
-        # 비복원 추출을 위해 선택된 요소 제거
-        idx = temp_pool.index(picked)
-        temp_pool.pop(idx)
-        temp_weights.pop(idx)
+    if opt == 1:
+        # 1. 가중치 확률에 따라 부족한 개수만큼 추출
+        for _ in range(need_count):
+            if not temp_pool: break
+            # random.choices로 가중치 적용 추출
+            picked = random.choices(temp_pool, weights=temp_weights, k=1)[0]
+            sample_nums.append(picked)
+            
+            # 비복원 추출을 위해 선택된 요소 제거
+            idx = temp_pool.index(picked)
+            temp_pool.pop(idx)
+            temp_weights.pop(idx)
+    elif opt == 2:
+        sample_nums = random.sample(temp_pool, k=need_count)
+    else:
+        pass
         
     return sample_nums
 
@@ -107,12 +113,20 @@ def generate_strategic_combinations(selected_df, ratio_filters, sum_range, skip_
 
         try:
             if enable_sakai:
-                sample_nums = user_random_choice_func(sakai_cnt, temp_pool, temp_weights)
+                # opt=1 => random.chocie fun
+                #sample_nums = user_random_func(sakai_cnt, temp_pool, temp_weights, opt=1)
+                # opt =>2 random.sample func 
+                sample_nums = user_random_func(sakai_cnt, temp_pool, None, opt=2) 
+                
                 temp_pool = list(pool_for_resting)
                 temp_weights = list(rested_pool_weights)
-                rested_nums = user_random_choice_func(rest_count, temp_pool, temp_weights)
+                # opt=1 => random.chocie fun
+                rested_nums = user_random_func(rest_count, temp_pool, temp_weights, opt=1)
+                # opt =>2 random.sample func 
+                #rested_nums = user_random_func(rest_count, temp_pool, None, opt=2)
             else:
-                sample_nums = user_random_choice_func(need_count, temp_pool, temp_weights)
+                # opt=1 => random.chocie fun
+                sample_nums = user_random_func(need_count, temp_pool, temp_weights, opt=1)
                 
             # 2. 최종 번호 구성 (기존 just_nums 변수명 유지)
             just_nums = sorted(fixed_nums + sample_nums + rested_nums)
@@ -792,7 +806,7 @@ def combination_by_filter(conn, sheet_url, df, edited_df):
                     enable_sakai=st.session_state.enable_sakai,
                     sakai_ratio=st.session_state.sakai_ratio,
                     sakai_cnt=st.session_state.sakai_cnt,
-                    count=5
+                    count=10
                 )
                         
                 # [확인용] 41번 주기가 0인지 로그 출력 (나중에 삭제 가능)
