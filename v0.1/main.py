@@ -25,6 +25,7 @@ SHEET_URL = "https://docs.google.com/spreadsheets/d/1q8P3SClxNSYsAXwBgk3__y44XxZ
 # 앱이 처음 켜질 때 강제 리로드 플래그를 False로 방 만들기
 if 'menu_changed_reload' not in st.session_state:
     st.session_state.menu_changed_reload = False
+    st.cache_data.clear()  # 👈 브라우저 새로고침(F5) 시에만 작동!
 
 # 1. 초기화 및 사이드바 표시 (최상단)
 init_all_saved_data(conn, SHEET_URL, force_reload=st.session_state.menu_changed_reload)
