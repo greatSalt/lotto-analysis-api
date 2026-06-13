@@ -6,7 +6,7 @@ from coldNum import get_cold_analysis
 from savepicked import display_sidebar_picks, get_highlight_style, init_all_saved_data, save_to_sheets_by_type, save_recommended_picks
 from specialNum import analyze_specific_number
 from streamlit_gsheets import GSheetsConnection
-from into_lottoDB import save_to_gsheet, get_recent_data, analyze_combination
+from into_lottoDB import save_to_gsheet, get_recent_data, analyze_combination, data_input_func
 from crazyLogic import get_crazy_analysis
 from formular_description import display_formula_guide
 import analysis_to_gsheet as saver
@@ -60,54 +60,7 @@ with st.sidebar:
 if menu == "데이터 입력":
     try:
         st.title("🎰 로또 데이터 입력 및 조합 분석")
-        
-        col_drw = st.number_input("회차", min_value=1, step=1)
-        c = st.columns(6)
-        n1 = c[0].number_input("No1", 1, 45, value=1)
-        n2 = c[1].number_input("No2", 1, 45, value=2)
-        n3 = c[2].number_input("No3", 1, 45, value=3)
-        n4 = c[3].number_input("No4", 1, 45, value=4)
-        n5 = c[4].number_input("No5", 1, 45, value=5)
-        n6 = c[5].number_input("No6", 1, 45, value=6)
-        bonus = st.number_input("Bonus", 1, 45, value=45)
-        
-        current_nums = [n1, n2, n3, n4, n5, n6]
-        
-        # 버튼 배치 (일반 버튼 st.button으로 변경)
-        btn_col1, btn_col2 = st.columns(2)
-        save_btn = btn_col1.button("💾 DB 저장하기", use_container_width=True)
-        analyze_btn = btn_col2.button("🔍 조합 분석하기", use_container_width=True)
-
-
-        if save_btn:
-            data_to_save = {"round": int(col_drw), "n1": n1, "n2": n2, "n3": n3, "n4": n4, "n5": n5, "n6": n6, "bonus": bonus}
-            save_to_gsheet(conn, SHEET_URL, data_to_save)
-            # 기존에 캐싱된 로또 raw 데이터(df_raw 등)를 메모리에서 강제 삭제
-            # (이렇게 해야 앱이 다시 켜질 때 구글 시트에서 최신 데이터를 처음부터 새로 긁어옵니다.)
-            st.cache_data.clear()
-            st.success(f"{col_drw}회차 데이터 저장 완료!")
-            # 저장 직후 앱을 강제로 처음(상단)부터 다시 실행시켜 UI와 사이드바를 즉시 동기화
-            st.rerun()
-            
-        if analyze_btn:
-            st.divider()
-            df_analysis, metrics = analyze_combination(current_nums, df, analyze_range)
-                
-            # 1. 개별 번호 상태 테이블(Crazy + Cold 엔진 결과)
-            st.subheader("📊 번호별 정밀 지표")
-            st.dataframe(df_analysis, use_container_width=True, hide_index=True)
-                
-            # 2. 조합 필터 (메트릭)
-            st.subheader("⚙️ 조합 필터 검증")
-            m_col1, m_col2, m_col3, m_col4, m_col5 = st.columns(5)
-            m_col1.metric("홀짝", metrics["홀짝"])
-            m_col2.metric("총합", metrics["총합"])
-            m_col3.metric("AC", metrics["AC"])
-            m_col4.metric("고저(저:고)", metrics["고저"])
-            m_col5.metric("연번", metrics["연번"])
-    
-            # 로우 데이터 컬럼 (한 줄 표시)
-            st.code(f"분석 조합: {sorted(current_nums)}")
+        data_input_func(conn, SHEET_URL, df, analyze_range)
     except Exception as e:
         # 에러가 나면 화면에 에러 서류를 길게 출력해서 붙잡아둠
         st.exception(e)

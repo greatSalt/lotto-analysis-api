@@ -4,6 +4,64 @@ from streamlit_gsheets import GSheetsConnection
 from crazyLogic import get_crazy_analysis
 from coldNum import get_cold_analysis
 
+def data_input_func(conn, sheet_url, df, analyze_range):
+    col_drw = st.number_input("회차", min_value=1, step=1)
+    c = st.columns(6)
+    n1 = c[0].number_input("No1", 1, 45, value=1)
+    n2 = c[1].number_input("No2", 1, 45, value=2)
+    n3 = c[2].number_input("No3", 1, 45, value=3)
+    n4 = c[3].number_input("No4", 1, 45, value=4)
+    n5 = c[4].number_input("No5", 1, 45, value=5)
+    n6 = c[5].number_input("No6", 1, 45, value=6)
+    bonus = st.number_input("Bonus", 1, 45, value=45)
+        
+    # [수정] 분석 엔진과 무결성을 위해 입력받은 번호를 즉시 오름차순 정렬
+    current_nums = sorted([n1, n2, n3, n4, n5, n6])
+    
+    # 버튼 배치 (일반 버튼 st.button으로 변경)
+    btn_col1, btn_col2 = st.columns(2)
+    save_btn = btn_col1.button("💾 DB 저장하기", use_container_width=True)
+    analyze_btn = btn_col2.button("🔍 조합 분석하기", use_container_width=True)
+    
+    if save_btn:
+        data_to_save = {
+            "round": int(col_drw), 
+            "n1": current_nums[0], 
+            "n2": current_nums[1], 
+            "n3": current_nums[2], 
+            "n4": current_nums[3], 
+            "n5": current_nums[4], 
+            "n6": current_nums[5], 
+            "bonus": bonus
+        }
+        save_to_gsheet(conn, sheet_url, data_to_save)
+        # 기존에 캐싱된 로또 raw 데이터(df_raw 등)를 메모리에서 강제 삭제
+        # (이렇게 해야 앱이 다시 켜질 때 구글 시트에서 최신 데이터를 처음부터 새로 긁어옵니다.)
+        st.cache_data.clear()
+        st.success(f"{col_drw}회차 데이터 저장 완료!")
+        # 저장 직후 앱을 강제로 처음(상단)부터 다시 실행시켜 UI와 사이드바를 즉시 동기화
+        st.rerun()
+            
+    if analyze_btn:
+        st.divider()
+        df_analysis, metrics = analyze_combination(current_nums, df, analyze_range)
+                
+        # 1. 개별 번호 상태 테이블(Crazy + Cold 엔진 결과)
+        st.subheader("📊 번호별 정밀 지표")
+        st.dataframe(df_analysis, use_container_width=True, hide_index=True)
+                
+        # 2. 조합 필터 (메트릭)
+        st.subheader("⚙️ 조합 필터 검증")
+        m_col1, m_col2, m_col3, m_col4, m_col5 = st.columns(5)
+        m_col1.metric("홀짝", metrics["홀짝"])
+        m_col2.metric("총합", metrics["총합"])
+        m_col3.metric("AC", metrics["AC"])
+        m_col4.metric("고저(저:고)", metrics["고저"])
+        m_col5.metric("연번", metrics["연번"])
+    
+        # 로우 데이터 컬럼 (한 줄 표시)
+        st.code(f"분석 조합: {current_nums}")
+    
 def save_to_gsheet(conn, sheet_url, new_data):
     """
     new_data: {'drwNo': 1110, 'num1': 3, ...} 형태의 딕셔너리
