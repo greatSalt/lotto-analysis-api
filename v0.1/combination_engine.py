@@ -629,7 +629,7 @@ def display_filter_setting(conn, sheet_url):
         
             st.success("🎉 모든 분석 전략이 SavedPicks 시트에 통합 저장되었습니다!")
 
-def disp_recommended_nums_table(conn, sheet_url, df_raw, decision):
+def disp_recommended_nums_table(conn, sheet_url, df_raw):
     
     # 1. 번호 필터링 및 우선순위 분석 데이터프레임 생성
     analysis_df = get_crazy_analysis(df_raw)
@@ -673,7 +673,7 @@ def disp_recommended_nums_table(conn, sheet_url, df_raw, decision):
     
     # 3. 대화형 데이터 에디터 렌더링 (전달받은 decision 인자로 스타일링 적용)    
     edited_df = st.data_editor(
-        apply_strategy_style(filtered_df[available_cols], decision),
+        filtered_df[available_cols],
         hide_index=True,
         #use_container_width=True,
         width="stretch",

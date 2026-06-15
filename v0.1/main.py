@@ -11,7 +11,7 @@ from crazyLogic import get_crazy_analysis
 from formular_description import display_formula_guide
 import analysis_to_gsheet as saver
 from iteration_predictor import render_carryover_analysis
-from empty_zone_engine import get_confirmed_empty_zone, color_rows, apply_strategy_style
+from empty_zone_engine import display_lotto_empty_zone_matrix
 from combination_engine import generate_strategic_combinations, get_advanced_stat_analysis, get_comprehensive_analysis, display_filter_setting, disp_recommended_nums_table, display_stat_report, combination_by_filter
 from winning_skip_analysis import analyze_winning_skip_distribution, render_skip_group_weight_ui
 from target_end_analysis import render_target_end_analysis
@@ -263,6 +263,7 @@ elif menu == "🎯 추천번호 분석":
     st.title("🎯 v2.5 전략 추천번호")
     
     if not df.empty:
+        '''
         decision = get_confirmed_empty_zone(df, analyze_range)
         
         # 멸구간 확정 브리핑
@@ -275,8 +276,8 @@ elif menu == "🎯 추천번호 분석":
         
         # 확정된 멸구간 번호 제외
         excluded_zones = [z for z, d in decision.items() if d['is_empty']]
-        
-        selected_numbers, edited_df = disp_recommended_nums_table(conn, SHEET_URL, df, decision)
+        '''
+        selected_numbers, edited_df = disp_recommended_nums_table(conn, SHEET_URL, df)
         
         st.divider()
         st.subheader("🎲 실전 조합 생성기 (확장 필터)")
@@ -289,6 +290,9 @@ elif menu == "🎯 추천번호 분석":
             st.warning("조합을 만들려면 최소 6개 이상의 번호를 위 테이블에서 체크해 주세요.")
     
         # 5. 하단 요약 리포트
+        display_lotto_empty_zone_matrix(df)
+        
+        '''
         st.divider()
         col1, col2 = st.columns(2)
         with col1:
@@ -296,6 +300,7 @@ elif menu == "🎯 추천번호 분석":
         with col2:
             warning_zones = [z for z, d in decision.items() if not d['is_empty'] and d['prob'] > 40]
             st.warning(f"⚠️ **멸 주의 구간**: {', '.join(warning_zones) if warning_zones else '없음'}")
+        '''
         
         st.divider()
         display_stat_report(df)
