@@ -263,20 +263,6 @@ elif menu == "🎯 추천번호 분석":
     st.title("🎯 v2.5 전략 추천번호")
     
     if not df.empty:
-        '''
-        decision = get_confirmed_empty_zone(df, analyze_range)
-        
-        # 멸구간 확정 브리핑
-        st.subheader("🛡️ 멸구간 확정 리포트")
-        for zone, data in decision.items():
-            if data['is_empty']:
-                st.error(f"🚫 **{zone} 제외 확정** : {data['reason']}")
-            elif data['prob'] > 40:
-                st.warning(f"⚠️ **{zone} 주의** : 멸 확률 {data['prob']:.1f}% (관찰 필요)")
-        
-        # 확정된 멸구간 번호 제외
-        excluded_zones = [z for z, d in decision.items() if d['is_empty']]
-        '''
         selected_numbers, edited_df = disp_recommended_nums_table(conn, SHEET_URL, df)
         
         st.divider()
@@ -291,16 +277,6 @@ elif menu == "🎯 추천번호 분석":
     
         # 5. 하단 요약 리포트
         display_lotto_empty_zone_matrix(df)
-        
-        '''
-        st.divider()
-        col1, col2 = st.columns(2)
-        with col1:
-            st.error(f"🚫 **완전 제외 구간**: {', '.join(excluded_zones) if excluded_zones else '없음'}")
-        with col2:
-            warning_zones = [z for z, d in decision.items() if not d['is_empty'] and d['prob'] > 40]
-            st.warning(f"⚠️ **멸 주의 구간**: {', '.join(warning_zones) if warning_zones else '없음'}")
-        '''
         
         st.divider()
         display_stat_report(df)
