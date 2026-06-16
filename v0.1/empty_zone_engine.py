@@ -1,6 +1,31 @@
 import streamlit as st
 import pandas as pd
 
+# 멸구간에 해당되는 번호를 스킵한다
+def divide_nums_by_empty_zone(target_nums, zones_row):
+    # 멸구간 정의 및 컬럼 설정
+    zones = {
+        "단번대": lambda n: 1 <= n <= 10,
+        "10번대": lambda n: 11 <= n <= 20,
+        "20번대": lambda n: 21 <= n <= 30,
+        "30번대": lambda n: 31 <= n <= 40,
+        "40번대": lambda n: 41 <= n <= 45
+    }
+    
+    # 2. 구글 시트에서 가져온 데이터프레임에서 '번호' 컬럼(예: ["단번대", "10번대"])을 리스트로 추출
+    # (만약 데이터프레임이 비어있으면 빈 리스트로 처리)
+    selected_zones = zones_row['번호'].tolist() if not zones_row.empty else []
+    
+    # 3. 사용자가 선택한 멸구간들만 돌면서 검사
+    for zone_name in selected_zones:
+        if zone_name in zones:
+            condition = zones[zone_name]
+            # 이번 조합(target_nums) 중에 멸구간에 해당하는 숫자가 하나라도 있다면?
+            if any(conditon(n) for n in target_nums):
+              return False
+              
+    return True
+    
 # 멸 횟수 카운팅 헬퍼 함수
 def get_empty_counts(target_df, zones, num_cols):
     counts = {k: 0 for k in zones.keys()}

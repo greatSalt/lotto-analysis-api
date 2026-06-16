@@ -6,6 +6,7 @@ from iteration_predictor import check_carryover_filter
 from funatsu_sakai import make_funatsu_sakai_pool
 from crazyLogic import get_crazy_analysis
 from savepicked import display_sidebar_picks, get_highlight_style, init_all_saved_data, save_to_sheets_by_type, save_recommended_picks
+from empty_zone_engine import divide_nums_by_empty_zone
 
 def user_random_func(need_count, temp_pool, temp_weights=None, opt=0):
     #if opt==1, random_choice_func  and if opt==2, random_sample_func
@@ -31,7 +32,7 @@ def user_random_func(need_count, temp_pool, temp_weights=None, opt=0):
         
     return sample_nums
 
-def generate_strategic_combinations(selected_df, ratio_filters, sum_range, skip_weights_df, fixed_nums, exclude_nums, target_digits, allowed_pairs, allowed_carry, last_win_nums, min_ac=7, allowed_hl=None, max_con=1, enable_sakai=False, sakai_ratio='선택 안 함', sakai_cnt=4, count=5):
+def generate_strategic_combinations(selected_df, ratio_filters, sum_range, skip_weights_df, fixed_nums, exclude_nums, target_digits, allowed_pairs, allowed_carry, last_win_nums, min_ac=7, allowed_hl=None, max_con=1, enable_sakai=False, sakai_ratio='선택 안 함', sakai_cnt=4, empty_zone=None, count=5):
     """
     selected_df: 사용자가 체크한 번호들의 데이터프레임
     ratio_filters: ['3:3', '2:4'] 형태의 홀짝 비율 리스트
@@ -126,6 +127,9 @@ def generate_strategic_combinations(selected_df, ratio_filters, sum_range, skip_
             else:
                 # opt=1 => random.chocie fun
                 sample_nums = user_random_func(need_count, temp_pool, temp_weights, opt=1)
+            
+            # 멸구간 안에 번호(sample_nums + rested_nums)가 해당되면 재추첨, 고정수(fixed_nums)는 멸구간에 포함하지 않는다.
+            if not divide_nums_by_empty_zone((sample_nums + rested_nums), empty_zone):   continue
                 
             # 2. 최종 번호 구성 (기존 just_nums 변수명 유지)
             just_nums = sorted(fixed_nums + sample_nums + rested_nums)
@@ -530,7 +534,8 @@ def display_filter_setting(conn, sheet_url):
                     default = st.session_state.sakai_ratio, 
                     key='sakai_ratio'
                 )
-                            
+        st.divider()
+    
     # 멸구간 설정 필터
     col_1 = st.columns(1)
     with col_1[0]:
@@ -544,7 +549,6 @@ def display_filter_setting(conn, sheet_url):
             key = 'sel_zone'
         )
     # --- 실전 필터 적용 섹션 ---
-    #st.divider()
     with st.expander("🚀 필터링 조건 설정 (생성 시 적용)", expanded=True):
         row1_col1, row1_col2, row3_col3 = st.columns(3)
         with row1_col1:
@@ -817,6 +821,7 @@ def combination_by_filter(conn, sheet_url, df, edited_df):
                     enable_sakai=st.session_state.enable_sakai,
                     sakai_ratio=st.session_state.sakai_ratio,
                     sakai_cnt=st.session_state.sakai_cnt,
+                    empty_zone=st.session_state.sel_zone,   #멸구간
                     count=10
                 )
                         
