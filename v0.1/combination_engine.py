@@ -531,7 +531,6 @@ def display_filter_setting(conn, sheet_url):
                 st.multiselect(
                     "조합 비율",    
                     options=ratio_options, 
-                    default = st.session_state.sakai_ratio, 
                     key='sakai_ratio'
                 )
         st.divider()
@@ -545,7 +544,6 @@ def display_filter_setting(conn, sheet_url):
         st.multiselect(
             "멸구간 설정",
             options = zone_opt,
-            default = st.session_state.sel_zone,
             key = 'sel_zone'
         )
     # --- 실전 필터 적용 섹션 ---

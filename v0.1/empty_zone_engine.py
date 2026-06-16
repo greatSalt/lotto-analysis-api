@@ -19,9 +19,17 @@ def divide_nums_by_empty_zone(target_nums, zones_row):
     for zone_name in selected_zones:
         if zone_name in zones:
             condition = zones[zone_name]
+            '''
             # 이번 조합(target_nums) 중에 멸구간에 해당하는 숫자가 하나라도 있다면?
             if any(condition(n) for n in target_nums):
-              return False
+                return False
+            '''
+            # 💡 any() 대신 일반 for 루프로 풀어야 개별 숫자(n)를 로그에 찍을 수 있습니다.
+            for n in target_nums:
+                if condition(n):
+                    # 터미널이나 콘솔 창에서 필터링 과정을 정확하게 추적할 수 있습니다.
+                    print(f"[멸구간 필터] '{zone_name}' 제한 걸림: 숫자 {n} 발견 -> 즉시 제외")
+                    return False  # 발견 즉시 함수 종료 (조합 탈락)
               
     return True
     
@@ -93,7 +101,7 @@ def display_lotto_empty_zone_matrix(df):
     st.dataframe(df_matrix, use_container_width=True, hide_index=True)
     
     # 하단 필터 결합 엔진 가이드 동적 출력
-    st.markdown("<h6> 🎯 이번 주 조합기 필터링 가이드 2026-06-16(0/0)")
+    st.markdown("<h6> 🎯 이번 주 조합기 필터링 가이드 2026-06-16(0/0)</h6>", unsafe_allow_html=True)
     if overheated_list:
         zones_str = ", ".join(overheated_list)
         st.error(f"⚠️ **예측 멸구간**[{zones_str}]**  (백테스트 적중률: 81.8%)")
