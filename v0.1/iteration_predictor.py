@@ -35,7 +35,6 @@ def std_probability_distribution_chart():
     # 4. 두 레이어를 병합( + )하여 화면에 출력
     st.altair_chart(bars + text, use_container_width=True)
     
-###########
     st.write("💡 **이월수 개수별 표준 확률 분포**")
     
     # 1. 데이터 세팅 (정밀 소수점 반영)
