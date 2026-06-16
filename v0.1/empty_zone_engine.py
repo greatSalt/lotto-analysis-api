@@ -5,11 +5,11 @@ import pandas as pd
 def divide_nums_by_empty_zone(target_nums, zones_row):
     # 멸구간 정의 및 컬럼 설정
     zones = {
-        "단번대": lambda n: 1 <= n <= 10,
-        "10번대": lambda n: 11 <= n <= 20,
-        "20번대": lambda n: 21 <= n <= 30,
-        "30번대": lambda n: 31 <= n <= 40,
-        "40번대": lambda n: 41 <= n <= 45
+        "단번대": lambda n: 1 <= n <= 9,
+        "10번대": lambda n: 11 <= n <= 19,
+        "20번대": lambda n: 21 <= n <= 29,
+        "30번대": lambda n: 31 <= n <= 39,
+        "40번대": lambda n: 40 <= n <= 45
     }
     
     # 만약 비어있거나 리스트가 아니라면 빈 리스트([])로 처리하여 에러를 방지합니다.
@@ -49,11 +49,11 @@ def display_lotto_empty_zone_matrix(df):
 
     # 구간 정의 및 컬럼 설정
     zones = {
-        "단번대 (1~10)": lambda n: 1 <= n <= 10,
-        "10번대 (11~20)": lambda n: 11 <= n <= 20,
-        "20번대 (21~30)": lambda n: 21 <= n <= 30,
-        "30번대 (31~40)": lambda n: 31 <= n <= 40,
-        "40번대 (41~45)": lambda n: 41 <= n <= 45
+        "단번대 (1~9)": lambda n: 1 <= n <= 9,
+        "10번대 (11~19)": lambda n: 11 <= n <= 19,
+        "20번대 (21~29)": lambda n: 21 <= n <= 29,
+        "30번대 (31~39)": lambda n: 31 <= n <= 39,
+        "40번대 (40~45)": lambda n: 40 <= n <= 45
     }
     num_cols = ['n1', 'n2', 'n3', 'n4', 'n5', 'n6']
 
@@ -93,9 +93,9 @@ def display_lotto_empty_zone_matrix(df):
     st.dataframe(df_matrix, use_container_width=True, hide_index=True)
     
     # 하단 필터 결합 엔진 가이드 동적 출력
-    st.markdown("### 🎯 이번 주 조합기 필터링 가이드")
+    st.markdown("### 🎯 이번 주 조합기 필터링 가이드 2026-06-16(0/0)")
     if overheated_list:
         zones_str = ", ".join(overheated_list)
-        st.error(f"⚠️ **[과열 압축 필터 활성화]** 이번 주 생성 조합 중 **[{zones_str}]** 중 최소 1개 이상 구간이 완전히 비어있는(0개) 조합만 남기고 압축 필터링할 것을 강력 권장합니다. (백테스트 적중률: 81.8%)")
+        st.error(f"⚠️ **예측 멸구간**[{zones_str}]**  (백테스트 적중률: 81.8%)")
     else:
         st.info("✅ 현재 시스템상 임계치를 넘긴 과열 구간이 없습니다. 기본 조합 비중을 유지하세요.")
