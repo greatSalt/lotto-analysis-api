@@ -12,7 +12,7 @@ def get_empty_counts(target_df, zones, num_cols):
     return counts
 
 def display_lotto_empty_zone_matrix(df):
-    st.title("🕳️ v2.0 동적 멸구간 모니터링 시스템")
+    st.subheader("🕳️ v2.0 동적 멸구간 모니터링 시스템")
     st.markdown("---")
     
     # 50주 및 25주 슬라이싱 데이터 확보

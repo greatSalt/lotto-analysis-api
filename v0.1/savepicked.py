@@ -46,6 +46,10 @@ def init_all_saved_data(conn, sheet_url, force_reload=False):
                     sakai_ratio_rows = df[df['유형'] == 'F_SAKAI_RATIO']
                     st.session_state.sakai_ratio = sakai_ratio_rows['번호'].tolist() if not sakai_ratio_rows.empty else ["3:3:3 비율"]
                     
+                    # 멸구간 설정
+                    zone_row = df[df['유형'] == 'F_ZONE']
+                    st.session_state.sel_zone = zone_row['번호'].tolist() if not zone_row.empty else []
+                    
                     # [최대 연번]
                     st.session_state.sel_con = get_safe_int(df, 'F_CON', 1)
                         
@@ -118,6 +122,7 @@ def set_default_session_values():
     st.session_state.sel_ac = 7
     st.session_state.sakai_cnt = 3
     st.session_state.sakai_ratio = ["3:3:3 비율"]
+    st.session_state.sel_zone = [] #멸구간 설정 기본적으로 없음
     st.session_state.sel_con = 1
     st.session_state.sel_hl = ["3:3", "2:4", "4:2"]
     st.session_state.sum_range = (100, 175)
@@ -157,14 +162,6 @@ def save_to_sheets_by_type(conn, sheet_url, new_nums, type_code):
             final_df = full_df[full_df["유형"] != type_code]
             conn.update(spreadsheet=sheet_url, worksheet="SavedPicks", data=final_df)
             
-            '''# 세션 상태도 함께 비워줌
-            if type_code == 'COMBI': st.session_state.my_combi_sets = []
-            elif type_code == 'PICK': st.session_state.my_saved_picks = []
-            # (필요에 따라 FIX, EX 등도 추가)
-            elif type_code == 'FIX': st.session_state.fixed_nums = []
-            elif type_code == 'EX': st.session_state.exclude_nums = []
-            elif type_code == 'F_TARGET_END': st.session_state.sel_target_end = []
-            '''
             st.session_state.menu_changed_reload = True
             st.toast(f"🗑️ {type_code} 데이터가 삭제되었습니다.")
             return # 삭제 후 함수 종료

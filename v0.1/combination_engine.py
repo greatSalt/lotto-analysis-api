@@ -531,8 +531,20 @@ def display_filter_setting(conn, sheet_url):
                     key='sakai_ratio'
                 )
                             
+    # 멸구간 설정 필터
+    col_1 = st.columns(1)
+    with col_1:
+        zone_opt = ["단번대", "10번대", "20번대", "30번대", "40번대"]
+        if 'sel_zone' not in st.session_state:
+            st.session_state.sel_zone = []
+        st.multiselect(
+            "멸구간 설정",
+            options = zone_opt,
+            default = st.session_state.sel_zone,
+            key = 'sel_zone'
+        )
     # --- 실전 필터 적용 섹션 ---
-    st.divider()
+    #st.divider()
     with st.expander("🚀 필터링 조건 설정 (생성 시 적용)", expanded=True):
         row1_col1, row1_col2, row3_col3 = st.columns(3)
         with row1_col1:
@@ -621,6 +633,7 @@ def display_filter_setting(conn, sheet_url):
             save_to_sheets_by_type(conn, sheet_url, st.session_state.sel_carry, 'F_CARRY')
             save_to_sheets_by_type(conn, sheet_url, [st.session_state.sakai_cnt], 'F_SAKAI_CNT')
             save_to_sheets_by_type(conn, sheet_url, st.session_state.sakai_ratio, 'F_SAKAI_RATIO')
+            save_to_sheets_by_type(conn, sheet_url, st.session_state.sel_zone, 'F_ZONE')
                     
             # 고정수와 제외수도 함께 저장 (선택 사항)
             #save_to_sheets_by_type(conn, sheet_url, fixed_nums, 'FIX')
@@ -664,7 +677,6 @@ def disp_recommended_nums_table(conn, sheet_url, df_raw):
             
     # 2. UI 레이아웃 및 캡션 설정
     st.subheader("📊 전략 분석 테이블")
-    st.info("🔵 **파란색**: 역사적 확률에 따른 **멸 확정** 구간 / 🟡 **노란색**: 멸 확률 40% 초과 **주의** 구간")
         
     # 데이터 에디터에 노출할 유효 컬럼 필터링
     cols = ['선택', '번호', '통합크레이지점수', '출현수', '출현율', '현재연속', '최대연속', '반등지수', '에너지지수', '탄성점수', '리듬점수', '박자상태']
