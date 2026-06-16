@@ -270,25 +270,41 @@ def render_dynamic_carryover_analysis_ui(history_df, weight_df, target_rounds=25
     st.markdown("### 🔄 실시간 연산형 이월수 융합 백데이터 결과표")
     st.caption("※ 고정 데이터가 아닙니다. 새로운 회차가 업데이트되면 연산 결과가 실시간으로 자동 갱신됩니다.")
     
+    # [데이터 준비] 필수 변수 및 컬럼 정제
+    cols = ['n1', 'n2', 'n3', 'n4', 'n5', 'n6']
+    history_df[cols] = history_df[cols].fillna(0).astype(int)
     dynamic_results = []
     
-    # 최신 회차부터 지정된 갯수만큼 동적 루프 연산
-    for idx in range(target_rounds):
-        if idx + 1 >= len(history_df): break
-            
-        row = history_df.iloc[idx]
-        round_num = row['round']
-        
-        # 직전 회차 본번호 6개 수집 (보너스 제외하여 팩트 정정 반영)
-        prev_row = history_df.iloc[idx + 1]
-        candidates = prev_row[['n1', 'n2', 'n3', 'n4', 'n5', 'n6']].tolist()
-        candidates_str = ", ".join(map(str, candidates))
-        
-        # 거시 개수 보정률 동적 계산
-        macro_modifier = get_macro_count_modifier(history_df, idx)
+    # 💡 인덱스를 -1부터 시작하여 [미래 예측 + 백테스팅]을 한 번에 처리
+    # idx = -1: 1229회 예측 (1228회 데이터 참조)
+    # idx = 0 ~ 24: 백테스팅 (1228회부터 25회분)
+    for idx in range(-1, target_rounds):
+        # 예측 루프와 백테스팅 루프의 경계 처리, 1229회는 미래이므로 실제 결과값이 없습니다.
+        if idx == -1:
+            row_label = "1229회(예상)"
+            target_data = history_df.iloc[0] # 가장 최신 데이터(1228회)
+            candidates = target_data[cols].tolist()
+            # 📍 표시: 데이터가 없음을 명시하여 연산 오류를 방지합니다.
+            actual_count = "-" 
+            actual_carry_str = "-"
+            macro_modifier = get_macro_count_modifier(history_df, -1)
+        else:
+            # 📍 표시: 과거 백테스팅 루프는 실제 결과값이 존재합니다.
+            if idx >= len(history_df) - 1: break
+            row_label = str(history_df.iloc[idx]['round']) + "회"
+            target_data = history_df.iloc[idx]
+            candidates = history_df.iloc[idx + 1][cols].tolist() # 직전 회차 데이터
+            # 📍 표시: 실제 당첨번호와 후보군을 비교해 정확도를 측정합니다.
+            current_win = target_data[cols].tolist()
+            actual_carry_nums = [n for n in current_win if n in candidates]
+            actual_count = len(actual_carry_nums)
+            actual_carry_str = ", ".join(map(str, actual_carry_nums))
+            macro_modifier = get_macro_count_modifier(history_df, idx)
         
         scored_candidates = []
         for num in candidates:
+            num = int(float(num))   # 번호를 무조건 정수(int)로 변환 
+            
             skip_val = get_dynamic_skip_value(history_df, idx, num)
             weight = get_dynamic_weight(skip_val, weight_df)
             deviation = get_dynamic_deviation(history_df, idx, num)
@@ -311,13 +327,16 @@ def render_dynamic_carryover_analysis_ui(history_df, weight_df, target_rounds=25
             predicted_count = 0
             
         # 실제 이월 결과 실시간 대조 (24번 오차 완벽 해결)
-        current_win = row[['n1', 'n2', 'n3', 'n4', 'n5', 'n6']].tolist()
+        current_win = target_data[['n1', 'n2', 'n3', 'n4', 'n5', 'n6']].tolist()
         actual_carry_nums = [n for n in current_win if n in candidates]
         actual_count = len(actual_carry_nums)
         actual_carry_str = ", ".join(map(str, actual_carry_nums)) if actual_carry_nums else "없음"
         
         # 개수 판정
         count_hit = "🎯 적중" if predicted_count == actual_count else ("✅ 근접" if abs(predicted_count - actual_count) <= 1 else "❌ 불일치")
+        
+        round_num = row_label # 위 분기(idx == -1 등)에서 정의된 row_label을 사용
+        candidates_str = ", ".join(map(str, candidates)) # candidates 리스트를 문자열로 변환
         
         dynamic_results.append([
             round_num, candidates_str, best_target, macro_modifier, 
