@@ -533,7 +533,7 @@ def display_filter_setting(conn, sheet_url):
                             
     # 멸구간 설정 필터
     col_1 = st.columns(1)
-    with col_1:
+    with col_1[0]:
         zone_opt = ["단번대", "10번대", "20번대", "30번대", "40번대"]
         if 'sel_zone' not in st.session_state:
             st.session_state.sel_zone = []
