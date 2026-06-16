@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import Config  # debug code
 
 # 멸구간에 해당되는 번호를 스킵한다
 def divide_nums_by_empty_zone(target_nums, zones_row):
@@ -27,8 +28,15 @@ def divide_nums_by_empty_zone(target_nums, zones_row):
             # 💡 any() 대신 일반 for 루프로 풀어야 개별 숫자(n)를 로그에 찍을 수 있습니다.
             for n in target_nums:
                 if condition(n):
-                    # 터미널이나 콘솔 창에서 필터링 과정을 정확하게 추적할 수 있습니다.
-                    print(f"[멸구간 필터] '{zone_name}' 제한 걸림: 숫자 {n} 발견 -> 즉시 제외")
+                    if Config.DEBUG:# [debug console code]
+                        # 터미널이나 콘솔 창에서 필터링 과정을 정확하게 추적할 수 있습니다.
+                        log_msg = f"[멸구간 필터] 조합 {list(target_nums)} ❌ 탈락 -> '{zone_name}' 제한 걸림: 숫자 {n} 발견"
+                        # [메모리 보호] 실시간 렌더링 과부하를 막기 위해 상시 300개 스냅샷 유지
+                        if len(st.session_state.filter_debug_logs) >= 300:
+                            st.session_state.filter_debug_logs.pop(0) # 가장 오래된 로그 하나 제거
+                            
+                        st.session_state.filter_debug_logs.append(log_msg)
+                    
                     return False  # 발견 즉시 함수 종료 (조합 탈락)
               
     return True

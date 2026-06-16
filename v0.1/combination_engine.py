@@ -1,3 +1,4 @@
+import Config   #debug code
 import random
 import pandas as pd
 import streamlit as st
@@ -784,8 +785,11 @@ def combination_by_filter(conn, sheet_url, df, edited_df):
         st.session_state.reco_results = None
                 
     if st.button("🚀 필터 적용 조합 추출", use_container_width=True):
-        # 여기서 itertools.combinations 등을 활용해 필터를 통과한 조합만 출력
-        # 이후 AC값, 동끝수 필터 등을 여기에 추가할 수 있음
+        if Config.DEBUG:
+            # [debug console] 새 조합 연산이 시작되므로 하단 콘솔창을 완전 깨끗하게 비웁니다!
+            st.session_state.filter_debug_logs = []
+            st.session_state.filter_debug_logs.append("📟 [SYSTEM] 멸구간 연산 엔진 가동... 필터링을 시작합니다.")
+    
         st.info("선택된 번호들로 필터를 만족하는 최적의 조합을 생성합니다.")
                             
         # 체크된 번호들의 로우데이터만 전달

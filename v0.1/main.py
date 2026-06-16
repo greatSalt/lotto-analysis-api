@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import Config   #debug code
 
 from coldNum import get_cold_analysis
 from savepicked import display_sidebar_picks, get_highlight_style, init_all_saved_data, save_to_sheets_by_type, save_recommended_picks
@@ -335,22 +336,23 @@ st.write("")
 st.markdown("<br><br>", unsafe_allow_html=True)
 st.divider() 
 
-# 전역 On/Off 토글 스위치 상시 노출 (이제 다른 메뉴를 눌러도 이 버튼은 자석처럼 붙어있습니다)
-show_global_lower_log = st.toggle(
-    "📟 멸구간 연산 실시간 콘솔 모니터 열기", 
-    value=False, 
-    key="global_lower_log_toggle"
-)
-
-if show_global_lower_log:
-    # 250px 고정 크기 컨테이너로 화면 출렁임(Layout Shift) 방지 및 UI 일체감 확보
-    with st.container(height=250):
-        if 'filter_debug_logs' in st.session_state and st.session_state.filter_debug_logs:
-            # 메모리 과부하 보호를 위해 최근 300개의 필터 탈락 로그만 슬라이싱하여 렌더링
-            full_log_text = "\n".join(st.session_state.filter_debug_logs[-300:])
-            st.code(full_log_text, language="text")
-        else:
-            # 💡 다른 메뉴로 이동했거나 초기 상태일 때 터미널 느낌을 유지해 주는 안내 메시지
-            st.code("📟 [SYSTEM] 대기 상태입니다.\n'🎯 추천번호 분석' 메뉴에서 조합을 추출하면 실시간 필터 로그가 이곳에 표시됩니다.", language="text")
+if Config.DEBUG:    # debug code
+    # 전역 On/Off 토글 스위치 상시 노출 (이제 다른 메뉴를 눌러도 이 버튼은 자석처럼 붙어있습니다)
+    show_global_lower_log = st.toggle(
+        "📟 실시간 콘솔 모니터 열기", 
+        value=False, 
+        key="global_lower_log_toggle"
+    )
+    
+    if show_global_lower_log:
+        # 250px 고정 크기 컨테이너로 화면 출렁임(Layout Shift) 방지 및 UI 일체감 확보
+        with st.container(height=250):
+            if 'filter_debug_logs' in st.session_state and st.session_state.filter_debug_logs:
+                # 메모리 과부하 보호를 위해 최근 300개의 필터 탈락 로그만 슬라이싱하여 렌더링
+                full_log_text = "\n".join(st.session_state.filter_debug_logs[-300:])
+                st.code(full_log_text, language="text")
+            else:
+                # 💡 다른 메뉴로 이동했거나 초기 상태일 때 터미널 느낌을 유지해 주는 안내 메시지
+                st.code("📟 [SYSTEM] 대기 상태입니다.\n'🎯 실시간 로그가 이곳에 표시됩니다.", language="text")
 
 
