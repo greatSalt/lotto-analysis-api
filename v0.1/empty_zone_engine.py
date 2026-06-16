@@ -7,7 +7,7 @@ def divide_nums_by_empty_zone(target_nums, zones_row):
     # 멸구간 정의 및 컬럼 설정
     zones = {
         "단번대": lambda n: 1 <= n <= 9,
-        "10번대": lambda n: 11 <= n <= 19,
+        "10번대": lambda n: 10 <= n <= 19,
         "20번대": lambda n: 20 <= n <= 29,
         "30번대": lambda n: 30 <= n <= 39,
         "40번대": lambda n: 40 <= n <= 45
@@ -66,7 +66,7 @@ def display_lotto_empty_zone_matrix(df):
     # 구간 정의 및 컬럼 설정
     zones = {
         "단번대 (1~9)": lambda n: 1 <= n <= 9,
-        "10번대 (11~19)": lambda n: 11 <= n <= 19,
+        "10번대 (11~19)": lambda n: 10 <= n <= 19,
         "20번대 (21~29)": lambda n: 20 <= n <= 29,
         "30번대 (31~39)": lambda n: 30 <= n <= 39,
         "40번대 (40~45)": lambda n: 40 <= n <= 45

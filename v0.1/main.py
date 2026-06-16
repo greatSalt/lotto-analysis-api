@@ -11,7 +11,7 @@ from into_lottoDB import save_to_gsheet, get_recent_data, analyze_combination, d
 from crazyLogic import get_crazy_analysis
 from formular_description import display_formula_guide
 import analysis_to_gsheet as saver
-from iteration_predictor import render_carryover_analysis
+from iteration_predictor import render_carryover_analysis, std_probability_distribution_chart
 from empty_zone_engine import display_lotto_empty_zone_matrix
 from combination_engine import generate_strategic_combinations, get_advanced_stat_analysis, get_comprehensive_analysis, display_filter_setting, disp_recommended_nums_table, display_stat_report, combination_by_filter
 from winning_skip_analysis import analyze_winning_skip_distribution, render_skip_group_weight_ui
@@ -259,10 +259,7 @@ elif menu == "📊 이월수 예측":
     if not df.empty:
         render_carryover_analysis(df, analyze_range)
                 
-    # 확률 차트 (시각적 근거)
-    st.write("💡 **이월수 개수별 표준 확률 분포**")
-    chart_data = {"0개": 38, "1개": 43, "2개": 13, "3개+": 6}
-    st.bar_chart(chart_data)
+    std_probability_distribution_chart()        # 표준 확률 분포 차트(로또 전회차)
 
 elif menu == "🎯 추천번호 분석":
     st.title("🎯 v2.5 전략 추천번호")
