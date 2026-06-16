@@ -93,7 +93,7 @@ def display_lotto_empty_zone_matrix(df):
     st.dataframe(df_matrix, use_container_width=True, hide_index=True)
     
     # 하단 필터 결합 엔진 가이드 동적 출력
-    st.markdown("### 🎯 이번 주 조합기 필터링 가이드 2026-06-16(0/0)")
+    st.markdown("<h6> 🎯 이번 주 조합기 필터링 가이드 2026-06-16(0/0)")
     if overheated_list:
         zones_str = ", ".join(overheated_list)
         st.error(f"⚠️ **예측 멸구간**[{zones_str}]**  (백테스트 적중률: 81.8%)")
