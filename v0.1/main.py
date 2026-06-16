@@ -54,6 +54,10 @@ df = df_raw.head(analyze_range).copy()
 def trigger_reload():
     st.session_state.menu_changed_reload = True
 
+# --- 세션 상태 및 기본 데이터 초기화 ---
+if 'filter_debug_logs' not in st.session_state:
+    st.session_state.filter_debug_logs = []
+
 with st.sidebar:
     menu = st.sidebar.radio("기능 선택", ["데이터 입력", "크레이지 번호 추출", "콜드 번호 추출", "특정 번호 분석", "📊 이월수 예측", "🎯 추천번호 분석", "당첨번호 주기 분석", "동끝수 상세 분석", "종합 분석", "후나츠 사카이 분류"], on_change=trigger_reload)
     display_sidebar_picks(conn, SHEET_URL) # 👈 어떤 메뉴에서든 내 번호가 보임
@@ -320,5 +324,33 @@ elif menu == "종합 분석":
 elif menu == "후나츠 사카이 분류":
     render_sakai_analysis(df_raw, analyze_range)
     
-st.sidebar.divider()
-st.sidebar.caption("v0.1 - 통계 분석 시스템")
+#st.sidebar.divider()
+#st.sidebar.caption("v0.1 - 통계 분석 시스템")
+
+# -----------------------------------------------------------------
+# 📟 메뉴 이동과 관계없이 하단에 상시 고정되는 전역 콘솔창 인프라
+# -----------------------------------------------------------------
+# 바깥쪽의 if 조건문을 과감히 제거하여, 어떤 메뉴에서도 하단 레이아웃을 무조건 확보합니다.
+st.write("") 
+st.markdown("<br><br>", unsafe_allow_html=True)
+st.divider() 
+
+# 전역 On/Off 토글 스위치 상시 노출 (이제 다른 메뉴를 눌러도 이 버튼은 자석처럼 붙어있습니다)
+show_global_lower_log = st.toggle(
+    "📟 멸구간 연산 실시간 콘솔 모니터 열기", 
+    value=False, 
+    key="global_lower_log_toggle"
+)
+
+if show_global_lower_log:
+    # 250px 고정 크기 컨테이너로 화면 출렁임(Layout Shift) 방지 및 UI 일체감 확보
+    with st.container(height=250):
+        if 'filter_debug_logs' in st.session_state and st.session_state.filter_debug_logs:
+            # 메모리 과부하 보호를 위해 최근 300개의 필터 탈락 로그만 슬라이싱하여 렌더링
+            full_log_text = "\n".join(st.session_state.filter_debug_logs[-300:])
+            st.code(full_log_text, language="text")
+        else:
+            # 💡 다른 메뉴로 이동했거나 초기 상태일 때 터미널 느낌을 유지해 주는 안내 메시지
+            st.code("📟 [SYSTEM] 대기 상태입니다.\n'🎯 추천번호 분석' 메뉴에서 조합을 추출하면 실시간 필터 로그가 이곳에 표시됩니다.", language="text")
+
+
