@@ -258,7 +258,7 @@ elif menu == "📊 이월수 예측":
     
     if not df.empty:
         #render_carryover_analysis(df, analyze_range)
-        render_dynamic_carryover_analysis_ui(df, st.session_state.weight_df, target_rounds=25)    
+        render_dynamic_carryover_analysis_ui(df, st.session_state.get('skip_weight_df'), target_rounds=25)    
     std_probability_distribution_chart()        # 표준 확률 분포 차트(로또 전회차)
 
 elif menu == "🎯 추천번호 분석":
