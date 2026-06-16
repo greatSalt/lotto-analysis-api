@@ -21,7 +21,7 @@ def divide_nums_by_empty_zone(target_nums, zones_row):
         if zone_name in zones:
             condition = zones[zone_name]
             # 이번 조합(target_nums) 중에 멸구간에 해당하는 숫자가 하나라도 있다면?
-            if any(conditon(n) for n in target_nums):
+            if any(condition(n) for n in target_nums):
               return False
               
     return True
