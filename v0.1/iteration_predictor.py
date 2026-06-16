@@ -188,7 +188,9 @@ def render_carryover_analysis(df, analyze_range):
         with cols[i]:
             st.metric(label=f"번호 {row.번호}", value=row.유형, delta=row.최근빈도)
             st.caption(f"적합도: {row.점수}점")
-            
+
+#####################################################################
+'''            
 def check_carryover_filter(nums, last_win_nums, allowed_carry_counts):
     """
     nums: 생성된 6개 번호
@@ -200,11 +202,6 @@ def check_carryover_filter(nums, last_win_nums, allowed_carry_counts):
     current_carry_count = len(intersect)
     
     return current_carry_count in allowed_carry_counts
-
-#####################################################################
-'''
-import pandas as pd
-import streamlit as st
 
 def get_dynamic_skip_value(history_df, target_idx, num):
     """실시간 기준, 해당 번호의 스킵 주기(미출현 회차 수) 동적 계산"""
