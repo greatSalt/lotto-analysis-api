@@ -41,6 +41,7 @@ def std_probability_distribution_chart():
     # 4. Streamlit 화면에 렌더링
     st.plotly_chart(fig, use_container_width=True)
 
+'''
 def predict_with_momentum(df, last_nums):
     prediction_results = []
     win_nums_list = df[['n1', 'n2', 'n3', 'n4', 'n5', 'n6']].values.tolist()
@@ -345,4 +346,3 @@ def render_dynamic_carryover_analysis_ui(history_df, weight_df, target_rounds=25
     hit_count = len(report_df[report_df['개수 판정'] == "🎯 적중"])
     st.success(f"📈 **동적 엔진 실시간 적중 통계** ➔ 25개 구간 중 **{hit_count}회차** 정확히 적중 (적중률: **{(hit_count/total_rounds)*100:.1f}%**)")
 
-'''
