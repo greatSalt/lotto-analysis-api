@@ -12,9 +12,8 @@ def divide_nums_by_empty_zone(target_nums, zones_row):
         "40번대": lambda n: 41 <= n <= 45
     }
     
-    # 2. 구글 시트에서 가져온 데이터프레임에서 '번호' 컬럼(예: ["단번대", "10번대"])을 리스트로 추출
-    # (만약 데이터프레임이 비어있으면 빈 리스트로 처리)
-    selected_zones = zones_row['번호'].tolist() if not zones_row.empty else []
+    # 만약 비어있거나 리스트가 아니라면 빈 리스트([])로 처리하여 에러를 방지합니다.
+    selected_zones = zones_row if isinstance(zones_row, list) else []
     
     # 3. 사용자가 선택한 멸구간들만 돌면서 검사
     for zone_name in selected_zones:
