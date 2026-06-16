@@ -1,41 +1,10 @@
-
 import streamlit as st
 import pandas as pd
 import numpy as np
-import altair as alt
 import plotly.express as px
 
 def std_probability_distribution_chart():
     st.write("💡 **이월수 개수별 표준 확률 분포 (로또 전회차)**")
-    
-    # 1. 데이터프레임 변환
-    df = pd.DataFrame({
-        '이월수': ["0개", "1개", "2개", "3개+"],
-        '확률': [38.4, 43.2, 15.2, 3.2]
-    })
-    
-    # 2. 베이스 차트 (막대) 정의
-    bars = alt.Chart(df).mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4).encode(
-        x=alt.X('이월수:N', sort=None, axis=alt.Axis(labelAngle=0)),
-        y=alt.Y('확률:Q', title='확률 (%)'),
-        color=alt.Color('이월수:N', legend=None)
-    )
-    
-    # 3. 텍스트 레이어 (막대 위 숫자) 정의
-    text = bars.mark_text(
-        align='center',
-        baseline='bottom',
-        dy=-5, # 막대 탑에서 위로 5픽셀 띄우기
-        fontSize=13,
-        fontWeight='bold'
-    ).encode(
-        text=alt.Text('확률:Q', format='.1f') # 소수점 첫째자리까지 수치 표시 (뒤에 % 수동 결합 가능)
-    )
-    
-    # 4. 두 레이어를 병합( + )하여 화면에 출력
-    st.altair_chart(bars + text, use_container_width=True)
-    
-    st.write("💡 **이월수 개수별 표준 확률 분포**")
     
     # 1. 데이터 세팅 (정밀 소수점 반영)
     chart_data = pd.DataFrame({
