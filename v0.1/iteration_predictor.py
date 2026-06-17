@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import Config
 #import numpy as np
 #import plotly.express as px
 
@@ -69,7 +70,16 @@ def get_historical_deviation(history_df, target_idx, num):
     df_50 = history_df.iloc[target_idx + 1 : target_idx + 51]
     df_25 = history_df.iloc[target_idx + 1 : target_idx + 26]
     
-    if len(df_50) < 50: return 0.0  # 데이터 부족 시 0 처리
+    if len(df_50) < 50: 
+        if Config.DEBUG:# [debug console code]
+            # 터미널이나 콘솔 창에서 필터링 과정을 정확하게 추적할 수 있습니다.
+            log_msg = f"[[25주 출현율 - 50주 출현율] 편차 산출] 조건확인 -> 50주기{len(df_50)} < 50: 0.0 return"
+            # [메모리 보호] 실시간 렌더링 과부하를 막기 위해 상시 300개 스냅샷 유지
+            if len(st.session_state.filter_debug_logs) >= 300:
+                st.session_state.filter_debug_logs.pop(0) # 가장 오래된 로그 하나 제거
+                            
+            st.session_state.filter_debug_logs.append(log_msg)
+        return 0.0  # 데이터 부족 시 0 처리
     
     count_50 = 0
     count_25 = 0
@@ -124,7 +134,8 @@ def run_carryover_fusion_backtest(history_df, weight_df, test_rounds=25):
             })
             
         scored_df = pd.DataFrame(scored_candidates)
-        st.dataframe(scored_df, use_container_width=True, hide_index=True)
+        
+        #st.dataframe(scored_df, use_container_width=True, hide_index=True)
         
         # 3. 판별 기준 수립: 최종 스코어가 특정 임계치(예: 4.5점)를 넘기는 정예 번호 필터링
         # 주기가중치가 높으면서(-0주기는 원래 높음) 편차가 마이너스인 녀석들이 최상위로 치솟음

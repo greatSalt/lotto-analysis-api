@@ -262,6 +262,8 @@ elif menu == "📊 이월수 예측":
         weight_table = st.session_state.skip_weight_df
         
         if Config.DEBUG:
+            # [debug console] 새 조합 연산이 시작되므로 하단 콘솔창을 완전 깨끗하게 비웁니다!
+            st.session_state.filter_debug_logs = []
             st.success("📟 [SYSTEM] 주기 가중치 헤더와 이월수 개별 편차 엔진의 결합을 완료했습니다.")
             
         # 2. 융합 엔진 기동 및 25주 전수 백테스팅 결과 수집
