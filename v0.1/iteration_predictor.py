@@ -1,8 +1,158 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-import plotly.express as px
+#import numpy as np
+#import plotly.express as px
 
+#-----------------------------------------------------------------#
+
+def check_carryover_filter(nums, last_win_nums, allowed_carry_counts):
+    """
+    nums: 생성된 6개 번호
+    last_win_nums: 직전 회차 당첨번호 6개 (보너스 제외 권장)
+    allowed_carry_counts: 허용된 이월수 개수 리스트 (예: [0, 1])
+    """
+    # 생성된 번호와 직전 당첨번호 간의 교집합 개수 계산
+    intersect = set(nums) & set(last_win_nums)
+    current_carry_count = len(intersect)
+    
+    return current_carry_count in allowed_carry_counts
+
+#-----------------------------------------------------------------#
+
+#test code
+def get_number_skip_value(history_df, target_idx, num):
+    """특정 회차(target_idx) 직전 기준, 해당 번호의 스킵 주기(몇 주 미출현했는지) 계산"""
+    """
+    history_df: 최신순으로 정렬된 데이터프레임
+    target_idx: 데이터프레임의 행 인덱스 (iloc)
+    num: 찾으려는 번호
+    """
+    # target_idx에 해당하는 실제 round 번호를 가져옴(기준 회차 번호)
+    target_round = history_df.iloc[target_idx]['round']
+    
+    # 1. 기준 회차보다 작거나 같은(더 과거의) 데이터만 필터링
+    prev_history = history_df[history_df['round'] < target_round]
+    
+    # 2. 해당 번호가 출현한 행 찾기
+    appearances = prev_history[(prev_history['n1'] == num) | (prev_history['n2'] == num) | 
+                               (prev_history['n3'] == num) | (prev_history['n4'] == num) | 
+                               (prev_history['n5'] == num) | (prev_history['n6'] == num)]
+    
+    if appearances.empty:
+        return 100  # 콜드 번호 가상 주기
+    
+    # 3. 가장 최근 출현 회차 번호와 현재 타겟 회차 번호의 차이 계산
+    latest_appearance_round = appearances['round'].max()
+    return target_round - latest_appearance_round - 1
+    
+def get_calculated_weight(num_skip_val, weight_df):
+    """번호의 스킵 주기를 기반으로 UI 가중치 테이블에서 해당 가중치 매핑"""
+    # UI에서 등록된 가중치 딕셔너리 변환
+    weight_dict = dict(zip(weight_df['구간'], weight_df['가중치']))
+    
+    if num_skip_val == 0: return weight_dict.get("0주기", 1.0)
+    elif 1 <= num_skip_val <= 3: return weight_dict.get("1~3주기", 1.0)
+    elif 4 <= num_skip_val <= 6: return weight_dict.get("4~6주기", 1.0)
+    elif 7 <= num_skip_val <= 9: return weight_dict.get("7~9주기", 1.0)
+    elif 10 <= num_skip_val <= 14: return weight_dict.get("10~14주기", 1.0)
+    elif 15 <= num_skip_val <= 24: return weight_dict.get("15~24주기", 1.0)
+    else: return weight_dict.get("25주기 이상", 1.0)
+
+def get_historical_deviation(history_df, target_idx, num):
+    """특정 회차 직전 기준, 해당 번호의 [25주 출현율 - 50주 출현율] 편차 산출"""
+    """
+    history_df: 최신순으로 정렬된 50주 데이터프레임
+    target_idx: 데이터프레임의 행 인덱스 (iloc)
+    num: 찾으려는 번호
+    """
+    
+    df_50 = history_df.iloc[target_idx + 1 : target_idx + 51]
+    df_25 = history_df.iloc[target_idx + 1 : target_idx + 26]
+    
+    if len(df_50) < 50: return 0.0  # 데이터 부족 시 0 처리
+    
+    count_50 = 0
+    count_25 = 0
+    cols = ['n1', 'n2', 'n3', 'n4', 'n5', 'n6']
+    
+    for _, row in df_50.iterrows():
+        if num in [row[c] for c in cols]: count_50 += 1
+    for _, row in df_25.iterrows():
+        if num in [row[c] for c in cols]: count_25 += 1
+        
+    prob_50 = count_50 / 50.0   # 50주기 출현율
+    prob_25 = count_25 / 25.0   # 20주기 출현율
+    return prob_25 - prob_50    # 개별 번호의 출현율 편차 = 25주기(추세선) - 50주기(기준선)
+
+def run_carryover_fusion_backtest(history_df, weight_df, test_rounds=25):
+    """
+    [핵심 매크로] 이월수 개수 편차와 주기별 가중치를 결합한 통합 백테스팅 함수
+    """
+    backtest_summary = []
+    
+    df_sort = history_df.sort_values(by='round', ascending=False) # 항상 내림차순(최신순) 정렬
+    df = df_sort.head(50).copy()
+
+    # 최근 25주기만 돌면서 검증
+    for idx in range(test_rounds):
+        row = df.iloc[idx]
+        round_num = row['round']
+        
+        # 1. 직전 회차의 당첨번호 6개 + 보너스번호 1개 = 총 7개 후보 수집 (사각지대 제거)
+        prev_row = df.iloc[idx + 1]
+        candidates = [prev_row['n1'], prev_row['n2'], prev_row['n3'], prev_row['n4'], prev_row['n5'], prev_row['n6'], prev_row['bonus']]
+        
+        scored_candidates = []
+        
+        # 2. 후보 번호별 융합 스코어링 연산
+        for num in candidates:
+            # A. 현재 속한 주기 및 가중치 확인
+            skip_val = get_number_skip_value(df, idx, num)
+            weight = get_calculated_weight(skip_val, weight_df)
+            
+            # B. 장단기 편차 확인
+            deviation = get_historical_deviation(df, idx, num)
+            
+            # 최종 이월 점수(fusion_score): 개별번호 편차가 (-)일수록(냉각상태) 가중치를 증폭하여 나올 확률이 높게 판단하기 위한 기준점
+            fusion_score = weight * (1.0 - deviation)
+            
+            scored_candidates.append({
+                "번호": num,
+                "편차": deviation,
+                "주기가중치": weight,
+                "최종점수": round(fusion_score, 2)
+            })
+            
+        scored_df = pd.DataFrame(scored_candidates)
+        
+        # 3. 판별 기준 수립: 최종 스코어가 특정 임계치(예: 4.5점)를 넘기는 정예 번호 필터링
+        # 주기가중치가 높으면서(-0주기는 원래 높음) 편차가 마이너스인 녀석들이 최상위로 치솟음
+        prime_candidates = scored_df[scored_df['최종점수'] >= 4.5].sort_values(by="최종점수", ascending=False)
+        predicted_count = len(prime_candidates)
+        predicted_nums = prime_candidates['번호'].tolist()
+        
+        # 4. 실제 결과와 매칭 평가
+        actual_win_nums = [row['n1'], row['n2'], row['n3'], row['n4'], row['n5'], row['n6']]
+        actual_carry_nums = [n for n in actual_win_nums if n in candidates]
+        actual_count = len(actual_carry_nums)
+        
+        # 적중 여부 판정 (C언어 스타일 조건 판별)
+        count_hit = "🎯 적중" if predicted_count == actual_count else ("✅ 근접" if abs(predicted_count - actual_count) <= 1 else "❌ 불일치")
+        num_hit_count = len([n for n in predicted_nums if n in actual_win_nums])
+        
+        backtest_summary.append({
+            "회차": round_num,
+            "예측 이월수": f"{predicted_count}개",
+            "실제 이월수": f"{actual_count}개",
+            "개수판정": count_hit,
+            "예측 타겟번호": predicted_nums,
+            "실제 이월번호": actual_carry_nums,
+            "맞춘 번호수": f"{num_hit_count}개"
+        })
+        
+    return pd.DataFrame(backtest_summary)
+
+'''    
 def std_probability_distribution_chart():
     st.write("💡 **이월수 개수별 표준 확률 분포 (로또 전회차)**")
     
@@ -41,6 +191,7 @@ def std_probability_distribution_chart():
     # 4. Streamlit 화면에 렌더링
     st.plotly_chart(fig, use_container_width=True)
 
+'''
 '''
 def predict_with_momentum(df, last_nums):
     prediction_results = []
@@ -191,18 +342,9 @@ def render_carryover_analysis(df, analyze_range):
 
 #####################################################################
 '''            
-def check_carryover_filter(nums, last_win_nums, allowed_carry_counts):
-    """
-    nums: 생성된 6개 번호
-    last_win_nums: 직전 회차 당첨번호 6개 (보너스 제외 권장)
-    allowed_carry_counts: 허용된 이월수 개수 리스트 (예: [0, 1])
-    """
-    # 생성된 번호와 직전 당첨번호 간의 교집합 개수 계산
-    intersect = set(nums) & set(last_win_nums)
-    current_carry_count = len(intersect)
-    
-    return current_carry_count in allowed_carry_counts
 
+#####################################################################
+'''
 def get_dynamic_skip_value(history_df, target_idx, num):
     """실시간 기준, 해당 번호의 스킵 주기(미출현 회차 수) 동적 계산"""
     prev_history = history_df.iloc[target_idx + 1:]
@@ -361,4 +503,4 @@ def render_dynamic_carryover_analysis_ui(history_df, weight_df, target_rounds=25
     total_rounds = len(report_df)
     hit_count = len(report_df[report_df['개수 판정'] == "🎯 적중"])
     st.success(f"📈 **동적 엔진 실시간 적중 통계** ➔ 25개 구간 중 **{hit_count}회차** 정확히 적중 (적중률: **{(hit_count/total_rounds)*100:.1f}%**)")
-
+'''
