@@ -98,7 +98,7 @@ def calculate_momentum_score(history_df, target_idx, num):
     
     target_round = history_df.iloc[target_idx]['round']
     # 최근 5주 데이터 추출
-    recent_5_weeks = history_df[history_df['round'] < target_round].tail(5)
+    recent_5_weeks = history_df[history_df['round'] < target_round].head(5)
 
     # 최근 5주간 출현 횟수 계산
     count = recent_5_weeks[['n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'bonus']].apply(
