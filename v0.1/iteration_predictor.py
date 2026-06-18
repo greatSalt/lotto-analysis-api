@@ -113,6 +113,7 @@ def run_carryover_fusion_backtest(history_df, weight_df, test_rounds=25):
         candidates = [prev_row['n1'], prev_row['n2'], prev_row['n3'], prev_row['n4'], prev_row['n5'], prev_row['n6'], prev_row['bonus']]
         
         scored_candidates = []
+        ref_score = get_calculated_weight(0, weight_df) # 기준점수 = 0주기 가중치
         
         # 2. 후보 번호별 융합 스코어링 연산
         for num in candidates:
@@ -139,7 +140,8 @@ def run_carryover_fusion_backtest(history_df, weight_df, test_rounds=25):
         
         # 3. 판별 기준 수립: 최종 스코어가 특정 임계치(예: 4.5점)를 넘기는 정예 번호 필터링
         # 주기가중치가 높으면서(-0주기는 원래 높음) 편차가 마이너스인 녀석들이 최상위로 치솟음
-        prime_candidates = scored_df[scored_df['최종점수'] >= 4.5].sort_values(by="최종점수", ascending=False)
+        #prime_candidates = scored_df[scored_df['최종점수'] >= 4.5].sort_values(by="최종점수", ascending=False)
+        prime_candidates = scored_df[scored_df['최종점수'] >= ref_score].sort_values(by="최종점수", ascending=False)
         predicted_count = len(prime_candidates)
         predicted_nums = prime_candidates['번호'].tolist()
         
