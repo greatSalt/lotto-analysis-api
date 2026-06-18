@@ -105,17 +105,25 @@ def calculate_momentum_score(history_df, target_idx, num):
         lambda x: (x == num).any(), axis=1
     ).sum()
 
+    # '최근성' 가중치 추가: 직전 회차(target_round - 1)에 나왔던 번호인가?
+    # 직전 회차에 등장했던 번호라면 가산점을 더 크게 부여 (이월 가속도)
+    prev_row = history_df[history_df['round'] == target_round - 1].iloc[0]
+    is_in_prev = num in [prev_row['n1'], prev_row['n2'], prev_row['n3'], prev_row['n4'], prev_row['n5'], prev_row['n6'], prev_row['bonus']]
+    
+    base_score = count * 0.2    # 2회 이상일 경우 기본 모멘텀 보너스 
+    recent_bonus = 0.8 if is_in_prev else 0.0 # 직전 회차면 0.8점 추가
+    
     if Config.DEBUG:# [debug console code]
             # 터미널이나 콘솔 창에서 필터링 과정을 정확하게 추적할 수 있습니다.
-            log_msg = f"[target_idx: {target_idx}, target_round: {target_round}, num: {num}, count: {count}, recent_5_weeks: {recent_5_weeks}"
+            log_msg = f"[target_idx: {target_idx}, target_round: {target_round}, num: {num}, count: {count}, base_score+recent_bonus: {base_score}+{recent_bonus} recent_5_weeks: {recent_5_weeks}"
             # [메모리 보호] 실시간 렌더링 과부하를 막기 위해 상시 300개 스냅샷 유지
             if len(st.session_state.filter_debug_logs) >= 300:
                 st.session_state.filter_debug_logs.pop(0) # 가장 오래된 로그 하나 제거
                             
             st.session_state.filter_debug_logs.append(log_msg)
-            
-    # 2회 이상일 경우 모멘텀 보너스 (예: +0.5점 추가)
-    return 0.5 if count >= 2 else 0.0
+    
+    return base_score + recent_bonus        
+    
 
 
 def run_carryover_fusion_backtest(history_df, weight_df, test_rounds=25):
