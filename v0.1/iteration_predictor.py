@@ -130,7 +130,7 @@ def count_historical_carryover(df, num):
     """
     count = 0
     # 전체 회차를 순회하며 이월 사례 카운트
-    for i in range(0, len(df)):
+    for i in range(0, len(df) - 1):
         prev_row = df.iloc[i+1]
         curr_row = df.iloc[i]
         
