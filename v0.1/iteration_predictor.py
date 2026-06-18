@@ -94,6 +94,19 @@ def get_historical_deviation(history_df, target_idx, num):
     prob_25 = count_25 / 25.0   # 20주기 출현율
     return prob_25 - prob_50    # 개별 번호의 출현율 편차 = 25주기(추세선) - 50주기(기준선)
 
+def calculate_momentum_score(history_df, target_round, num):
+    # 최근 5주 데이터 추출
+    recent_5_weeks = history_df[history_df['round'] < target_round].tail(5)
+
+    # 최근 5주간 출현 횟수 계산
+    count = recent_5_weeks[['n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'bonus']].apply(
+        lambda x: (x == num).any(), axis=1
+    ).sum()
+
+    # 2회 이상일 경우 모멘텀 보너스 (예: +0.5점 추가)
+    return 0.5 if count >= 2 else 0.0
+
+
 def run_carryover_fusion_backtest(history_df, weight_df, test_rounds=25):
     """
     [핵심 매크로] 이월수 개수 편차와 주기별 가중치를 결합한 통합 백테스팅 함수
@@ -121,11 +134,14 @@ def run_carryover_fusion_backtest(history_df, weight_df, test_rounds=25):
             skip_val = get_number_skip_value(df, idx, num)
             weight = get_calculated_weight(skip_val, weight_df)
             
+            # 모멘텀(단기 급상승) 가중치 적용
+            m_score = calculate_momentum_score(df, idx, num)
+            
             # B. 장단기 편차 확인
             deviation = get_historical_deviation(df, idx, num)
             
             # 최종 이월 점수(fusion_score): 개별번호 편차가 (-)일수록(냉각상태) 가중치를 증폭하여 나올 확률이 높게 판단하기 위한 기준점
-            fusion_score = weight * (1.0 - deviation)
+            fusion_score = weight * (1.0 - deviation) + m_score
             
             scored_candidates.append({
                 "번호": num,
