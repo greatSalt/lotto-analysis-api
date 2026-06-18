@@ -113,7 +113,7 @@ def run_carryover_fusion_backtest(history_df, weight_df, test_rounds=25):
         candidates = [prev_row['n1'], prev_row['n2'], prev_row['n3'], prev_row['n4'], prev_row['n5'], prev_row['n6'], prev_row['bonus']]
         
         scored_candidates = []
-        ref_score = get_calculated_weight(0, weight_df) # 기준점수 = 0주기 가중치
+        ref_score = get_calculated_weight(0, weight_df) + 0.1 # 기준점수 = 0주기 가중치 + 0.1
         
         # 2. 후보 번호별 융합 스코어링 연산
         for num in candidates:
