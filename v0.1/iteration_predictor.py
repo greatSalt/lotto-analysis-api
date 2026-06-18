@@ -135,7 +135,7 @@ def run_carryover_fusion_backtest(history_df, weight_df, test_rounds=25):
             weight = get_calculated_weight(skip_val, weight_df)
             
             # 모멘텀(단기 급상승) 가중치 적용
-            m_score = calculate_momentum_score(df, idx, num)
+            m_score = calculate_momentum_score(df, round_num, num)
             
             # B. 장단기 편차 확인
             deviation = get_historical_deviation(df, idx, num)
