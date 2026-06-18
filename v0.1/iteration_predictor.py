@@ -107,7 +107,7 @@ def calculate_momentum_score(history_df, target_idx, num):
 
     if Config.DEBUG:# [debug console code]
             # 터미널이나 콘솔 창에서 필터링 과정을 정확하게 추적할 수 있습니다.
-            log_msg = f"[target_idx: {target_idx}, target_round: {target_round}, count: {count}"
+            log_msg = f"[target_idx: {target_idx}, target_round: {target_round}, num: {num}, count: {count}"
             # [메모리 보호] 실시간 렌더링 과부하를 막기 위해 상시 300개 스냅샷 유지
             if len(st.session_state.filter_debug_logs) >= 300:
                 st.session_state.filter_debug_logs.pop(0) # 가장 오래된 로그 하나 제거
@@ -129,7 +129,7 @@ def run_carryover_fusion_backtest(history_df, weight_df, test_rounds=25):
 
     # 최근 25주기만 돌면서 검증
     #for idx in range(test_rounds):
-    for idx in range(3):
+    for idx in range(1):
         row = df.iloc[idx]
         round_num = row['round']
         
