@@ -144,7 +144,7 @@ def count_historical_carryover(df, num):
     
 def get_carryover_rankings(history_df, test_rounds=1228):
     # 1. 직전 회차 데이터 추출
-    prev_row = history_df[history_df['round'] == target_round - 1].iloc[0]
+    prev_row = history_df[history_df['round'] == test_rounds - 1].iloc[0]
     candidates = [prev_row['n1'], prev_row['n2'], prev_row['n3'], 
                   prev_row['n4'], prev_row['n5'], prev_row['n6'], prev_row['bonus']]
     
@@ -155,7 +155,7 @@ def get_carryover_rankings(history_df, test_rounds=1228):
         hist_rate = count_historical_carryover(history_df, num)
         
         # 3. 최근 5주간 활성도
-        recent_5_weeks = history_df[history_df['round'] < target_round].head(5)
+        recent_5_weeks = history_df[history_df['round'] < test_rounds].head(5)
         recent_freq = recent_5_weeks[['n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'bonus']].apply(
             lambda x: (x == num).any(), axis=1
         ).sum()
