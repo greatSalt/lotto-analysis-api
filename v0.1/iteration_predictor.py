@@ -142,7 +142,7 @@ def count_historical_carryover(df, num):
             count += 1
     return count
     
-def get_carryover_rankings(history_df, target_round=1228):
+def get_carryover_rankings(history_df, test_rounds=1228):
     # 1. 직전 회차 데이터 추출
     prev_row = history_df[history_df['round'] == target_round - 1].iloc[0]
     candidates = [prev_row['n1'], prev_row['n2'], prev_row['n3'], 
