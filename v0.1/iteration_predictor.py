@@ -101,7 +101,7 @@ def run_carryover_fusion_backtest(history_df, weight_df, test_rounds=25):
     backtest_summary = []
     
     df_sort = history_df.sort_values(by='round', ascending=False) # 항상 내림차순(최신순) 정렬
-    df = df_sort.head(50).copy()
+    df = df_sort.head(76).copy()
 
     # 최근 25주기만 돌면서 검증
     for idx in range(test_rounds):
