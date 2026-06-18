@@ -123,8 +123,54 @@ def calculate_momentum_score(history_df, target_idx, num):
             st.session_state.filter_debug_logs.append(log_msg)
     
     return base_score + recent_bonus        
-    
 
+def count_historical_carryover(df, num):
+    """
+    해당 번호가 과거 전체 회차에서 이월(직전 회차 등장 후 다음 회차 또 등장)된 횟수를 계산
+    """
+    count = 0
+    # 전체 회차를 순회하며 이월 사례 카운트
+    for i in range(0, len(df)):
+        prev_row = df.iloc[i+1]
+        curr_row = df.iloc[i]
+        
+        # 이전 회차 7개 번호 중 num이 있고, 현재 회차 6개 번호(당첨번호)에 또 등장하면 이월
+        prev_nums = [prev_row['n1'], prev_row['n2'], prev_row['n3'], prev_row['n4'], prev_row['n5'], prev_row['n6'], prev_row['bonus']]
+        curr_nums = [curr_row['n1'], curr_row['n2'], curr_row['n3'], curr_row['n4'], curr_row['n5'], curr_row['n6']]
+        
+        if num in prev_nums and num in curr_nums:
+            count += 1
+    return count
+    
+def get_carryover_rankings(history_df, target_round=1228):
+    # 1. 직전 회차 데이터 추출
+    prev_row = history_df[history_df['round'] == target_round - 1].iloc[0]
+    candidates = [prev_row['n1'], prev_row['n2'], prev_row['n3'], 
+                  prev_row['n4'], prev_row['n5'], prev_row['n6'], prev_row['bonus']]
+    
+    scored_candidates = []
+    
+    for num in set(candidates):
+        # 2. 이월 체질 측정 (과거 이월 이력)
+        hist_rate = count_historical_carryover(history_df, num)
+        
+        # 3. 최근 5주간 활성도
+        recent_5_weeks = history_df[history_df['round'] < target_round].head(5)
+        recent_freq = recent_5_weeks[['n1', 'n2', 'n3', 'n4', 'n5', 'n6', 'bonus']].apply(
+            lambda x: (x == num).any(), axis=1
+        ).sum()
+        
+        # 4. 이월 전용 점수 산출
+        final_score = (hist_rate * 0.6) + (recent_freq * 0.4)
+        
+        scored_candidates.append({
+            "번호": num,
+            "최종점수": round(final_score, 2),
+            "역사적체질": hist_rate,
+            "최근활동성": recent_freq
+        })
+        
+    return pd.DataFrame(scored_candidates).sort_values(by='최종점수', ascending=False)
 
 def run_carryover_fusion_backtest(history_df, weight_df, test_rounds=25):
     """

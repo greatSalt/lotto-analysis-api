@@ -11,7 +11,7 @@ from into_lottoDB import save_to_gsheet, get_recent_data, analyze_combination, d
 from crazyLogic import get_crazy_analysis
 from formular_description import display_formula_guide
 import analysis_to_gsheet as saver
-from iteration_predictor import run_carryover_fusion_backtest
+from iteration_predictor import get_carryover_rankings
 from empty_zone_engine import display_lotto_empty_zone_matrix
 from combination_engine import generate_strategic_combinations, get_advanced_stat_analysis, get_comprehensive_analysis, display_filter_setting, disp_recommended_nums_table, display_stat_report, combination_by_filter
 from winning_skip_analysis import analyze_winning_skip_distribution, render_skip_group_weight_ui
@@ -256,6 +256,15 @@ elif menu == "콜드 번호 추출":
 elif menu == "📊 이월수 예측":
     st.title("🔮이월수 전략 시뮬레이터 v2.0 (융합형)")
     
+    if Config.DEBUG:
+        # [debug console] 새 조합 연산이 시작되므로 하단 콘솔창을 완전 깨끗하게 비웁니다!
+        st.session_state.filter_debug_logs = []
+        st.success("📟 [SYSTEM] 주기 가중치 헤더와 이월수 개별 편차 엔진의 결합을 완료했습니다.")
+    
+    test_report_df = get_carryover_rankings(df_raw, test_rounds=1228)
+    st.dataframe(test_report_df, use_container_width=True, hide_index=True)
+    
+    '''
     # 1. 기존 주기 가중치 테이블 로드 (UI 함수 활용)
     # 당첨번호 주기 분석 메뉴에서 계산되어 세션에 적재된 가중치 연동
     if 'skip_weight_df' in st.session_state:
@@ -265,7 +274,7 @@ elif menu == "📊 이월수 예측":
             # [debug console] 새 조합 연산이 시작되므로 하단 콘솔창을 완전 깨끗하게 비웁니다!
             st.session_state.filter_debug_logs = []
             st.success("📟 [SYSTEM] 주기 가중치 헤더와 이월수 개별 편차 엔진의 결합을 완료했습니다.")
-            
+        
         # 2. 융합 엔진 기동 및 25주 전수 백테스팅 결과 수집
         fusion_report_df = run_carryover_fusion_backtest(df_raw, weight_table, test_rounds=25)
         
@@ -279,13 +288,7 @@ elif menu == "📊 이월수 예측":
         st.info(f"💡 **가중치 결합 엔진 최종 성적표** ➔ 개수 정밀 적중률: **{hit_rate:.1f}%** | 허용 오차 이내 근접률: **{close_rate:.1f}%**")
     else:
         st.warning("⚠️ '당첨번호 주기 분석' 메뉴를 먼저 클릭하여 주기별 가중치 데이터를 활성화(세션 등록)해 주세요.")
-    
-    #st.title("🔮이월수 전략 시뮬레이터")
-    
-    #if not df.empty:
-        #render_carryover_analysis(df, analyze_range)
-        #render_dynamic_carryover_analysis_ui(df, st.session_state.get('skip_weight_df'), target_rounds=25)    
-    
+    '''
     #std_probability_distribution_chart()        # 표준 확률 분포 차트(로또 전회차)
 
 elif menu == "🎯 추천번호 분석":
