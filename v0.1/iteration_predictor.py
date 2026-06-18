@@ -94,7 +94,9 @@ def get_historical_deviation(history_df, target_idx, num):
     prob_25 = count_25 / 25.0   # 20주기 출현율
     return prob_25 - prob_50    # 개별 번호의 출현율 편차 = 25주기(추세선) - 50주기(기준선)
 
-def calculate_momentum_score(history_df, target_round, num):
+def calculate_momentum_score(history_df, target_idx, num):
+    
+    target_round = history_df.iloc[target_idx]['round']
     # 최근 5주 데이터 추출
     recent_5_weeks = history_df[history_df['round'] < target_round].tail(5)
 
@@ -103,6 +105,15 @@ def calculate_momentum_score(history_df, target_round, num):
         lambda x: (x == num).any(), axis=1
     ).sum()
 
+    if Config.DEBUG:# [debug console code]
+            # 터미널이나 콘솔 창에서 필터링 과정을 정확하게 추적할 수 있습니다.
+            log_msg = f"[target_idx: {target_idx}, target_round: {target_round}, count: {count}"
+            # [메모리 보호] 실시간 렌더링 과부하를 막기 위해 상시 300개 스냅샷 유지
+            if len(st.session_state.filter_debug_logs) >= 300:
+                st.session_state.filter_debug_logs.pop(0) # 가장 오래된 로그 하나 제거
+                            
+            st.session_state.filter_debug_logs.append(log_msg)
+            
     # 2회 이상일 경우 모멘텀 보너스 (예: +0.5점 추가)
     return 0.5 if count >= 2 else 0.0
 
@@ -117,7 +128,8 @@ def run_carryover_fusion_backtest(history_df, weight_df, test_rounds=25):
     df = df_sort.head(76).copy()
 
     # 최근 25주기만 돌면서 검증
-    for idx in range(test_rounds):
+    #for idx in range(test_rounds):
+    for idx in range(3):
         row = df.iloc[idx]
         round_num = row['round']
         
@@ -135,7 +147,7 @@ def run_carryover_fusion_backtest(history_df, weight_df, test_rounds=25):
             weight = get_calculated_weight(skip_val, weight_df)
             
             # 모멘텀(단기 급상승) 가중치 적용
-            m_score = calculate_momentum_score(df, round_num, num)
+            m_score = calculate_momentum_score(df, idx, num)
             
             # B. 장단기 편차 확인
             deviation = get_historical_deviation(df, idx, num)
