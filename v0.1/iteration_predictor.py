@@ -135,7 +135,7 @@ def run_carryover_fusion_backtest(history_df, weight_df, test_rounds=25):
             
         scored_df = pd.DataFrame(scored_candidates)
         
-        #st.dataframe(scored_df, use_container_width=True, hide_index=True)
+        st.dataframe(scored_df, use_container_width=True, hide_index=True)
         
         # 3. 판별 기준 수립: 최종 스코어가 특정 임계치(예: 4.5점)를 넘기는 정예 번호 필터링
         # 주기가중치가 높으면서(-0주기는 원래 높음) 편차가 마이너스인 녀석들이 최상위로 치솟음
