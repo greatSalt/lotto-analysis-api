@@ -261,7 +261,7 @@ def run_carryover_fusion_backtest(history_df, weight_df, test_rounds=25):
                 "주기가중치": weight,
                 "미시 융합 스코어": round(fusion_score, 2),
                 "거시 보정률": macro_modifier,
-                "최종점수": round(total_score, 2)
+                "최종점수": round(total_score, 2),
                 "ref_score": round(ref_score, 2)
             })
             
