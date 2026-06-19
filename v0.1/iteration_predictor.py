@@ -182,8 +182,8 @@ def run_carryover_fusion_backtest(history_df, weight_df, test_rounds=25):
     df = df_sort.head(76).copy()
 
     # 최근 25주기만 돌면서 검증
-    #for idx in range(test_rounds):
-    for idx in range(1):
+    for idx in range(test_rounds):
+    #for idx in range(1):
         row = df.iloc[idx]
         round_num = row['round']
         
@@ -197,7 +197,7 @@ def run_carryover_fusion_backtest(history_df, weight_df, test_rounds=25):
         # 2. 후보 번호별 융합 스코어링 연산
         for num in candidates:
             # A. 현재 속한 주기 및 가중치 확인
-            skip_val = get_number_skip_value(df, idx+1, num)
+            skip_val = get_number_skip_value(df, idx, num)
             weight = get_calculated_weight(skip_val, weight_df)
             
             # 모멘텀(단기 급상승) 가중치 적용
