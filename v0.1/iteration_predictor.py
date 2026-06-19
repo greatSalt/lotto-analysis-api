@@ -110,15 +110,16 @@ def get_macro_count_modifier(history_df, target_idx):
         actual_carry = len([n for n in current_win if n in prev_win])
         carryover_counts.append(actual_carry)
         
-        if Config.DEBUG:# [debug console code]
+        '''if Config.DEBUG:# [debug console code]
             # 터미널이나 콘솔 창에서 필터링 과정을 정확하게 추적할 수 있습니다.
             log_msg = f"[idx: {idx}, current_win: {current_win}, prev_win: {prev_win}, actual_carry: {actual_carry}, "
             st.session_state.filter_debug_logs.append(log_msg)
-            
+        '''    
     # 최근 25회와 과거 25회의 1개 이월 빈도 비교 (과열/냉각 측정)
     recent_25 = carryover_counts[:25]
     count_1_recent = recent_25.count(1) / 25.0
     
+    '''
     if Config.DEBUG:# [debug console code]
         # 터미널이나 콘솔 창에서 필터링 과정을 정확하게 추적할 수 있습니다.
         log_msg = f"[target_idx: {target_idx}, count_1_recent: {count_1_recent}, recent_25: {recent_25}"
@@ -127,7 +128,7 @@ def get_macro_count_modifier(history_df, target_idx):
             st.session_state.filter_debug_logs.pop(0) # 가장 오래된 로그 하나 제거
                             
         st.session_state.filter_debug_logs.append(log_msg)
-        
+    '''    
         
     # 1개 이월이 장기 평균(약 43%)보다 과열되어 있으면 디버프 조절
     if count_1_recent > 0.45:
@@ -233,7 +234,7 @@ def run_carryover_fusion_backtest(history_df, weight_df, test_rounds=25):
         candidates = [prev_row['n1'], prev_row['n2'], prev_row['n3'], prev_row['n4'], prev_row['n5'], prev_row['n6'], prev_row['bonus']]
         
         scored_candidates = []
-        ref_score = get_calculated_weight(0, weight_df) + 0.1 # 기준점수 = 0주기 가중치 + 0.1
+        ref_score = get_calculated_weight(0, weight_df) + 0.15 # 기준점수 = 0주기 가중치 + 0.15
         
         # 2. 후보 번호별 융합 스코어링 연산
         for num in candidates:
@@ -260,15 +261,15 @@ def run_carryover_fusion_backtest(history_df, weight_df, test_rounds=25):
                 "번호": num,
                 "편차": deviation,
                 "주기가중치": weight,
-                "미시 융합 스코어": round(fusion_score, 2),
-                "거시 보정률": macro_modifier,
+                #"미시 융합 스코어": round(fusion_score, 2),
+                #"거시 보정률": macro_modifier,
                 "최종점수": round(total_score, 2),
-                "ref_score": round(ref_score, 2)
+                #"ref_score": round(ref_score, 2)
             })
             
         scored_df = pd.DataFrame(scored_candidates)
         
-        st.dataframe(scored_df, use_container_width=True, hide_index=True)
+        #st.dataframe(scored_df, use_container_width=True, hide_index=True)
         
         # 3. 판별 기준 수립: 최종 스코어가 특정 임계치(예: 4.5점)를 넘기는 정예 번호 필터링
         # 주기가중치가 높으면서(-0주기는 원래 높음) 편차가 마이너스인 녀석들이 최상위로 치솟음

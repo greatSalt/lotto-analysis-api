@@ -3,7 +3,7 @@ import random
 import pandas as pd
 import streamlit as st
 from target_end_analysis import check_same_end_digit_filter
-from iteration_predictor import check_carryover_filter
+from iteration_predictor import check_carryover_filter, std_probability_distribution_chart
 from funatsu_sakai import make_funatsu_sakai_pool
 from crazyLogic import get_crazy_analysis
 from savepicked import display_sidebar_picks, get_highlight_style, init_all_saved_data, save_to_sheets_by_type, save_recommended_picks
@@ -778,6 +778,8 @@ def display_stat_report(df):
         st.write("**🔗 연번 출현 빈도**")
         st.dataframe(con_df, use_container_width=True, hide_index=True)
         st.caption("보통 0~1쌍이 전체의 80%")    
+        
+    std_probability_distribution_chart()        # 이월수 표준 확률 분포 차트(로또 전회차)
         
 def combination_by_filter(conn, sheet_url, df, edited_df):
     # 1. 세션 상태 초기화 (코드 상단에 위치)

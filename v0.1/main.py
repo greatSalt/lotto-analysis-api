@@ -280,7 +280,7 @@ elif menu == "📊 이월수 예측":
     else:
         st.warning("⚠️ '당첨번호 주기 분석' 메뉴를 먼저 클릭하여 주기별 가중치 데이터를 활성화(세션 등록)해 주세요.")
     
-    #std_probability_distribution_chart()        # 표준 확률 분포 차트(로또 전회차)
+    
 
 elif menu == "🎯 추천번호 분석":
     st.title("🎯 v2.5 전략 추천번호")
