@@ -18,6 +18,43 @@ def check_carryover_filter(nums, last_win_nums, allowed_carry_counts):
     
     return current_carry_count in allowed_carry_counts
 
+def std_probability_distribution_chart():
+    st.write("💡 **이월수 개수별 표준 확률 분포 (로또 전회차)**")
+    
+    # 1. 데이터 세팅 (정밀 소수점 반영)
+    chart_data = pd.DataFrame({
+        "이월수": ["0개", "1개", "2개", "3개+"],
+        "확률": [38.4, 43.2, 15.2, 3.2]
+    })
+    
+    # 2. Plotly 막대 차트 생성 (text 옵션으로 막대 위에 수치 지정)
+    fig = px.bar(
+        chart_data, 
+        x="이월수", 
+        y="확률", 
+        text=chart_data["확률"].apply(lambda x: f"{x}%"), # 숫자 뒤에 % 기호 붙이기
+        color="이월수", # 막대별 색상 다르게
+        color_discrete_sequence=px.colors.qualitative.Pastel
+    )
+    
+    # 3. 차트 레이아웃 정밀 튜닝 (텍스트 위치 및 여백 조정)
+    fig.update_traces(
+        textposition="outside", # 텍스트를 막대 바깥(위)에 표시
+        textfont_size=14,       # 글자 크기
+        hovertemplate="이월수: %{x}<br>확률: %{y}%<extra></extra>" # 마우스 올렸을 때 창
+    )
+    
+    fig.update_layout(
+        yaxis_title="확률 (%)",
+        xaxis_title="이월수 갯수",
+        font=dict(family="NanumGothic, Malgun Gothic, sans-serif"), # 한글 깨짐 방지 폰트 가이드
+        height=350,
+        margin=dict(l=20, r=20, t=20, b=20),
+        showlegend=False # 범례 숨기기 (깔끔하게)
+    )
+    
+    # 4. Streamlit 화면에 렌더링
+    st.plotly_chart(fig, use_container_width=True)
 #-----------------------------------------------------------------#
 
 #test code
@@ -299,46 +336,6 @@ def run_carryover_fusion_backtest(history_df, weight_df, test_rounds=25):
         
     return pd.DataFrame(backtest_summary)
 
-'''    
-def std_probability_distribution_chart():
-    st.write("💡 **이월수 개수별 표준 확률 분포 (로또 전회차)**")
-    
-    # 1. 데이터 세팅 (정밀 소수점 반영)
-    chart_data = pd.DataFrame({
-        "이월수": ["0개", "1개", "2개", "3개+"],
-        "확률": [38.4, 43.2, 15.2, 3.2]
-    })
-    
-    # 2. Plotly 막대 차트 생성 (text 옵션으로 막대 위에 수치 지정)
-    fig = px.bar(
-        chart_data, 
-        x="이월수", 
-        y="확률", 
-        text=chart_data["확률"].apply(lambda x: f"{x}%"), # 숫자 뒤에 % 기호 붙이기
-        color="이월수", # 막대별 색상 다르게
-        color_discrete_sequence=px.colors.qualitative.Pastel
-    )
-    
-    # 3. 차트 레이아웃 정밀 튜닝 (텍스트 위치 및 여백 조정)
-    fig.update_traces(
-        textposition="outside", # 텍스트를 막대 바깥(위)에 표시
-        textfont_size=14,       # 글자 크기
-        hovertemplate="이월수: %{x}<br>확률: %{y}%<extra></extra>" # 마우스 올렸을 때 창
-    )
-    
-    fig.update_layout(
-        yaxis_title="확률 (%)",
-        xaxis_title="이월수 갯수",
-        font=dict(family="NanumGothic, Malgun Gothic, sans-serif"), # 한글 깨짐 방지 폰트 가이드
-        height=350,
-        margin=dict(l=20, r=20, t=20, b=20),
-        showlegend=False # 범례 숨기기 (깔끔하게)
-    )
-    
-    # 4. Streamlit 화면에 렌더링
-    st.plotly_chart(fig, use_container_width=True)
-
-'''
 '''
 def predict_with_momentum(df, last_nums):
     prediction_results = []
