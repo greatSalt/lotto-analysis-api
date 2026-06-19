@@ -197,7 +197,7 @@ def run_carryover_fusion_backtest(history_df, weight_df, test_rounds=25):
         # 2. 후보 번호별 융합 스코어링 연산
         for num in candidates:
             # A. 현재 속한 주기 및 가중치 확인
-            skip_val = get_number_skip_value(df, idx, num)
+            skip_val = get_number_skip_value(df, idx+1, num)
             weight = get_calculated_weight(skip_val, weight_df)
             
             # 모멘텀(단기 급상승) 가중치 적용
