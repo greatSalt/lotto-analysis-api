@@ -238,13 +238,16 @@ def run_carryover_fusion_backtest(history_df, weight_df, test_rounds=25):
             
             # 최종 이월 점수(fusion_score): 개별번호 편차가 (-)일수록(냉각상태) 가중치를 증폭하여 나올 확률이 높게 판단하기 위한 기준점
             # 미시 융합 스코어에 거시 보정률까지 동적 연산 결합
-            fusion_score = weight * (1.0 - deviation) * macro_modifier
+            fusion_score = weight * (1.0 - deviation) 
+            total_score = fusion_score * macro_modifier
             
             scored_candidates.append({
                 "번호": num,
                 "편차": deviation,
                 "주기가중치": weight,
-                "최종점수": round(fusion_score, 2)
+                "미시 융합 스코어": round(fusion_score, 2),
+                "거시 보정률": macro_modifier,
+                "최종점수": round(total_score, 2)
             })
             
         scored_df = pd.DataFrame(scored_candidates)
