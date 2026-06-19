@@ -113,6 +113,7 @@ def get_macro_count_modifier(history_df, target_idx):
         if Config.DEBUG:# [debug console code]
             # 터미널이나 콘솔 창에서 필터링 과정을 정확하게 추적할 수 있습니다.
             log_msg = f"[idx: {idx}, current_win: {current_win}, prev_win: {prev_win}, actual_carry: {actual_carry}, "
+            st.session_state.filter_debug_logs.append(log_msg)
             
     # 최근 25회와 과거 25회의 1개 이월 빈도 비교 (과열/냉각 측정)
     recent_25 = carryover_counts[:25]
