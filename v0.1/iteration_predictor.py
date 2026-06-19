@@ -94,6 +94,32 @@ def get_historical_deviation(history_df, target_idx, num):
     prob_25 = count_25 / 25.0   # 20주기 출현율
     return prob_25 - prob_50    # 개별 번호의 출현율 편차 = 25주기(추세선) - 50주기(기준선)
 
+def get_macro_count_modifier(history_df, target_idx):
+    """
+    [거시적 지표] 최신 25주기 대비 50주기 이월수 빈도 편차를 구하여 
+    이번 회차에 적용할 거시 보정계수(디버프/버프)를 동적으로 반환
+    """
+    # target_idx 직전 50회와 25회 구간 설정
+    df_50 = history_df.iloc[target_idx + 1 : target_idx + 51]
+    
+    # 직전 50회 동안의 이월수 분포 계산
+    carryover_counts = []
+    for idx in range(len(df_50) - 1):
+        current_win = df_50.iloc[idx][['n1','n2','n3','n4','n5','n6']].tolist()
+        prev_win = df_50.iloc[idx+1][['n1','n2','n3','n4','n5','n6']].tolist()
+        actual_carry = len([n for n in current_win if n in prev_win])
+        carryover_counts.append(actual_carry)
+        
+    # 최근 25회와 과거 25회의 1개 이월 빈도 비교 (과열/냉각 측정)
+    recent_25 = carryover_counts[:25]
+    count_1_recent = recent_25.count(1) / 25.0
+    
+    # 1개 이월이 장기 평균(약 43%)보다 과열되어 있으면 디버프 조절
+    if count_1_recent > 0.45:
+        return 0.85  # 과열 디버프 (가짜 후보 가지치기)
+    else:
+        return 1.05  # 냉각 버프 (진입 장벽 완화)
+        
 def calculate_momentum_score(history_df, target_idx, num):
     
     target_round = history_df.iloc[target_idx]['round']
@@ -204,11 +230,15 @@ def run_carryover_fusion_backtest(history_df, weight_df, test_rounds=25):
             #m_score = calculate_momentum_score(df, idx, num)
             m_score = 0
             
+            #거시 보정률
+            macro_modifier = get_macro_count_modifier(history_df, idx)
+            
             # B. 장단기 편차 확인
             deviation = get_historical_deviation(df, idx, num)
             
             # 최종 이월 점수(fusion_score): 개별번호 편차가 (-)일수록(냉각상태) 가중치를 증폭하여 나올 확률이 높게 판단하기 위한 기준점
-            fusion_score = weight * (1.0 - deviation) + m_score
+            # 미시 융합 스코어에 거시 보정률까지 동적 연산 결합
+            fusion_score = weight * (1.0 - deviation) * macro_modifier
             
             scored_candidates.append({
                 "번호": num,
@@ -475,31 +505,7 @@ def get_dynamic_deviation(history_df, target_idx, num):
         
     return (count_25 / 25.0) - (count_50 / 50.0)
 
-def get_macro_count_modifier(history_df, target_idx):
-    """
-    [거시적 지표] 최신 25주기 대비 50주기 이월수 빈도 편차를 구하여 
-    이번 회차에 적용할 거시 보정계수(디버프/버프)를 동적으로 반환
-    """
-    # target_idx 직전 50회와 25회 구간 설정
-    df_50 = history_df.iloc[target_idx + 1 : target_idx + 51]
-    
-    # 직전 50회 동안의 이월수 분포 계산
-    carryover_counts = []
-    for idx in range(len(df_50) - 1):
-        current_win = df_50.iloc[idx][['n1','n2','n3','n4','n5','n6']].tolist()
-        prev_win = df_50.iloc[idx+1][['n1','n2','n3','n4','n5','n6']].tolist()
-        actual_carry = len([n for n in current_win if n in prev_win])
-        carryover_counts.append(actual_carry)
-        
-    # 최근 25회와 과거 25회의 1개 이월 빈도 비교 (과열/냉각 측정)
-    recent_25 = carryover_counts[:25]
-    count_1_recent = recent_25.count(1) / 25.0
-    
-    # 1개 이월이 장기 평균(약 43%)보다 과열되어 있으면 디버프 조절
-    if count_1_recent > 0.45:
-        return 0.85  # 과열 디버프 (가짜 후보 가지치기)
-    else:
-        return 1.05  # 냉각 버프 (진입 장벽 완화)
+
 
 def render_dynamic_carryover_analysis_ui(history_df, weight_df, target_rounds=25):
     """
