@@ -1,9 +1,63 @@
 import streamlit as st
 import pandas as pd
 import Config
-#import numpy as np
 import plotly.express as px
 
+import numpy as np
+
+def preprocess_lotto_data(df):
+    # 1. 1~45번까지의 컬럼을 가진 0으로 초기화된 75x45 행렬 생성
+    num_rows = len(df)
+    matrix = np.zeros((num_rows, 45), dtype=int)
+    
+    # 2. 당첨 번호들을 순회하며 해당 위치에 1 대입
+    # df의 n1~n6 컬럼을 순회
+    for i in range(num_rows):
+        for col in ['n1', 'n2', 'n3', 'n4', 'n5', 'n6']:
+            num = int(df.iloc[i][col])
+            matrix[i, num - 1] = 1 # 1번 공은 0번 인덱스에 저장
+            
+    return matrix
+
+
+def calculate_lag_probability(history_matrix, max_lag=5):
+    # history_matrix: 75주 데이터 (75 x 45)
+    # max_lag: 몇 주 후까지 볼 것인가 (n주)
+    
+    num_weeks, num_nums = history_matrix.shape
+    # 결과 저장: [번호][lag]
+    lag_probs = np.zeros((num_nums, max_lag))
+    
+    for n in range(1, max_lag + 1):
+        for num in range(num_nums):
+            # 번호가 나온 회차들 (마지막 n주 제외)
+            occurred_indices = np.where(history_matrix[:-n, num] == 1)[0]
+            
+            if len(occurred_indices) > 0:
+                # n주 후에도 나왔는지 확인
+                appeared_after_n = history_matrix[occurred_indices + n, num]
+                lag_probs[num, n-1] = np.mean(appeared_after_n)
+                
+    return lag_probs
+
+def Display_nums_occurred_prob(history_df):
+    
+    df_75 = history_df.head(75).copy()
+    history_matrix = preprocess_lotto_data(df_75)
+    
+    lag_probs = calculate_lag_probability(history_matrix, max_lag)
+    
+    # 4. 결과 시각화 (Pandas DataFrame으로 변환)
+    result_df = pd.DataFrame(
+        lag_probs,
+        columns=[f'{n}주 후' for n in range(1, max_lag + 1)],
+        index=[f'번호 {i+1}' for i in range(history_matrix.shape[1])]
+    )
+    
+    st.subheader(f"최근 75주간 번호별 {max_lag}주차 내 출현 확률")
+    st.dataframe(result_df, use_container_width=True, hide_index=True)
+    
+    return result_df
 #-----------------------------------------------------------------#
 
 def check_carryover_filter(nums, last_win_nums, allowed_carry_counts):
@@ -260,6 +314,8 @@ def run_carryover_fusion_backtest(history_df, weight_df, test_rounds=25):
     df_sort = history_df.sort_values(by='round', ascending=False) # 항상 내림차순(최신순) 정렬
     df = df_sort.head(76).copy()
 
+    Display_nums_occurred_prob(df)
+    
     # 최근 25주기만 돌면서 검증
     for idx in range(test_rounds):
     #for idx in range(1):
