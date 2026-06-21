@@ -45,7 +45,7 @@ def Display_nums_occurred_prob(history_df):
     df_75 = history_df.head(75).copy()
     history_matrix = preprocess_lotto_data(df_75)
     
-    lag_probs = calculate_lag_probability(history_matrix, max_lag)
+    lag_probs = calculate_lag_probability(history_matrix, max_lag=5)
     
     # 4. 결과 시각화 (Pandas DataFrame으로 변환)
     result_df = pd.DataFrame(
