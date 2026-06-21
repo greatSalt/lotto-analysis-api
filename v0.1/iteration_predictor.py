@@ -40,12 +40,12 @@ def calculate_lag_probability(history_matrix, max_lag=5):
                 
     return lag_probs
 
-def Display_nums_occurred_prob(history_df):
+def Display_nums_occurred_prob(history_df, max_lag=5):
     
     df_75 = history_df.head(75).copy()
     history_matrix = preprocess_lotto_data(df_75)
     
-    lag_probs = calculate_lag_probability(history_matrix, max_lag=5)
+    lag_probs = calculate_lag_probability(history_matrix, max_lag)
     
     # 4. 결과 시각화 (Pandas DataFrame으로 변환)
     result_df = pd.DataFrame(
@@ -314,7 +314,7 @@ def run_carryover_fusion_backtest(history_df, weight_df, test_rounds=25):
     df_sort = history_df.sort_values(by='round', ascending=False) # 항상 내림차순(최신순) 정렬
     df = df_sort.head(76).copy()
 
-    Display_nums_occurred_prob(df)
+    Display_nums_occurred_prob(df, max_lag=5)
     
     # 최근 25주기만 돌면서 검증
     for idx in range(test_rounds):
