@@ -48,14 +48,24 @@ def Display_nums_occurred_prob(history_df, max_lag=5):
     lag_probs = calculate_lag_probability(history_matrix, max_lag)
     
     # 4. 결과 시각화 (Pandas DataFrame으로 변환)
-    result_df = pd.DataFrame(
-        lag_probs,
-        columns=[f'{n}주 후' for n in range(1, max_lag + 1)],
-        index=[f'번호 {i+1}' for i in range(history_matrix.shape[1])]
-    )
+    # 3. 데이터프레임 구조화
+    result_data = {'번호': [f'{i+1}번' for i in range(45)]}
+    for n in range(1, max_lag + 1):
+        result_data[f'{n}주 후'] = lag_probs[:, n-1]
+        
+    result_df = pd.DataFrame(result_data)
     
+    # 4. Streamlit 시각화 (소수점 1자리 설정)
     st.subheader(f"최근 75주간 번호별 {max_lag}주차 내 출현 확률")
-    st.dataframe(result_df, use_container_width=True, hide_index=True)
+    st.dataframe(
+        result_df, 
+        use_container_width=True, 
+        hide_index=True,
+        column_config={
+            "번호": st.column_config.TextColumn("번호", width="small"),
+            **{f"{n}주 후": st.column_config.NumberColumn(f"{n}주 후", format="%.1f") for n in range(1, max_lag + 1)}
+        }
+    )
     
     return result_df
 #-----------------------------------------------------------------#
