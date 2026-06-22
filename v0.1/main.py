@@ -14,7 +14,7 @@ import analysis_to_gsheet as saver
 from iteration_predictor import run_carryover_fusion_backtest
 from empty_zone_engine import display_lotto_empty_zone_matrix
 from combination_engine import generate_strategic_combinations, get_advanced_stat_analysis, get_comprehensive_analysis, display_filter_setting, disp_recommended_nums_table, display_stat_report, combination_by_filter
-from winning_skip_analysis import analyze_winning_skip_distribution, render_skip_group_weight_ui
+from winning_skip_analysis import analyze_winning_skip_distribution, render_skip_group_weight_ui, get_and_compute_weights
 from target_end_analysis import render_target_end_analysis
 from comprehensive_analysis import render_comprehensive_analysis
 from funatsu_sakai import render_sakai_analysis 
@@ -48,9 +48,14 @@ analyze_range = st.sidebar.slider(
     step=5
 )
 
+# 데이터가 로드될 때 가중치도 함께 세트로 반환받습니다.
+df_raw, current_stats = get_and_compute_weights(conn, SHEET_URL, analyze_range)
 # 모든 메뉴에서 사용할 공통 분석 데이터 (슬라이싱)
 df = df_raw.head(analyze_range).copy()
-
+# 세션에 가중치 자동 갱신
+st.session_state.skip_weight_df = render_skip_group_weight_ui(current_stats, auto_mode=True)
+    
+    
 # 메뉴가 바뀌었으므로 다음 화면 갱신 때 시트를 강제로 읽으라고 신호를 줌
 def trigger_reload():
     st.session_state.menu_changed_reload = True

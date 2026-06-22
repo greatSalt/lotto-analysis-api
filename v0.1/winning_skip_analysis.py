@@ -1,6 +1,16 @@
 import pandas as pd 
 import streamlit as st
 
+# 분석 범위가 바뀔 때만 재계산하도록 캐시 설정
+@st.cache_data(ttl=600) #600초동안 캐시유지
+def get_and_compute_weights(conn, SHEET_URL, analyze_range):
+    # 데이터 새로 로드
+    df_raw = get_recent_data(conn, SHEET_URL, count=0)
+    # 가중치 계산 로직 실행
+    _, skip_stats = analyze_winning_skip_distribution(df, analyze_range)
+    # UI 없이 데이터만 반환하도록 함수를 다듬거나, 결과값만 추출
+    return df_raw, skip_stats
+    
 def analyze_winning_skip_distribution(history_df, target_rounds=10):
     """
     사용자 제안: 회차별 주기 구간 비중을 합산하여 확률(가중치) 산출
@@ -60,7 +70,7 @@ def analyze_winning_skip_distribution(history_df, target_rounds=10):
     
     return analysis_results, avg_ratios
 
-def render_skip_group_weight_ui(group_stats):
+def render_skip_group_weight_ui(group_stats, auto_mode=False):
     """
     group_stats: 이미 구간별 평균 비중(확률)이 계산된 데이터프레임
     """
@@ -78,6 +88,11 @@ def render_skip_group_weight_ui(group_stats):
         st.session_state.skip_weight_df['확률'] = group_stats['확률']
         st.session_state.skip_weight_df['가중치'] = group_stats['가중치']
         
+    # 3. auto_mode일 경우 UI 없이 결과만 리턴
+    if auto_mode:
+        return st.session_state.skip_weight_df
+
+    # 4. 일반 모드: UI 렌더링
     st.info("💡 **회차별 비중 합산 방식**으로 계산되었습니다. 콜드번호 구간의 확률이 더 합리적으로 산출됩니다.")
     
     edited_df = st.data_editor(
