@@ -316,12 +316,6 @@ elif menu == "당첨번호 주기 분석":
     if not df_raw.empty:
         results_df, skip_stats = analyze_winning_skip_distribution(df_raw, analyze_range)
         
-        # 통계와 별개로, 현재 1~45번이 '지금' 몇 주기에 있는지 크레이지 로직으로 계산합니다.
-        df_crazy = get_crazy_analysis(df_raw) # 크레이지 엔진 호출
-        
-        # 1~45번 전체의 실시간 현재스킵을 딕셔너리로 저장 (41번: 0)
-        st.session_state.skip_dict = dict(zip(df_crazy['번호'], df_crazy['현재스킵']))
-        
         # 그래프 표시
         fig = px.bar(skip_stats, x='구간', y='확률', 
                      title=f"최근 {analyze_range}회차 당첨번호 출현 주기 분포",
