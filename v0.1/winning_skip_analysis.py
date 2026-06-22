@@ -2,6 +2,7 @@ import pandas as pd
 import streamlit as st
 
 from into_lottoDB import get_recent_data
+from crazyLogic import get_crazy_analysis
 
 # 분석 범위가 바뀔 때만 재계산하도록 캐시 설정
 @st.cache_data(ttl=600) #600초동안 캐시유지
