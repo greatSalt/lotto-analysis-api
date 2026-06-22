@@ -1,6 +1,8 @@
 import pandas as pd 
 import streamlit as st
 
+from into_lottoDB import get_recent_data
+
 # 분석 범위가 바뀔 때만 재계산하도록 캐시 설정
 @st.cache_data(ttl=600) #600초동안 캐시유지
 def get_and_compute_weights(_conn, SHEET_URL, analyze_range):

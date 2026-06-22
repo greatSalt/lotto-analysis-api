@@ -33,7 +33,7 @@ init_all_saved_data(conn, SHEET_URL, force_reload=st.session_state.menu_changed_
 
 # --- 데이터 로드 및 사이드바 공통 설정 ---
 # 분석에 필요한 데이터를 넉넉하게 한 번만 가져옵니다.
-df_raw = get_recent_data(conn, SHEET_URL, count=0)    #모든 데이터를 가져온다. 
+#df_raw = get_recent_data(conn, SHEET_URL, count=0)    #모든 데이터를 가져온다. 
 
 st.sidebar.title("🎮 메뉴 선택")
 
