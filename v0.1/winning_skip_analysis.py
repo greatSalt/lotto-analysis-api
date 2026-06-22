@@ -9,7 +9,7 @@ def get_and_compute_weights(_conn, SHEET_URL, analyze_range):
     # 데이터 새로 로드
     df_raw = get_recent_data(_conn, SHEET_URL, count=0)
     # 가중치 계산 로직 실행
-    _, skip_stats = analyze_winning_skip_distribution(df, analyze_range)
+    _, skip_stats = analyze_winning_skip_distribution(df_raw, analyze_range)
     # UI 없이 데이터만 반환하도록 함수를 다듬거나, 결과값만 추출
     return df_raw, skip_stats
     
