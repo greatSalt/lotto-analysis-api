@@ -525,6 +525,15 @@ def display_filter_setting(conn, sheet_url):
                     key = 'sakai_cnt'
                 )
             with row_col2:  # 후나츠 사카이 분류 조합 비율 선택(3:2:1,2:3:1,...)
+                if Config.DEBUG:# [debug console code]
+                    # 터미널이나 콘솔 창에서 필터링 과정을 정확하게 추적할 수 있습니다.
+                    log_msg = f"--- 디버그 로그 ---"
+                    st.session_state.filter_debug_logs.append(log_msg)
+                    log_msg = f"시트에서 로드된 값: '{st.session_state.sakai_ratio}'"
+                    st.session_state.filter_debug_logs.append(log_msg)
+                    log_msg = f"타입 확인: {type(st.session_state.sakai_ratio)}"
+                    st.session_state.filter_debug_logs.append(log_msg)
+                    
                 ratio_options = ["선택 안 함", "3:3:3 비율"]
                 if 'sakai_ratio' not in st.session_state:
                     st.session_state.sakai_ratio = ["3:3:3 비율"]
