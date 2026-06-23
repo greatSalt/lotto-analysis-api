@@ -80,8 +80,8 @@ def generate_strategic_combinations(selected_df, ratio_filters, sum_range, skip_
         
         if sakai_cnt < 0:   sakai_cnt = 0
             
-         # 선택된 번호 외에 선택받지 못한 나머지 번호들만 쏙 골라내는 필터링
-        rested_nums = [n for n in range(1,46) if n not in selected_nums]
+         # 선택된 번호 번호와 제외수를 뺀 선택받지 못한 나머지 번호들만 쏙 골라내는 필터링
+        rested_nums = [n for n in range(1,46) if n not in selected_nums and n not in exclude_nums]
         # 나머지 번호 추출 대상에서 고정수 제외 (고정수는 나중에 합류)
         pool_for_resting = [n for n in rested_nums if n not in fixed_nums]
         # 나머지 번호별 가중치 리스트 산출
