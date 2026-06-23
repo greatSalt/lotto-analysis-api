@@ -537,11 +537,15 @@ def display_filter_setting(conn, sheet_url):
                 if 'sakai_ratio' not in st.session_state:
                     st.session_state.sakai_ratio = ["3:3:3 비율"]
                 
-                st.multiselect(
+                selected_values = st.multiselect(
                     "조합 비율",    
-                    options=ratio_options, 
-                    key='sakai_ratio'
+                    options=ratio_options,
+                    default = st.session_state.sakai_ratio,
+                    key='sakai_ratio_widget'
                 )
+                if  selected_values != st.session_state.sakai_ratio:
+                    st.session_state.sakai_ratio = selected_values
+                    
                 if Config.DEBUG:# [debug console code]
                     # 터미널이나 콘솔 창에서 필터링 과정을 정확하게 추적할 수 있습니다.
                     log_msg = f"--- 디버그 로그 ---"
