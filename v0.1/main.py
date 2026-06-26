@@ -266,32 +266,19 @@ elif menu == "콜드 번호 추출":
 elif menu == "📊 백테스팅":
     st.title("🔮백테스팅")
     
+    if Config.DEBUG:    # [debug console]
+        st.session_state.filter_debug_logs = [] # 하단 콘솔창을 완전 깨끗하게 비웁니다!
+        st.success("📟 [SYSTEM] Back testing menu start ...")
+        
     bt_main_func()
-    '''
-    # 1. 기존 주기 가중치 테이블 로드 (UI 함수 활용)
-    # 당첨번호 주기 분석 메뉴에서 계산되어 세션에 적재된 가중치 연동
-    if 'skip_weight_df' in st.session_state:
-        weight_table = st.session_state.skip_weight_df
         
-        if Config.DEBUG:
-            # [debug console] 새 조합 연산이 시작되므로 하단 콘솔창을 완전 깨끗하게 비웁니다!
-            st.session_state.filter_debug_logs = []
-            st.success("📟 [SYSTEM] 주기 가중치 헤더와 이월수 개별 편차 엔진의 결합을 완료했습니다.")
+    # 2. 융합 엔진 기동 및 25주 전수 백테스팅 결과 수집
+    #fusion_report_df = run_carryover_fusion_backtest(df_raw, weight_table, test_rounds=25)
         
-        # 2. 융합 엔진 기동 및 25주 전수 백테스팅 결과 수집
-        fusion_report_df = run_carryover_fusion_backtest(df_raw, weight_table, test_rounds=25)
-        
-        # 3. 화면 시각화 출력
-        st.subheader("📊 주기 가중치 연동형 이월수 25주 백테스트 리포트")
-        st.dataframe(fusion_report_df, use_container_width=True, hide_index=True)
-        
-        # 4. 통계 스코어 자동 산출
-        hit_rate = (fusion_report_df['개수판정'] == "🎯 적중").mean() * 100
-        close_rate = (fusion_report_df['개수판정'] == "✅ 근접").mean() * 100
-        st.info(f"💡 **가중치 결합 엔진 최종 성적표** ➔ 개수 정밀 적중률: **{hit_rate:.1f}%** | 허용 오차 이내 근접률: **{close_rate:.1f}%**")
-    else:
-        st.warning("⚠️ '당첨번호 주기 분석' 메뉴를 먼저 클릭하여 주기별 가중치 데이터를 활성화(세션 등록)해 주세요.")
-    '''
+    # 4. 통계 스코어 자동 산출
+    #hit_rate = (fusion_report_df['개수판정'] == "🎯 적중").mean() * 100
+    #close_rate = (fusion_report_df['개수판정'] == "✅ 근접").mean() * 100
+    #st.info(f"💡 **가중치 결합 엔진 최종 성적표** ➔ 개수 정밀 적중률: **{hit_rate:.1f}%** | 허용 오차 이내 근접률: **{close_rate:.1f}%**")
 
 elif menu == "🎯 추천번호 분석":
     st.title("🎯 v2.5 전략 추천번호")

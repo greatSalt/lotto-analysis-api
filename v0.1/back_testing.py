@@ -25,7 +25,7 @@ def bt_sel_func():
             "Back Testing",    
             options=func_options,
             index=func_options.index(st.session_state.f_opt), # 현재 저장된 값의 인덱스 지정
-            key='func_opt_widget'
+            key='f_opt'
         )
                     
     st.divider()
