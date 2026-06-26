@@ -50,7 +50,7 @@ analyze_range = st.sidebar.slider(
 )
 
 # 데이터가 로드될 때 가중치도 함께 세트로 반환받습니다.
-df_raw, current_stats = get_and_compute_weights(conn, SHEET_URL, analyze_range)
+df_raw, current_stats, df_crazy = get_and_compute_weights(conn, SHEET_URL, analyze_range)
 # 모든 메뉴에서 사용할 공통 분석 데이터 (슬라이싱)
 df = df_raw.head(analyze_range).copy()
 # 세션에 가중치 자동 갱신

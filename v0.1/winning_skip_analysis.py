@@ -16,7 +16,7 @@ def get_and_compute_weights(_conn, SHEET_URL, analyze_range):
     df_crazy = get_crazy_analysis(df_raw) # 크레이지 엔진 호출
         
     # UI 없이 데이터만 반환하도록 함수를 다듬거나, 결과값만 추출
-    return df_raw, skip_stats
+    return df_raw, skip_stats, df_crazy
     
 def analyze_winning_skip_distribution(history_df, target_rounds=10):
     """
