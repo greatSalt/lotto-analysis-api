@@ -18,6 +18,7 @@ from winning_skip_analysis import analyze_winning_skip_distribution, render_skip
 from target_end_analysis import render_target_end_analysis
 from comprehensive_analysis import render_comprehensive_analysis
 from funatsu_sakai import render_sakai_analysis 
+from back_testing import bt_main_func
 
 st.set_page_config(page_title="로또 분석 프로 v0.1", layout="wide")
 conn = st.connection("gsheets", type=GSheetsConnection)
@@ -65,7 +66,7 @@ if 'filter_debug_logs' not in st.session_state:
     st.session_state.filter_debug_logs = []
 
 with st.sidebar:
-    menu = st.sidebar.radio("기능 선택", ["데이터 입력", "크레이지 번호 추출", "콜드 번호 추출", "특정 번호 분석", "📊 이월수 예측", "🎯 추천번호 분석", "당첨번호 주기 분석", "동끝수 상세 분석", "종합 분석", "후나츠 사카이 분류"], on_change=trigger_reload)
+    menu = st.sidebar.radio("기능 선택", ["데이터 입력", "크레이지 번호 추출", "콜드 번호 추출", "특정 번호 분석", "📊 백테스팅", "🎯 추천번호 분석", "당첨번호 주기 분석", "동끝수 상세 분석", "종합 분석", "후나츠 사카이 분류"], on_change=trigger_reload)
     display_sidebar_picks(conn, SHEET_URL) # 👈 어떤 메뉴에서든 내 번호가 보임
 
 if menu == "데이터 입력":
@@ -258,9 +259,11 @@ elif menu == "콜드 번호 추출":
     else:
         st.error("데이터를 불러올 수 없습니다.")         
         
-elif menu == "📊 이월수 예측":
-    st.title("🔮이월수 전략 시뮬레이터 v2.0 (융합형)")
+elif menu == "📊 백테스팅":
+    st.title("🔮백테스팅")
     
+    bt_main_func()
+    '''
     # 1. 기존 주기 가중치 테이블 로드 (UI 함수 활용)
     # 당첨번호 주기 분석 메뉴에서 계산되어 세션에 적재된 가중치 연동
     if 'skip_weight_df' in st.session_state:
@@ -284,8 +287,7 @@ elif menu == "📊 이월수 예측":
         st.info(f"💡 **가중치 결합 엔진 최종 성적표** ➔ 개수 정밀 적중률: **{hit_rate:.1f}%** | 허용 오차 이내 근접률: **{close_rate:.1f}%**")
     else:
         st.warning("⚠️ '당첨번호 주기 분석' 메뉴를 먼저 클릭하여 주기별 가중치 데이터를 활성화(세션 등록)해 주세요.")
-    
-    
+    '''
 
 elif menu == "🎯 추천번호 분석":
     st.title("🎯 v2.5 전략 추천번호")
