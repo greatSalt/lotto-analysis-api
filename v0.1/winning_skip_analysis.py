@@ -81,8 +81,6 @@ def render_skip_group_weight_ui(group_stats, auto_mode=False):
     """
     group_stats: 이미 구간별 평균 비중(확률)이 계산된 데이터프레임
     """
-    st.markdown("### ⚙️ 구간별 당첨 통계 및 가중치 설정 (회차 비중 방식)")
-    
     # [핵심] 확률의 10배를 기본 가중치로 설정
     group_stats['가중치'] = (group_stats['확률'] * 10).round(2)
     
@@ -99,6 +97,7 @@ def render_skip_group_weight_ui(group_stats, auto_mode=False):
     if auto_mode:
         return st.session_state.skip_weight_df
 
+    st.markdown("### ⚙️ 구간별 당첨 통계 및 가중치 설정 (회차 비중 방식)")
     # 4. 일반 모드: UI 렌더링
     st.info("💡 **회차별 비중 합산 방식**으로 계산되었습니다. 콜드번호 구간의 확률이 더 합리적으로 산출됩니다.")
     
