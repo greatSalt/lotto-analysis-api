@@ -75,7 +75,7 @@ with st.sidebar:
 
 if menu == "데이터 입력":
     try:
-        st.title("🎰 로또 데이터 입력 및 조합 분석")
+        st.subheader("🎰 로또 데이터 입력 및 조합 분석")
         data_input_func(conn, SHEET_URL, df, analyze_range)
     except Exception as e:
         # 에러가 나면 화면에 에러 서류를 길게 출력해서 붙잡아둠
