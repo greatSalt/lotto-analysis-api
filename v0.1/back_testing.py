@@ -11,13 +11,15 @@ def bt_main_func():
         st.subheader("🧪 멸구간 예측 백테스팅")
         # run_empty_zone_backtest() 호출
         pass
+    else:
+        pass
     
 def bt_sel_func():
     col1, _ = st.columns(2)
     with col1: 
         func_options = ["선택 안 함", "이월수 예측",  "멸구간 예측"]
         if 'f_opt' not in st.session_state or st.session_state.f_opt not in func_options:
-            st.session_state.f_opt = ["선택 안 함"]
+            st.session_state.f_opt = "선택 안 함"
         
         st.selectbox(
             "Back Testing",    
