@@ -16,17 +16,15 @@ def bt_sel_func():
     col1, _ = st.columns(2)
     with col1: 
         func_options = ["선택 안 함", "이월수 예측",  "멸구간 예측"]
-        if 'f_opt' not in st.session_state:
+        if 'f_opt' not in st.session_state or st.session_state.f_opt not in func_options:
             st.session_state.f_opt = ["선택 안 함"]
         
-        selected_values = st.selectbox(
+        st.selectbox(
             "Back Testing",    
             options=func_options,
             index=func_options.index(st.session_state.f_opt), # 현재 저장된 값의 인덱스 지정
             key='func_opt_widget'
         )
-        if  selected_values != st.session_state.f_opt:
-            st.session_state.f_opt = selected_values
                     
     st.divider()
     
