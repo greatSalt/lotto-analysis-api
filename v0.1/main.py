@@ -54,7 +54,11 @@ df_raw, current_stats = get_and_compute_weights(conn, SHEET_URL, analyze_range)
 # 모든 메뉴에서 사용할 공통 분석 데이터 (슬라이싱)
 df = df_raw.head(analyze_range).copy()
 # 세션에 가중치 자동 갱신
-st.session_state.skip_weight_df = render_skip_group_weight_ui(current_stats, auto_mode=True)
+if skip_weight_df not in st.session_state:
+    st.session_state.skip_weight_df = render_skip_group_weight_ui(current_stats, auto_mode=True)
+# 1~45번 전체의 실시간 현재스킵을 딕셔너리로 저장 (41번: 0)
+if skip_dict not in st.session_state:
+    st.session_state.skip_dict = dict(zip(df_crazy['번호'], df_crazy['현재스킵']))
     
     
 # 메뉴가 바뀌었으므로 다음 화면 갱신 때 시트를 강제로 읽으라고 신호를 줌

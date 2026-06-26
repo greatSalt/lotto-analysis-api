@@ -22,7 +22,7 @@ def bt_sel_func():
         selected_values = st.selectbox(
             "Back Testing",    
             options=func_options,
-            default = st.session_state.f_opt,
+            index=func_options.index(st.session_state.f_opt), # 현재 저장된 값의 인덱스 지정
             key='func_opt_widget'
         )
         if  selected_values != st.session_state.f_opt:

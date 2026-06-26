@@ -15,9 +15,6 @@ def get_and_compute_weights(_conn, SHEET_URL, analyze_range):
      # 통계와 별개로, 현재 1~45번이 '지금' 몇 주기에 있는지 크레이지 로직으로 계산합니다.
     df_crazy = get_crazy_analysis(df_raw) # 크레이지 엔진 호출
         
-    # 1~45번 전체의 실시간 현재스킵을 딕셔너리로 저장 (41번: 0)
-    st.session_state.skip_dict = dict(zip(df_crazy['번호'], df_crazy['현재스킵']))
-        
     # UI 없이 데이터만 반환하도록 함수를 다듬거나, 결과값만 추출
     return df_raw, skip_stats
     
