@@ -34,7 +34,7 @@ def data_input_func(conn, sheet_url, df, analyze_range):
             "n6": current_nums[5], 
             "bonus": bonus
         }
-        save_to_gsheet(conn, sheet_url, worksheet='시트1', data_to_save)
+        save_to_gsheet(conn, sheet_url, '시트1', data_to_save)
         # 기존에 캐싱된 로또 raw 데이터(df_raw 등)를 메모리에서 강제 삭제
         # (이렇게 해야 앱이 다시 켜질 때 구글 시트에서 최신 데이터를 처음부터 새로 긁어옵니다.)
         st.cache_data.clear()
@@ -72,7 +72,7 @@ def data_input_func(conn, sheet_url, df, analyze_range):
             "n5": current_nums[4], 
             "n6": current_nums[5], 
         }
-        save_to_gsheet(conn, sheet_url, worksheet='MyPickNums', data_to_save)
+        save_to_gsheet(conn, sheet_url, 'MyPickNums', data_to_save)
 
 def save_to_gsheet(conn, sheet_url, worksheet, new_data):
     """
