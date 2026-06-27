@@ -111,7 +111,7 @@ def save_to_gsheet(conn, sheet_url, worksheet, new_data):
     df = df.sort_values(by='round', ascending=False)
     
     # 5. 구글 시트 업데이트
-    conn.update(spreadsheet=sheet_url, worksheet, data=df)
+    conn.update(spreadsheet=sheet_url, worksheet=worksheet, data=df)
     
     return df
 
