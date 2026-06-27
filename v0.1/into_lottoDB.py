@@ -34,7 +34,7 @@ def data_input_func(conn, sheet_url, df, analyze_range):
             "n6": current_nums[5], 
             "bonus": bonus
         }
-        save_to_gsheet(conn, sheet_url, data_to_save)
+        save_to_gsheet(conn, sheet_url, worksheet='시트1', data_to_save)
         # 기존에 캐싱된 로또 raw 데이터(df_raw 등)를 메모리에서 강제 삭제
         # (이렇게 해야 앱이 다시 켜질 때 구글 시트에서 최신 데이터를 처음부터 새로 긁어옵니다.)
         st.cache_data.clear()
@@ -61,7 +61,60 @@ def data_input_func(conn, sheet_url, df, analyze_range):
     
         # 로우 데이터 컬럼 (한 줄 표시)
         st.code(f"분석 조합: {current_nums}")
+        
+        col_drw = 1     # 입력한 번호는 인덱스1번에만 저장
+        data_to_save = {
+            "round": int(col_drw), 
+            "n1": current_nums[0], 
+            "n2": current_nums[1], 
+            "n3": current_nums[2], 
+            "n4": current_nums[3], 
+            "n5": current_nums[4], 
+            "n6": current_nums[5], 
+        }
+        save_to_gsheet(conn, sheet_url, worksheet='MyPickNums', data_to_save)
+
+def save_to_gsheet(conn, sheet_url, worksheet, new_data):
+    """
+    new_data: {'drwNo': 1110, 'num1': 3, ...} 형태의 딕셔너리
+    """
+    try:
+        # 1. 기존 데이터 불러오기
+        df = conn.read(spreadsheet=sheet_url, worksheet, ttl=0)
+    except Exception as e:
+        st.warning(f"기존 데이터를 읽지 못했습니다: {e}")
+        # 시트가 비어있을 경우 대비
+        df = pd.DataFrame()
+
+    if worksheet == 'MyPickNums':
+        if df.empty or new_data['round'] == 1:
+            new_data['round'] = 1   # 첫 데이터라면 1회차부터 시작
+        else:
+            last_round = df.iloc[0]['round']
+            new_data['round'] = last_round + 1
+            
+    # 2. 새로운 데이터를 데이터프레임으로 변환
+    new_df = pd.DataFrame([new_data])
+    if not df.empty:
+        # 기존 df가 있다면 컬럼 순서 맞추기
+        new_df = new_df.reindex(columns=df.columns)
+        
+    # 3. 기존 데이터와 합치기 (중복 회차 제거 포함)
+    if not df.empty:
+        df = pd.concat([df, new_df], ignore_index=True)
+        # 회차(drwNo)가 중복되면 마지막에 입력한 것으로 유지
+        df = df.drop_duplicates(['round'], keep='last')
+    else:
+        df = new_df
+
+    # 4. 회차(round) 기준 내림차순 정렬 (최신순)
+    df = df.sort_values(by='round', ascending=False)
     
+    # 5. 구글 시트 업데이트
+    conn.update(spreadsheet=sheet_url, worksheet, data=df)
+    
+    return df
+'''    
 def save_to_gsheet(conn, sheet_url, new_data):
     """
     new_data: {'drwNo': 1110, 'num1': 3, ...} 형태의 딕셔너리
@@ -92,9 +145,9 @@ def save_to_gsheet(conn, sheet_url, new_data):
     conn.update(spreadsheet=sheet_url, data=df)
     
     return df
-    
+'''    
 @st.cache_data # 이 함수는 500개의 데이터를 한 번 가져오면 메모리에 저장해둡니다. 슬라이더를 움직여도 구글 시트에 다시 접속하지 않고 메모리에서 꺼내옵니다.
-def get_recent_data(_conn, sheet_url, count=0): # conn -> _conn 으로 변경
+def get_recent_data(_conn, sheet_url, worksheet, count=0): # conn -> _conn 으로 변경
     """
     인자 앞에 '_'를 붙이면 Streamlit은 이 인자의 변화를 
     캐시 체크용 해시 계산에서 제외합니다.
@@ -104,7 +157,7 @@ def get_recent_data(_conn, sheet_url, count=0): # conn -> _conn 으로 변경
     # 예: sheet = _conn.open_by_url(url)
     try:
         # 1. 데이터 읽기
-        df = _conn.read(spreadsheet=sheet_url, ttl=0)
+        df = _conn.read(spreadsheet=sheet_url, worksheet, ttl=0)
         
         if df.empty:
             return pd.DataFrame()
