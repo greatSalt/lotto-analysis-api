@@ -270,7 +270,7 @@ elif menu == "📊 백테스팅":
         st.session_state.filter_debug_logs = [] # 하단 콘솔창을 완전 깨끗하게 비웁니다!
         st.success("📟 [SYSTEM] Back testing menu start ...")
         
-    bt_main_func()
+    bt_main_func(df_raw)
         
     # 2. 융합 엔진 기동 및 25주 전수 백테스팅 결과 수집
     #fusion_report_df = run_carryover_fusion_backtest(df_raw, weight_table, test_rounds=25)

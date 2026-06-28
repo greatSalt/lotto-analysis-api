@@ -80,7 +80,7 @@ def data_input_func(conn, sheet_url, df, analyze_range):
         latest_row = df_raw.iloc[0]
         picked_nums = [latest_row[f'n{i}'] for i in range(1, 7)]
         status_map, _ = get_detailed_status(0, df)
-        render_ball_ui(picked_nums, status_map)
+        render_ball_ui(picked_nums, status_map, size=45)
 
 def save_to_gsheet(conn, sheet_url, worksheet, new_data):
     """
@@ -238,16 +238,16 @@ def analyze_combination(input_nums, df, analyze_range):
     
     return analysis_df, metrics
 
-def render_ball_ui(nums, status_map):
+def render_ball_ui(nums, status_map, size):
     # 디자인 스타일 정의 (유지보수 용이)
-    size = 45 # 전체 크기 결정 (이 숫자만 바꾸면 공이 커지거나 작아짐)
+    #size = 45 # 전체 크기 결정 (이 숫자만 바꾸면 공이 커지거나 작아짐)
 
     base_style = (
         f"width: {size}px; "
         f"height: {size}px; "
         f"line-height: {size}px; "
         "padding: 0; "
-        "margin: 5px; "              # 공 사이 간격 
+        f"margin: {size/9}px; "              # 공 사이 간격 
         "border-radius: 50%; "        # 50%는 항상 완벽한 원
         "text-align: center; "
         "display: inline-block; "
@@ -271,3 +271,5 @@ def render_ball_ui(nums, status_map):
         balls_html += f'<span style="{base_style} background-color:{bg}; color:{color}; border:{border};">{n}</span>'
     balls_html += '</div>'
     st.markdown(balls_html, unsafe_allow_html=True)
+    
+    return balls_html
