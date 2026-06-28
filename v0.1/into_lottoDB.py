@@ -150,6 +150,13 @@ def get_recent_data(_conn, sheet_url, worksheet, count=0): # conn -> _conn 으�
             else:
                 df = df.head(count) # 최근 count개만 가져옴
             
+        # 숫자형 컬럼만 선택하여 정수로 변환
+        # 로또 번호나 회차처럼 정수여야 하는 컬럼명을 리스트로 지정합니다.
+        cols_to_int = ['round', 'n1', 'n2', 'n3', 'n4', 'n5', 'n6']
+        for col in cols_to_int:
+            if col in df.columns:
+                df[col] = df[col].fillna(0).astype(int)
+                
         return df
     except Exception as e:
         st.error(f"데이터 로드 실패: {e}")
@@ -233,7 +240,17 @@ def analyze_combination(input_nums, df, analyze_range):
 
 def render_ball_ui(nums, status_map):
     # 디자인 스타일 정의 (유지보수 용이)
-    base_style = "padding:4px 10px; margin:2px; border-radius:15px; border:1px solid #777; font-weight:bold; display:inline-block; font-size:14px; text-align:center;"
+    size = 45 # 전체 크기 결정 (이 숫자만 바꾸면 공이 커지거나 작아짐)
+
+    base_style = (
+        f"width: {size}px; "
+        f"height: {size}px; "
+        f"line-height: {size}px; " # 이 3개를 묶어서 하나의 변수로 관리
+        "padding: 0; "
+        "border-radius: 50%; " # 모양은 고정
+        "text-align: center; "
+        "display: inline-block; "
+    )
     
     balls_html = '<div style="margin-top:15px; margin-bottom:15px;">'
     for n in nums:
