@@ -3,6 +3,7 @@ import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 from crazyLogic import get_crazy_analysis
 from coldNum import get_cold_analysis
+from comprehensive_analysis import get_detailed_status
 
 def data_input_func(conn, sheet_url, df, analyze_range):
     col_drw = st.number_input("회차", min_value=1, step=1)
@@ -73,6 +74,11 @@ def data_input_func(conn, sheet_url, df, analyze_range):
             "n6": current_nums[5], 
         }
         save_to_gsheet(conn, sheet_url, 'MyPickNums', data_to_save)
+        
+    df_raw = get_recent_data(conn, sheet_url, 'MyPickNums', count=1)
+    if not df_raw.empty:
+        status_map, _ = get_detailed_status(0, df_raw)
+        render_ball_ui(current_nums, status_map)
 
 def save_to_gsheet(conn, sheet_url, worksheet, new_data):
     """
@@ -137,7 +143,10 @@ def get_recent_data(_conn, sheet_url, worksheet, count=0): # conn -> _conn 으�
         
         # 3. 인자(count)에 따라 데이터 자르기
         if count > 0:
-            df = df.head(count) # 최근 count개만 가져옴
+            if worksheet == 'MyPickNums':
+                df = df.tail(count)
+            else:
+                df = df.head(count) # 최근 count개만 가져옴
             
         return df
     except Exception as e:
@@ -219,3 +228,24 @@ def analyze_combination(input_nums, df, analyze_range):
     }
     
     return analysis_df, metrics
+
+def render_ball_ui(nums, status_map):
+def render_ball_ui(nums, status_map):
+    # 디자인 스타일 정의 (유지보수 용이)
+    base_style = "padding:4px 10px; margin:2px; border-radius:15px; border:1px solid #777; font-weight:bold; display:inline-block; font-size:14px; text-align:center;"
+    
+    balls_html = '<div style="margin-top:15px; margin-bottom:15px;">'
+    for n in nums:
+        status = status_map.get(n, "UNKNOWN")
+        # 상태별 컬러 매핑
+        colors = {
+            "CARRY": ("#FFFFFF", "black", "2px solid #333"),
+            "HOT": ("#FF4B4B", "white", "1px solid #777"),
+            "MIDDLE": ("#FFD700", "black", "1px solid #777"),
+            "UNKNOWN": ("#1E90FF", "white", "1px solid #777")
+        }
+        bg, color, border = colors.get(status, colors["UNKNOWN"])
+        
+        balls_html += f'<span style="{base_style} background-color:{bg}; color:{color}; border:{border};">{n}</span>'
+    balls_html += '</div>'
+    st.markdown(balls_html, unsafe_allow_html=True)
