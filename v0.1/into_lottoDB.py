@@ -230,7 +230,6 @@ def analyze_combination(input_nums, df, analyze_range):
     return analysis_df, metrics
 
 def render_ball_ui(nums, status_map):
-def render_ball_ui(nums, status_map):
     # 디자인 스타일 정의 (유지보수 용이)
     base_style = "padding:4px 10px; margin:2px; border-radius:15px; border:1px solid #777; font-weight:bold; display:inline-block; font-size:14px; text-align:center;"
     
