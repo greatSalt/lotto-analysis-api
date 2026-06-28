@@ -77,8 +77,10 @@ def data_input_func(conn, sheet_url, df, analyze_range):
         
     df_raw = get_recent_data(conn, sheet_url, 'MyPickNums', count=1)
     if not df_raw.empty:
-        status_map, _ = get_detailed_status(0, df_raw)
-        render_ball_ui(current_nums, status_map)
+        latest_row = df_raw.iloc[0]
+        picked_nums = [latest_row[f'n{i}'] for i in range(1, 7)]
+        status_map, _ = get_detailed_status(0, df)
+        render_ball_ui(picked_nums, status_map)
 
 def save_to_gsheet(conn, sheet_url, worksheet, new_data):
     """
