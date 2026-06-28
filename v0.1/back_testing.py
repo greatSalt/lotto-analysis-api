@@ -45,7 +45,7 @@ def run_empty_zone_backtest(df_raw, count=25):
             row = target_rows.iloc[idx]
             round_num = row['round']
             picked_nums = [row[f'n{i}'] for i in range(1, 7)]
-            status_map, _ = get_detailed_status(idx, target_rows)
+            status_map, _ = get_detailed_status(idx, df_raw)
             ball_html = render_ball_ui(picked_nums, status_map, size=25)
 
             results.append({
