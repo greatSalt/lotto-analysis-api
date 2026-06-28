@@ -38,7 +38,7 @@ def bt_sel_func():
     
 def run_empty_zone_backtest(df_raw, count=25):
     
-    result = []
+    results = []
     if not df_raw.empty:
         target_rows = df_raw.head(count)
         for idx in range(len(target_rows)):
