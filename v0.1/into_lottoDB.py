@@ -245,11 +245,15 @@ def render_ball_ui(nums, status_map):
     base_style = (
         f"width: {size}px; "
         f"height: {size}px; "
-        f"line-height: {size}px; " # 이 3개를 묶어서 하나의 변수로 관리
+        f"line-height: {size}px; "
         "padding: 0; "
-        "border-radius: 50%; " # 모양은 고정
+        "margin: 5px; "              # 공 사이 간격 
+        "border-radius: 50%; "        # 50%는 항상 완벽한 원
         "text-align: center; "
         "display: inline-block; "
+        "font-size: 16px; "           # 공 크기에 맞춰 글자 크기 조정
+        "font-weight: bold; "
+        "border: 2px solid #555; "    # 테두리
     )
     
     balls_html = '<div style="margin-top:15px; margin-bottom:15px;">'
