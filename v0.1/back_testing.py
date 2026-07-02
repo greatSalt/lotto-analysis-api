@@ -58,7 +58,7 @@ def run_empty_zone_backtest(df_raw, count=25):
             picked_nums = [row[f'n{i}'] for i in range(1, 7)]
             emptyzones = get_empty_finder(picked_nums, zones)   # 멸구간 찾기
             status_map, _ = get_detailed_status(idx, df_raw)
-            ball_html = render_ball_ui(picked_nums, status_map, size=18)
+            ball_html = render_ball_ui(picked_nums, status_map, size=20)
 
             results.append({
                 "회차": row['round'],
