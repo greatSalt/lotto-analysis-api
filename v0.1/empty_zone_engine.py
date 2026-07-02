@@ -50,6 +50,20 @@ def get_empty_counts(target_df, zones, num_cols):
             if not any(condition(n) for n in nums):
                 counts[zone_name] += 1
     return counts
+    
+# 회차별로 멸구간 찾기
+def get_empty_finder(picked_nums, zones):
+    # 출현한 구간을 먼저 찾고, 전체 zones에서 없는 구간을 추출
+    appeared_zones = []
+        
+    for zone_name, condition in zones.items():
+        # nums 중 해당 구간(condition)에 부합하는 번호가 하나라도 있으면 True
+        if any(condition(n) for n in picked_nums):
+            appeared_zones.append(zone_name)  
+        
+    # 멸구간 = 전체 구간 - 출현한 구간
+    empty_zones = [z for z in zones.keys() if z not in appeared_zones]
+    return empty_zones
 
 def display_lotto_empty_zone_matrix(df):
     st.subheader("🕳️ v2.0 동적 멸구간 모니터링 시스템")
