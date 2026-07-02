@@ -63,7 +63,7 @@ def run_empty_zone_backtest(df_raw, count=25):
             results.append({
                 "회차": row['round'],
                 "당첨 번호 구성": ball_html, # 여기에 공 UI 삽입
-                "멸구간": ", ".join(emptyzones) if emptyzones else "없음
+                "멸구간": ", ".join(emptyzones) if emptyzones else "없음"
             })
     
         df_result = pd.DataFrame(results)
