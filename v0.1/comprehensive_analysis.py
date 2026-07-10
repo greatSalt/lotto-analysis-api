@@ -88,9 +88,9 @@ def render_comprehensive_analysis(df_raw, display_count=20):
         cold_skips = []
         for n in curr_nums:
             status = status_map.get(n)
-            if status == "CARRY": bg, color, border = "#FFFFFF", "black", "2px solid #333"
+            if status == "이월수": bg, color, border = "#FFFFFF", "black", "2px solid #333"
             elif status == "HOT": bg, color, border = "#FF4B4B", "white", "1px solid #777"
-            elif status == "MIDDLE": bg, color, border = "#FFD700", "black", "1px solid #777"
+            elif status == "WARM": bg, color, border = "#FFD700", "black", "1px solid #777"
             else: 
                 bg, color, border = "#1E90FF", "white", "1px solid #777"
                 cold_skips.append(f"{n}({skip_durations.get(n, 15)})")
