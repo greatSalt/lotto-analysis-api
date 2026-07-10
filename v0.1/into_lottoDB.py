@@ -247,7 +247,7 @@ def analyze_combination(input_nums, df, analyze_range):
     
     return analysis_df, metrics
 
-def render_ball_ui(nums, size):
+def render_ball_ui(nums, status_map, size):
     # 디자인 스타일 정의 (유지보수 용이)
     #size = 45 # 전체 크기 결정 (이 숫자만 바꾸면 공이 커지거나 작아짐)
 
