@@ -18,9 +18,9 @@ def get_detailed_status(target_idx, df_raw):
         else:
             curr_skip = found_indices[0] - (target_idx + 1)
         
-        if curr_skip == 0: status = "CARRY"
+        if curr_skip == 0: status = "이월수"
         elif 1 <= curr_skip <= 3: status = "HOT"
-        elif 4 <= curr_skip <= 14: status = "MIDDLE"
+        elif 4 <= curr_skip <= 14: status = "WARM"
         else:
             status = "COLD"
             skip_durations[n] = curr_skip
