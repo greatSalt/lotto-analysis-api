@@ -3,7 +3,8 @@ import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 from crazyLogic import get_crazy_analysis
 from coldNum import get_cold_analysis
-from comprehensive_analysis import get_detailed_status
+#from comprehensive_analysis import get_detailed_status
+from combination_engine import get_group_v2
 
 def data_input_func(conn, sheet_url, df, analyze_range):
     col_drw = st.number_input("회차", min_value=1, step=1)
@@ -85,8 +86,9 @@ def data_input_func(conn, sheet_url, df, analyze_range):
     if not df_raw.empty:
         latest_row = df_raw.iloc[0]
         picked_nums = [latest_row[f'n{i}'] for i in range(1, 7)]
-        status_map, _ = get_detailed_status(0, df)
-        balls_html = render_ball_ui(picked_nums, status_map, size=45)
+        #status_map, _ = get_detailed_status(0, df)
+        #balls_html = render_ball_ui(picked_nums, status_map, size=45)
+        balls_html = render_ball_ui(picked_nums, size=45)
         st.markdown(balls_html, unsafe_allow_html=True)
 
 def save_to_gsheet(conn, sheet_url, worksheet, new_data):
@@ -245,7 +247,7 @@ def analyze_combination(input_nums, df, analyze_range):
     
     return analysis_df, metrics
 
-def render_ball_ui(nums, status_map, size):
+def render_ball_ui(nums, size):
     # 디자인 스타일 정의 (유지보수 용이)
     #size = 45 # 전체 크기 결정 (이 숫자만 바꾸면 공이 커지거나 작아짐)
 
@@ -265,7 +267,8 @@ def render_ball_ui(nums, status_map, size):
     
     balls_html = '<div style="margin-top:15px; margin-bottom:15px;">'
     for n in nums:
-        status = status_map.get(n, "UNKNOWN")
+        #status = status_map.get(n, "UNKNOWN")
+        status = get_group_v2(n)
         # 상태별 컬러 매핑
         colors = {
             "CARRY": ("#FFFFFF", "black", "2px solid #333"),
