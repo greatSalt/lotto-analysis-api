@@ -74,6 +74,12 @@ def data_input_func(conn, sheet_url, df, analyze_range):
             "n6": current_nums[5], 
         }
         save_to_gsheet(conn, sheet_url, 'MyPickNums', data_to_save)
+        # 기존에 캐싱된 로또 raw 데이터(df_raw 등)를 메모리에서 강제 삭제
+        # (이렇게 해야 앱이 다시 켜질 때 구글 시트에서 최신 데이터를 처음부터 새로 긁어옵니다.)
+        st.cache_data.clear()
+        st.success("최종 예측 번호 조합 저장 완료!")
+        # 저장 직후 앱을 강제로 처음(상단)부터 다시 실행시켜 UI와 사이드바를 즉시 동기화
+        st.rerun()
         
     df_raw = get_recent_data(conn, sheet_url, 'MyPickNums', count=1)
     if not df_raw.empty:
