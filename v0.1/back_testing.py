@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 
 #from comprehensive_analysis import get_detailed_status
-from combination_engine import get_group_v2
 from into_lottoDB import render_ball_ui
 from empty_zone_engine import get_empty_finder
 
