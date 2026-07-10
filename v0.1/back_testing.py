@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
 
-from comprehensive_analysis import get_detailed_status
+#from comprehensive_analysis import get_detailed_status
+from combination_engine import get_group_v2
 from into_lottoDB import render_ball_ui
 from empty_zone_engine import get_empty_finder
 
@@ -57,8 +58,9 @@ def run_empty_zone_backtest(df_raw, count=25):
             round_num = row['round']
             picked_nums = [row[f'n{i}'] for i in range(1, 7)]
             emptyzones = get_empty_finder(picked_nums, zones)   # 멸구간 찾기
-            status_map, _ = get_detailed_status(idx, df_raw)
-            ball_html = render_ball_ui(picked_nums, status_map, size=20)
+            #status_map, _ = get_detailed_status(idx, df_raw)
+            #ball_html = render_ball_ui(picked_nums, status_map, size=20)
+            ball_html = render_ball_ui(picked_nums, size=20)
 
             results.append({
                 "회차": row['round'],
