@@ -267,14 +267,14 @@ def render_ball_ui(nums, size):
     
     balls_html = '<div style="margin-top:15px; margin-bottom:15px;">'
     for n in nums:
-        #status = status_map.get(n, "UNKNOWN")
+        #status = status_map.get(n, "COLD")
         status = get_group_v2(n)
         # 상태별 컬러 매핑
         colors = {
-            "CARRY": ("#FFFFFF", "black", "2px solid #333"),
+            "이월수": ("#FFFFFF", "black", "2px solid #333"),
             "HOT": ("#FF4B4B", "white", "1px solid #777"),
             "MIDDLE": ("#FFD700", "black", "1px solid #777"),
-            "UNKNOWN": ("#1E90FF", "white", "1px solid #777")
+            "COLD": ("#1E90FF", "white", "1px solid #777")
         }
         bg, color, border = colors.get(status, colors["UNKNOWN"])
         
