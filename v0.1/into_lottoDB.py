@@ -276,7 +276,7 @@ def render_ball_ui(nums, size):
             "MIDDLE": ("#FFD700", "black", "1px solid #777"),
             "COLD": ("#1E90FF", "white", "1px solid #777")
         }
-        bg, color, border = colors.get(status, colors["UNKNOWN"])
+        bg, color, border = colors.get(status, colors["COLD"])
         
         balls_html += f'<span style="{base_style} background-color:{bg}; color:{color}; border:{border};">{n}</span>'
     balls_html += '</div>'
