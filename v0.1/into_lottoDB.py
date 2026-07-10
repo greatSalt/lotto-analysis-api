@@ -79,7 +79,7 @@ def data_input_func(conn, sheet_url, df, analyze_range):
         st.cache_data.clear()
         st.success("최종 예측 번호 조합 저장 완료!")
         # 저장 직후 앱을 강제로 처음(상단)부터 다시 실행시켜 UI와 사이드바를 즉시 동기화
-        st.rerun()
+        #st.rerun()
         
     df_raw = get_recent_data(conn, sheet_url, 'MyPickNums', count=1)
     if not df_raw.empty:
