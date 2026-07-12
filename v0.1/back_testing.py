@@ -16,7 +16,7 @@ def bt_main_func(df_raw):
         st.subheader("🧪 멸구간 예측 백테스팅")
         run_empty_zone_backtest(df_raw, count=25) 
     elif selection_menu == "보너스 번호의 이월확률":
-        run_bonus_carry_backtest()
+        run_bonus_carry_backtest(df_raw, count=50)
     else:
         pass
     
