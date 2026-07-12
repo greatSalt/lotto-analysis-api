@@ -16,7 +16,7 @@ def bt_main_func(df_raw):
         st.subheader("🧪 멸구간 예측 백테스팅")
         run_empty_zone_backtest(df_raw, count=25) 
     elif selection_menu == "보너스 번호의 이월확률":
-        run_bonus_carry_backtest(df_raw, count=50)
+        run_bonus_carry_backtest(df_raw, count=25)
     else:
         pass
     
@@ -79,7 +79,7 @@ def run_empty_zone_backtest(df_raw, count=25):
          # Streamlit에서 HTML 표 출력 (unsafe_allow_html=True 필수)
         st.write(df_result.to_html(escape=False, index=False), unsafe_allow_html=True)
         
-def run_bonus_carry_backtest(df_raw, count=50):
+def run_bonus_carry_backtest(df_raw, count=25):
     
     results = []
     if not df_raw.empty:
@@ -105,17 +105,55 @@ def run_bonus_carry_backtest(df_raw, count=50):
                 if is_carry:
                     carry_text = '<span style="color:#FF4B4B; font-weight:bold;">✅ 이월</span>'
                 else:
-                    carry_text = '<span style="color:#CCCCCC;">❌ -</span>'
-            
+                    carry_text = '<span style="color:#CCCCCC;">❌ </span>'
+                
+            devitation_table = run_bonus_devitation_table(idx, df_raw)
+            stat = devitation_table[0]
+                            
             results.append({
                 "회차": row['round'],
                 "당첨 번호 구성": ball_html, # 여기에 공 UI 삽입
                 "보너스번호": bonus_ball_html,
-                "보너스번호 이월": carry_text
+                "보너스번호 이월": carry_text,
+                "50주 확률": stat['50주 확률'],
+                "10주 확률": stat['10주 확률'],
+                "확률 편차": stat['확률 편차']
             })
     
+        #df_table = pd.DataFrame(devitation_table)
         df_result = pd.DataFrame(results)
         
-         # Streamlit에서 HTML 표 출력 (unsafe_allow_html=True 필수)
+        # Streamlit에서 HTML 표 출력 (unsafe_allow_html=True 필수)
+        #st.write(df_table.to_html(escape=False, index=False), unsafe_allow_html=True)
         st.write(df_result.to_html(escape=False, index=False), unsafe_allow_html=True)
     
+def run_bonus_devitation_table(idx, df_raw):
+    
+    df_50 = df_raw[idx:idx+50].astype(int)
+    
+    sum_10 = sum_50 = 0
+    devitation_table = []
+    # 분모는 실제 루프가 돈 횟수(데이터 길이 - 1) 기준
+    n_count = len(df_50) - 1
+    
+    for n in range(n_count):
+        row = df_50.iloc[n]
+        picked_nums = [row[f'n{i}'] for i in range(1, 7)]
+        pre_bonus_num = int(df_50.iloc[n + 1]['bonus']) #이전 회차의 보너스 번호
+        is_carry = pre_bonus_num in picked_nums
+        
+        if is_carry:
+            if n < 10: sum_10 += 1
+            sum_50 += 1
+            
+    devitation_50 = sum_50 / n_count * 100
+    devitation_10 = sum_10 / 10.0 * 100
+    devitation_res = devitation_50 - devitation_10
+    
+    devitation_table.append({
+        "50주 확률" : f"{devitation_50:.1f}%",
+        "10주 확률" : f"{devitation_10:.1f}%",
+        "확률 편차" : f"{devitation_res:.1f}%"
+    })     
+    
+    return devitation_table
