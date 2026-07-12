@@ -23,18 +23,25 @@ def bt_sel_func():
     col1, _ = st.columns(2)
     with col1: 
         func_options = ["선택 안 함", "이월수 예측",  "멸구간 예측"]
-        if 'f_opt' not in st.session_state or st.session_state.f_opt not in func_options:
+        
+        # 1. 세션 스테이트 초기화 (존재하지 않을 때만)
+        if 'f_opt' not in st.session_state:
             st.session_state.f_opt = "선택 안 함"
         
+        # 2. 안전한 인덱스 계산 (데이터 검증 포함)
+        current_val = st.session_state.f_opt
+        # 현재 값이 리스트에 없으면 기본값(0) 사용
+        target_index = func_options.index(current_val) if current_val in func_options else 0
+        
+        # 3. 위젯 설정
         st.selectbox(
             "Back Testing",    
             options=func_options,
-            index=func_options.index(st.session_state.f_opt), # 현재 저장된 값의 인덱스 지정
+            index=target_index,
             key='f_opt'
         )
                     
     st.divider()
-    
     return st.session_state.f_opt
     
 def run_empty_zone_backtest(df_raw, count=25):
