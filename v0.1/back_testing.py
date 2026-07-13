@@ -131,7 +131,7 @@ def run_bonus_devitation_table(idx, df_raw):
     
     df_50 = df_raw[idx:idx+50].astype(int)
     
-    sum_10 = sum_50 = 0
+    sum_4 = sum_50 = 0
     devitation_table = []
     # 분모는 실제 루프가 돈 횟수(데이터 길이 - 1) 기준
     n_count = len(df_50) - 1
@@ -143,16 +143,16 @@ def run_bonus_devitation_table(idx, df_raw):
         is_carry = pre_bonus_num in picked_nums
         
         if is_carry:
-            if n < 10: sum_10 += 1
+            if n < 4: sum_4 += 1
             sum_50 += 1
             
     devitation_50 = sum_50 / n_count * 100
-    devitation_10 = sum_10 / 10.0 * 100
-    devitation_res = devitation_50 - devitation_10
+    devitation_4 = sum_4 / 4.0 * 100
+    devitation_res = devitation_50 - devitation_4
     
     devitation_table.append({
         "50주 확률" : f"{devitation_50:.1f}%",
-        "10주 확률" : f"{devitation_10:.1f}%",
+        "4주 확률" : f"{devitation_4:.1f}%",
         "확률 편차" : f"{devitation_res:.1f}%"
     })     
     
