@@ -116,7 +116,7 @@ def run_bonus_carry_backtest(df_raw, count=25):
                 "보너스번호": bonus_ball_html,
                 "보너스번호 이월": carry_text,
                 "50주 확률": stat['50주 확률'],
-                "10주 확률": stat['10주 확률'],
+                "4주 확률": stat['4주 확률'],
                 "확률 편차": stat['확률 편차']
             })
     
