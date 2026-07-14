@@ -115,7 +115,7 @@ def run_bonus_carry_backtest(df_raw, count=25):
                 "당첨 번호 구성": ball_html, # 여기에 공 UI 삽입
                 "보너스번호": bonus_ball_html,
                 "보너스번호 이월": carry_text,
-                "18주 확률": stat['18주 확률'],
+                "25주 확률": stat['25주 확률'],
                 "4주 확률": stat['4주 확률'],
                 "확률 편차": stat['확률 편차']
             })
@@ -129,29 +129,29 @@ def run_bonus_carry_backtest(df_raw, count=25):
     
 def run_bonus_devitation_table(idx, df_raw):
     
-    df_18 = df_raw[idx:idx+18].astype(int)
+    df_25 = df_raw[idx:idx+25].astype(int)
     
-    sum_4 = sum_18 = 0
+    sum_4 = sum_25 = 0
     devitation_table = []
     # 분모는 실제 루프가 돈 횟수(데이터 길이 - 1) 기준
-    n_count = len(df_18) - 1
+    n_count = len(df_25) - 1
     
     for n in range(n_count):
-        row = df_18.iloc[n]
+        row = df_25.iloc[n]
         picked_nums = [row[f'n{i}'] for i in range(1, 7)]
-        pre_bonus_num = int(df_18.iloc[n + 1]['bonus']) #이전 회차의 보너스 번호
+        pre_bonus_num = int(df_25.iloc[n + 1]['bonus']) #이전 회차의 보너스 번호
         is_carry = pre_bonus_num in picked_nums
         
         if is_carry:
             if n < 4: sum_4 += 1
-            sum_18 += 1
+            sum_25 += 1
             
-    devitation_18 = sum_18 / n_count * 100
+    devitation_25 = sum_25 / n_count * 100
     devitation_4 = sum_4 / 4.0 * 100
-    devitation_res = devitation_18 - devitation_4
+    devitation_res = devitation_25 - devitation_4
     
     devitation_table.append({
-        "18주 확률" : f"{devitation_18:.1f}%",
+        "25주 확률" : f"{devitation_25:.1f}%",
         "4주 확률" : f"{devitation_4:.1f}%",
         "확률 편차" : f"{devitation_res:.1f}%"
     })     
