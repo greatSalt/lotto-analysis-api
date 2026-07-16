@@ -166,10 +166,10 @@ def get_crazy_analysis(df):
         # --- [F] 최종 통합 점수 산출 (V2.2 가중치 모델) ---
         # 반등(30%) + 기세(50%) + 에너지(10%) + 탄성(5%) + 리듬(5%) = 100%
         total_score = (
-            (rebound_part * 0.30) + 
-            (streak_part * 0.50) + 
-            (energy_part * 0.10) + 
-            (bridge_final_part * 0.05) + 
+            #(rebound_part * 0.30) + 
+            #(streak_part * 0.50) + 
+            #(energy_part * 0.10) + 
+            #(bridge_final_part * 0.05) + 
             (rhythm_final_part * 0.05)
         )
         
