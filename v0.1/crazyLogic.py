@@ -171,7 +171,8 @@ def get_crazy_analysis(df):
             #(streak_part * 0.50) + 
             #(energy_part * 0.10) + 
             #(bridge_final_part * 0.05) + 
-            (rhythm_final_part * 0.05)
+            #(rhythm_final_part * 0.05)
+            rhythm_final_part
         )
         
         # --- [G] 추가 보정 및 필터링 ---
