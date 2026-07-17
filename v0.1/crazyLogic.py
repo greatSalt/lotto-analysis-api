@@ -206,8 +206,8 @@ def get_crazy_analysis(df):
                 total_score *= 0.3'''
 #----------------------mycode--------------------------------------------------------------
 
-        # 최종 점수 범위 제한 (0~100)
-        total_score = max(0, min(100, total_score))
+        # 최종 점수 범위 제한 (0~200)
+        total_score = max(0, min(200, total_score))
         
         # --- [G] 최종 결과 데이터 구성 (모든 컬럼 포함) ---
         results.append({
