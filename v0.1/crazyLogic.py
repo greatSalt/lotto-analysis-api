@@ -162,7 +162,7 @@ def get_crazy_analysis(df):
         # 5. 리듬 점수 (10%): 전체 주기의 규칙성 (rhythm_score)
         # (앞서 선언된 rhythm_score 변수 사용)
         #rhythm_final_part = rhythm_score
-        rhythm_final_part = min(100, (100 - sync_val))
+        rhythm_final_part = min(100, (1 - sync_val)*100) + rhythm_score
         
         # --- [F] 최종 통합 점수 산출 (V2.2 가중치 모델) ---
         # 반등(30%) + 기세(50%) + 에너지(10%) + 탄성(5%) + 리듬(5%) = 100%
@@ -213,6 +213,7 @@ def get_crazy_analysis(df):
         results.append({
             "번호": num,
             "통합크레이지점수": round(total_score, 1),
+            "동기화지수": round(sync_val, 2)
             "변동성": round(rhythm_std, 2),        # 표준편차(Sigma) - 리듬점수의 근거
             "박자상태": rhythm_status,
             "평균스킵": round(avg_skip, 1),
