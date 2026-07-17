@@ -213,7 +213,7 @@ def get_crazy_analysis(df):
         results.append({
             "번호": num,
             "통합크레이지점수": round(total_score, 1),
-            "동기화지수": round(sync_val, 2)
+            "동기화지수": round(sync_val, 2),
             "변동성": round(rhythm_std, 2),        # 표준편차(Sigma) - 리듬점수의 근거
             "박자상태": rhythm_status,
             "평균스킵": round(avg_skip, 1),
