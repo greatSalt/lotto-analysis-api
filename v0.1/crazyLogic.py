@@ -212,6 +212,12 @@ def get_crazy_analysis(df):
         # --- [G] 최종 결과 데이터 구성 (모든 컬럼 포함) ---
         results.append({
             "번호": num,
+            "통합크레이지점수": round(total_score, 1),
+            "변동성": round(rhythm_std, 2),        # 표준편차(Sigma) - 리듬점수의 근거
+            "박자상태": rhythm_status,
+            "평균스킵": round(avg_skip, 1),
+            "현재스킵": current_skip,
+            "리듬점수": round(rhythm_score, 1),     # 규칙성
             "출현수": count_in_range,
             "출현율": round(occurrence_rate, 1),
             "출현기대치": "hot" if is_hot_number else "cold", 
@@ -221,14 +227,8 @@ def get_crazy_analysis(df):
             "탄성점수": round(bridge_score, 1),
             "반등지수": round(rebound_index, 2),
             "에너지지수": round(energy_index, 2),
-            "평균스킵": round(avg_skip, 1),
             "직전스킵": last_skip,
-            "현재스킵": current_skip,
-            "변동성": round(rhythm_std, 2),        # 표준편차(Sigma) - 리듬점수의 근거
-            "리듬점수": round(rhythm_score, 1),     # 규칙성
-            "박자상태": rhythm_status,
-            "임계점": "🔥반등임박" if is_critical else "⏳에너지충전",
-            "통합크레이지점수": round(total_score, 1)
+            "임계점": "🔥반등임박" if is_critical else "⏳에너지충전" 
         })
 
     return pd.DataFrame(results)

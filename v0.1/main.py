@@ -118,6 +118,12 @@ elif menu == "크레이지 번호 추출":
                     "No.": st.column_config.NumberColumn("No.", format="%d"),
                     "선택": st.column_config.CheckboxColumn("선택", default=False),
                     "번호": st.column_config.NumberColumn("번호"),
+                    "통합크레이지점수": st.column_config.NumberColumn("최종점수", format="%.1f"),
+                    "변동성": st.column_config.NumberColumn("변동성", format="%.2f"),
+                    "박자상태": st.column_config.TextColumn("박자상태"), # ✅ 추가 (🔥 표시용)   
+                    "평균스킵": st.column_config.NumberColumn("평균스킵", format="%.1f"),
+                    "현재스킵": st.column_config.NumberColumn("현재스킵", format="%d"),
+                    "리듬점수": st.column_config.NumberColumn("리듬점수", format="%.1f"),
                     "출현수": st.column_config.NumberColumn("출현수"),
                     "출현율": st.column_config.NumberColumn("출현율", format="%.1f"),
                     "출현기대치": st.column_config.TextColumn("출현기대치"),
@@ -127,14 +133,8 @@ elif menu == "크레이지 번호 추출":
                     "탄성점수": st.column_config.NumberColumn("탄성점수", format="%.1f"),
                     "반등지수": st.column_config.NumberColumn("반등지수", format="%.1f"),
                     "에너지지수": st.column_config.NumberColumn("에너지", format="%.2f"),
-                    "평균스킵": st.column_config.NumberColumn("평균스킵", format="%.1f"),
                     "직전스킵": st.column_config.NumberColumn("직전스킵", format="%d"),
-                    "현재스킵": st.column_config.NumberColumn("현재스킵", format="%d"),
-                    "변동성": st.column_config.NumberColumn("변동성", format="%.2f"),
-                    "리듬점수": st.column_config.NumberColumn("리듬점수", format="%.1f"),
-                    "박자상태": st.column_config.TextColumn("박자상태"), # ✅ 추가 (🔥 표시용)   
-                    "임계점": st.column_config.TextColumn("임계점"), # ✅ 추가 (🔥 표시용)
-                    "통합크레이지점수": st.column_config.NumberColumn("최종점수", format="%.1f")
+                    "임계점": st.column_config.TextColumn("임계점") # ✅ 추가 (🔥 표시용)
                 },
 
                 disabled=[c for c in display_df.columns if c != '선택']
