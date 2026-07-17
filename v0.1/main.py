@@ -45,7 +45,7 @@ analyze_range = st.sidebar.slider(
     "통합 분석 범위 (최근 회차)", 
     min_value=5, 
     max_value=300, 
-    value=30, 
+    value=25, 
     step=5
 )
 
