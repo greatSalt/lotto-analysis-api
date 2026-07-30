@@ -125,7 +125,8 @@ def get_crazy_analysis(df):
         
         # 1. 반등 점수 (30%): 현재 타이밍 (rebound_index 기반)
         # 1.0~1.5 구간에서 피크를 찍고, 그 이상(과냉각)일 경우 완만하게 하락
-        rebound_part = min(100, rebound_index * 75) if rebound_index <= 1.5 else max(0, 100 - (rebound_index * 10))
+        #rebound_part = min(100, rebound_index * 75) if rebound_index <= 1.5 else max(0, 100 - (rebound_index * 10))
+        rebound_part = rebound_index * 100
 
 #------------------------------------------------------------------------------------------        
         # 2. 기세 점수 (25%): 연속 폭발력 (streak_part)
@@ -153,7 +154,8 @@ def get_crazy_analysis(df):
 #------------------------------------------------------------------------------------------
         
         # 3. 에너지 점수 (25%): 직전 응축도 (energy_index 기반)
-        energy_part = min(100, energy_index * 70)
+        #energy_part = min(100, energy_index * 70)
+        energy_part = energy_index * 100
         
         # 4. 탄성 점수 (10%): 최근 10회 리듬 (bridge_score)
         # (앞서 선언된 bridge_score 변수 사용)
@@ -167,12 +169,12 @@ def get_crazy_analysis(df):
         # --- [F] 최종 통합 점수 산출 (V2.2 가중치 모델) ---
         # 반등(30%) + 기세(50%) + 에너지(10%) + 탄성(5%) + 리듬(5%) = 100%
         total_score = (
-            #(rebound_part * 0.30) + 
+            (rebound_part * 0.30) + 
             #(streak_part * 0.50) + 
-            #(energy_part * 0.10) + 
             #(bridge_final_part * 0.05) + 
             #(rhythm_final_part * 0.05)
-            rhythm_final_part
+            #rhythm_final_part +
+            (energy_part * 0.10)
         )
         
         # --- [G] 추가 보정 및 필터링 ---
@@ -213,11 +215,12 @@ def get_crazy_analysis(df):
         results.append({
             "번호": num,
             "통합크레이지점수": round(total_score, 1),
-            "동기화지수": round(sync_val, 2),
-            "변동성": round(rhythm_std, 2),        # 표준편차(Sigma) - 리듬점수의 근거
-            "박자상태": rhythm_status,
+            "반등지수": round(rebound_index, 2),
+            "에너지지수": round(energy_index, 2),
             "평균스킵": round(avg_skip, 1),
             "현재스킵": current_skip,
+            "직전스킵": last_skip,
+            "임계점": "🔥반등임박" if is_critical else "⏳에너지충전", 
             "리듬점수": round(rhythm_score, 1),     # 규칙성
             "출현수": count_in_range,
             "출현율": round(occurrence_rate, 1),
@@ -226,10 +229,9 @@ def get_crazy_analysis(df):
             "최대연속": max_streak,
             "연속점수": round(streak_part, 1),
             "탄성점수": round(bridge_score, 1),
-            "반등지수": round(rebound_index, 2),
-            "에너지지수": round(energy_index, 2),
-            "직전스킵": last_skip,
-            "임계점": "🔥반등임박" if is_critical else "⏳에너지충전" 
+            "동기화지수": round(sync_val, 2),
+            "변동성": round(rhythm_std, 2),        # 표준편차(Sigma) - 리듬점수의 근거
+            "박자상태": rhythm_status
         })
 
     return pd.DataFrame(results)
