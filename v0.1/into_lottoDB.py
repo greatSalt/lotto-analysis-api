@@ -40,6 +40,12 @@ def data_input_func(conn, sheet_url, df, analyze_range):
         # 기존에 캐싱된 로또 raw 데이터(df_raw 등)를 메모리에서 강제 삭제
         # (이렇게 해야 앱이 다시 켜질 때 구글 시트에서 최신 데이터를 처음부터 새로 긁어옵니다.)
         st.cache_data.clear()
+        # 세션 전체를 날리는 대신, 데이터/스킵 관련 상태값만 골라서 삭제
+        # (이렇게 하면 사용자가 선택했던 메뉴나 다른 설정은 유지됩니다.)
+        keys_to_reset = ['skip_weight_df', 'skip_dict']
+        for key in keys_to_reset:
+            if key in st.session_state:
+                del st.session_state[key]
         st.success(f"{col_drw}회차 데이터 저장 완료!")
         # 저장 직후 앱을 강제로 처음(상단)부터 다시 실행시켜 UI와 사이드바를 즉시 동기화
         st.rerun()
