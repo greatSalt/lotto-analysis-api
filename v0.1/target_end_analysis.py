@@ -102,11 +102,16 @@ def check_same_end_digit_filter(nums, allowed_pairs, target_digits):
     
     # --- [조건 2] 지정 끝수 포함 여부 검사 (설정이 있을 경우만) ---
     if target_digits:
+        # active_ends에 있는 모든 동끝수가 내가 선택한 target_digits 안에 포함되어 있어야 함!
+        # 즉, 선택하지 않은 숫자(예: 3, 9)가 동끝수 그룹에 하나라도 끼어있으면 즉시 탈락
+        is_all_allowed = all(ae in target_digits for ae in active_ends)
+        if not is_all_allowed:
+            return False
         # 지정한 끝수 중 하나라도 실제 동끝수(active_ends)에 포함되어 있는지 확인
         # 예: target_digits가 [7]인데 active_ends에 7이 있으면 통과
-        has_target = any(td in active_ends for td in target_digits)
-        if not has_target:
-            return False
+        #has_target = any(td in active_ends for td in target_digits)
+        #if not has_target:
+            #return False
             
     return True
 
