@@ -204,13 +204,21 @@ def run_combination_backtest(conn, sheet_url):
             matched = combo_set.intersection(winning_nums)
             match_count = len(matched)
             
-            # 당첨/낙첨 텍스트 및 스타일 결정
+            # 당첨/낙첨 텍스트 및 스타일 결정 (문자열 깨짐 방지 구조)
             if match_count >= 3:
-                result_text = f"<span style='color:#FF4B4B; font-weight:bold;'>🎉 {match_count개 일치 (당첨)}</span>"
-                if match_count in match_stats: match_stats[match_count] += 1
+                color_code = "#FF4B4B"
+                status_label = "당첨"
+                icon = "🎉"
+                if match_count in match_stats: 
+                    match_stats[match_count] += 1
             else:
-                result_text = f"<span style='color:#888888;'>❌ {match_count개 일치 (낙첨)}</span>"
+                color_code = "#888888"
+                status_label = "낙첨"
+                icon = "❌"
                 match_stats["낙첨"] += 1
+
+            # HTML 태그를 깔끔하게 조립
+            result_text = f"<span style='color:{color_code}; font-weight:bold;'>{icon} {match_count}개 일치 ({status_label})</span>"
 
             col_chk, col_label, col_balls, col_result = st.columns([0.08, 0.12, 0.55, 0.25])
             
