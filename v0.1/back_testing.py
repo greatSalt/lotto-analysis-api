@@ -5,7 +5,7 @@ from comprehensive_analysis import get_detailed_status
 from into_lottoDB import render_ball_ui
 from empty_zone_engine import get_empty_finder
 
-def bt_main_func(df_raw):
+def bt_main_func(conn, sheet_url, df_raw):
     selection_menu = bt_sel_func()
     
     if selection_menu == "이월수 예측":
@@ -17,13 +17,15 @@ def bt_main_func(df_raw):
         run_empty_zone_backtest(df_raw, count=25) 
     elif selection_menu == "보너스 번호의 이월확률":
         run_bonus_carry_backtest(df_raw, count=50)
+    elif selection_menu == "조합 시험":
+        run_combination_backtest(conn, sheet_url)
     else:
         pass
     
 def bt_sel_func():
     col1, _ = st.columns(2)
     with col1: 
-        func_options = ["선택 안 함", "이월수 예측",  "멸구간 예측", "보너스 번호의 이월확률"]
+        func_options = ["선택 안 함", "이월수 예측",  "멸구간 예측", "보너스 번호의 이월확률", "조합 시험"]
         
         # 1. 세션 스테이트 초기화 (존재하지 않을 때만)
         if 'f_opt' not in st.session_state:
@@ -157,3 +159,135 @@ def run_bonus_devitation_table(idx, df_raw):
     })     
     
     return devitation_table
+
+def run_combination_backtest(conn, sheet_url):
+    # 비교할 당첨번호 입력 및 비교 시작 버튼
+    col_drw = st.number_input("회차", min_value=1, step=1)
+    c = st.columns(6)
+    n1 = c[0].number_input("No1", 1, 45, value=1)
+    n2 = c[1].number_input("No2", 1, 45, value=2)
+    n3 = c[2].number_input("No3", 1, 45, value=3)
+    n4 = c[3].number_input("No4", 1, 45, value=4)
+    n5 = c[4].number_input("No5", 1, 45, value=5)
+    n6 = c[5].number_input("No6", 1, 45, value=6)
+    
+    winning_nums = set([n1, n2, n3, n4, n5, n6])
+    
+    # 버튼 및 전체선택 토글 배치 
+    btn_col1, btn_col2 = st.columns([0.3, 0.7])
+    compare_btn = btn_col1.button("당첨확인", use_container_width=True)
+    
+    # 100개 조합 데이터가 존재할 때만 실행
+    if 'backtest_target_results' in st.session_state and st.session_state.backtest_target_results:
+        target_100_combos = st.session_state.backtest_target_results
+        
+        # [신규 기능] 전체 선택/해제 토글 스위치 (세션 스테이트로 상태 유지)
+        if 'select_all_backtest' not in st.session_state:
+            st.session_state.select_all_backtest = False
+            
+        select_all = st.checkbox("☑ 전체 선택 / 해제", value=st.session_state.select_all_backtest, key="select_all_toggle")
+        if select_all != st.session_state.select_all_backtest:
+            st.session_state.select_all_backtest = select_all
+            st.rerun() # 전체 선택 상태 변경 시 즉시 반영
+
+        st.write(f"현재 백테스팅 대상: 총 {len(target_100_combos)}개 조합")
+        st.divider()        
+        
+        to_save_MyPickNums = []  
+        match_stats = {3: 0, 4: 0, 5: 0, 6: 0, "낙첨": 0} # 통계용
+                            
+        for i, combo_data in enumerate(target_100_combos):
+            combo_nums = sorted([n for n, group in combo_data])
+            combo_set = set(combo_nums)
+            
+            # 당첨 번호와 비교 (맞춘 개수 확인)
+            matched = combo_set.intersection(winning_nums)
+            match_count = len(matched)
+            
+            # 당첨/낙첨 텍스트 및 스타일 결정
+            if match_count >= 3:
+                result_text = f'<span style="color:#FF4B4B; font-weight:bold;">🎉 {match_count개 일치 (당첨)}</span>'
+                if match_count in match_stats: match_stats[match_count] += 1
+            else:
+                result_text = f'<span style="color:#888888;">❌ {match_count개 일치 (낙첨)}</span>'
+                match_stats["낙첨"] += 1
+
+            col_chk, col_label, col_balls, col_result = st.columns([0.08, 0.12, 0.55, 0.25])
+            
+            # 1. 체크박스: 전체 선택 상태와 개별 상태 연동
+            with col_chk:
+                # 전체선택이 체크되어 있으면 기본값을 True로 설정
+                chk_key = f"chk_backtest_{i}"
+                if select_all and chk_key not in st.session_state:
+                    st.session_state[chk_key] = True
+                
+                is_checked = st.checkbox("", key=chk_key)
+                if is_checked:
+                    to_save_MyPickNums.append((combo_nums, match_count))
+                            
+            with col_label:
+                st.markdown(f"**SET {i+1}**")
+                                    
+            # 2. 번호별 색상 배지 (공 UI)
+            with col_balls:
+                ball_html = "<div style='display: flex; gap: 4px; flex-wrap: wrap;'>"
+                for n, group in combo_data:
+                    if group == '이월수': color = "white"   # ⬜ 이월수 (흰색 배경 + 검정 글자)
+                    elif group == 'HOT': color = "red"      # 🟥 핫 (빨간색)
+                    elif group == 'WARM': color = "yellow"  # 🟨 웜 (노란색/골드)
+                    elif group == 'COLD': color = "blue"    # 🟦 콜드 (파란색)
+                    else: color = "lightgrey"               # 데이터 오류 시 회색
+                                    
+                    ball_html += f"<img src='https://img.shields.io/badge/-{n}-{color}?style=flat-square&border_radius=50' style='margin-bottom:4px;'>"
+                ball_html += "</div>"
+                st.markdown(ball_html, unsafe_allow_html=True)
+                
+            # 3. 당첨 결과 출력
+            with col_result:
+                st.markdown(result_text, unsafe_allow_html=True)
+                            
+        st.divider()
+        
+        # [신규 기능] 하단 저장 버튼 및 요약 통계
+        save_col1, save_col2 = st.columns([0.4, 0.6])
+        with save_col1:
+            save_btn = st.button("💾 체크된 조합 MyPickNums 저장", use_container_width=True)
+            
+        with save_col2:
+            st.markdown(f"📊 **결과 요약**: 3개 맞춤: {match_stats[3]}개 | 4개 맞춤: {match_stats[4]}개 | 5개 맞춤: {match_stats[5]}개 | 6개 맞춤: {match_stats[6]}개")
+
+        # 당첨 확인 버튼 동작 (필요시 알림이나 추가 요약용)
+        if compare_btn:
+            st.success(f"🔍 {col_drw}회차 기준 당첨 확인이 완료되었습니다! (위 결과를 확인하세요)")
+
+        # 체크된 조합번호를 MyPickNums 시트에 저장하는 로직
+        if save_btn:
+            if not to_save_MyPickNums:
+                st.warning("⚠️ 저장할 조합이 선택되지 않았습니다. 체크박스를 선택해주세요.")
+            else:
+                try:
+                    # 구글 시트 연결 (MyPickNums 시트 대상)
+                    sheet = conn.open_by_url(sheet_url)
+                    try:
+                        worksheet = sheet.worksheet("MyPickNums")
+                    except:
+                        # 시트가 없으면 생성
+                        worksheet = sheet.add_worksheet(title="MyPickNums", rows="1000", cols="10")
+                        # 첫 행 헤더가 없다면 기본 세팅 (이미 다른 저장 번호가 있다고 하셨으므로 안전하게 구성)
+                        worksheet.append_row(["round", "n1", "n2", "n3", "n4", "n5", "n6", "일치개수"])
+
+                    # 2행부터 데이터 추가 (기존 데이터 유지하며 밑으로 append)
+                    rows_to_append = []
+                    for combo, m_cnt in to_save_MyPickNums:
+                        rows_to_append.append([int(col_drw), combo[0], combo[1], combo[2], combo[3], combo[4], combo[5], f"{m_cnt개 일치}"])
+                    
+                    # 뱃치 형태로 일괄 추가
+                    worksheet.append_rows(rows_to_append)
+                    st.success(f"✅ 총 {len(rows_to_append)}개의 조합이 'MyPickNums' 시트의 2행 이후에 성공적으로 저장되었습니다!")
+                    
+                except Exception as e:
+                    st.error(f"❌ 구글 시트 저장 중 오류 발생: {e}")
+                    
+    else:
+        st.info("먼저 조합 생성 메뉴에서 '100개 조합 생성' 버튼을 눌러주세요.")
+

@@ -842,6 +842,45 @@ def combination_by_filter(conn, sheet_url, df, edited_df):
                 if not st.session_state.reco_results:
                     st.warning("⚠️ 필터 조건을 만족하는 조합을 찾지 못했습니다. 범위를 넓혀주세요.")
                 else:   st.balloons()
+    
+    # [신규 추가] 100개 조합 생성 버튼 (기존 로직 그대로 재활용, count만 100으로 변경)
+    if st.button("📊 100개 조합 생성 (백테스팅용)", use_container_width=True):
+        if len(st.session_state.fixed_nums) > 6:
+            st.error("고정수는 최대 6개까지만 입력 가능합니다.")
+        else:
+            last_row = df.iloc[0]
+            last_nums = [int(last_row[f'n{i}']) for i in range(1, 7)]
+            
+            with st.spinner('100개의 최적 조합을 계산 중... (잠시만 기다려주세요)'):
+                # count만 100으로 바꿔서 기존 함수를 그대로 호출!
+                results_100 = generate_strategic_combinations(
+                    selected_df, 
+                    ratio_filters = st.session_state.sel_oe,
+                    sum_range = st.session_state.sum_range,      
+                    skip_weights_df = st.session_state.get('skip_weight_df'), 
+                    fixed_nums = st.session_state.fixed_nums,  
+                    exclude_nums = st.session_state.exclude_nums,  
+                    target_digits=st.session_state.sel_target_end,   
+                    allowed_pairs=st.session_state.sel_end,        
+                    allowed_carry=st.session_state.sel_carry,  
+                    last_win_nums=last_nums,    
+                    min_ac=st.session_state.sel_ac,     
+                    allowed_hl=st.session_state.sel_hl, 
+                    max_con=st.session_state.sel_con,   
+                    enable_sakai=st.session_state.enable_sakai,
+                    sakai_ratio=st.session_state.sakai_ratio,
+                    sakai_cnt=st.session_state.sakai_cnt,
+                    empty_zone=st.session_state.sel_zone,   
+                    count=100  # ✨ 100개 요청
+                )
+                
+                # 백테스팅용 전용 세션 키에 저장
+                st.session_state.backtest_target_results = results_100
+                
+                if not results_100:
+                    st.warning("⚠️ 필터 조건을 만족하는 조합을 찾지 못했습니다.")
+                else:
+                    st.success("✅ 100개 조합 생성 완료! 백테스팅 메뉴에서 확인하세요.")
             
     # 2. 버튼 외부에서 결과를 출력 (결과가 있을 때만 실행)
     if st.session_state.reco_results:            
