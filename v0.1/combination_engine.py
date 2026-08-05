@@ -845,6 +845,9 @@ def combination_by_filter(conn, sheet_url, df, edited_df):
     
     # [신규 추가] 100개 조합 생성 버튼 (기존 로직 그대로 재활용, count만 100으로 변경)
     if st.button("📊 100개 조합 생성 (백테스팅용)", use_container_width=True):
+        # 체크된 번호들의 로우데이터만 전달
+        selected_df = edited_df[edited_df['선택'] == True]
+        
         if len(st.session_state.fixed_nums) > 6:
             st.error("고정수는 최대 6개까지만 입력 가능합니다.")
         else:
