@@ -206,10 +206,10 @@ def run_combination_backtest(conn, sheet_url):
             
             # 당첨/낙첨 텍스트 및 스타일 결정
             if match_count >= 3:
-                result_text = f'<span style="color:#FF4B4B; font-weight:bold;">🎉 {match_count개 일치 (당첨)}</span>'
+                result_text = f"<span style='color:#FF4B4B; font-weight:bold;'>🎉 {match_count개 일치 (당첨)}</span>"
                 if match_count in match_stats: match_stats[match_count] += 1
             else:
-                result_text = f'<span style="color:#888888;">❌ {match_count개 일치 (낙첨)}</span>'
+                result_text = f"<span style='color:#888888;'>❌ {match_count개 일치 (낙첨)}</span>"
                 match_stats["낙첨"] += 1
 
             col_chk, col_label, col_balls, col_result = st.columns([0.08, 0.12, 0.55, 0.25])
