@@ -287,7 +287,7 @@ def run_combination_backtest(conn, sheet_url):
                     # 2행부터 데이터 추가 (기존 데이터 유지하며 밑으로 append)
                     rows_to_append = []
                     for combo, m_cnt in to_save_MyPickNums:
-                        rows_to_append.append([int(col_drw), combo[0], combo[1], combo[2], combo[3], combo[4], combo[5], f"{m_cnt개 일치}"])
+                        rows_to_append.append([int(col_drw), combo[0], combo[1], combo[2], combo[3], combo[4], combo[5], f"{m_cnt}개 일치"])
                     
                     # 뱃치 형태로 일괄 추가
                     worksheet.append_rows(rows_to_append)
