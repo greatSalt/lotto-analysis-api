@@ -4,6 +4,7 @@ import pandas as pd
 from comprehensive_analysis import get_detailed_status
 from into_lottoDB import render_ball_ui
 from empty_zone_engine import get_empty_finder
+from combination_engine import get_group_v2
 
 def bt_main_func(conn, sheet_url, df_raw):
     selection_menu = bt_sel_func()
@@ -324,4 +325,36 @@ def run_combination_backtest(conn, sheet_url):
 
     else:
         st.info("먼저 조합 생성 메뉴에서 '100개 조합 생성' 버튼을 눌러주세요.")
+
+def loaded_combination_data_to_gsheet():
+    # --- 앱 최초 실행 시 구글 시트 'MyPickNums'의 3행부터 저장된 조합 불러오기 ---
+if 'backtest_target_results' not in st.session_state:
+    try:
+        # MyPickNums 시트 읽기
+        df_mypick = conn.read(spreadsheet=SHEET_URL, worksheet="MyPickNums", ttl=0)
+        
+        if not df_mypick.empty and all(col in df_mypick.columns for col in ['n1', 'n2', 'n3', 'n4', 'n5', 'n6']):
+            loaded_combos = []
+            
+            # 💡 핵심: iloc[1:]을 사용하면 시트 기준 2행(다른 데이터)을 건너뛰고, 
+            # 3행부터 끝까지(100개 조합) 안전하게 순회합니다.
+            for _, row in df_mypick.iloc[1:].iterrows():
+                # n1 값이 숫자인지 확인 (NaN이거나 공백이면 데이터가 없는 것으로 간주)
+                try:
+                    just_nums = [
+                        int(float(row['n1'])), int(float(row['n2'])), int(float(row['n3'])), 
+                        int(float(row['n4'])), int(float(row['n5'])), int(float(row['n6']))
+                    ]
+                except (ValueError, TypeError):
+                    continue # 숫자가 아니면 다음 행으로 패스
+                
+                # 그룹 함수로 재조립하여 리스트에 담기
+                full_combo = [[n, get_group_v2(n)] for n in just_nums]
+                loaded_combos.append(full_combo)
+            
+            st.session_state.backtest_target_results = loaded_combos
+        else:
+            st.session_state.backtest_target_results = []
+    except Exception as e:
+        st.session_state.backtest_target_results = []
 

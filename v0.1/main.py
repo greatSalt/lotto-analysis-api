@@ -18,7 +18,7 @@ from winning_skip_analysis import analyze_winning_skip_distribution, render_skip
 from target_end_analysis import render_target_end_analysis
 from comprehensive_analysis import render_comprehensive_analysis
 from funatsu_sakai import render_sakai_analysis 
-from back_testing import bt_main_func
+from back_testing import bt_main_func, loaded_combination_data_to_gsheet
 
 st.set_page_config(page_title="로또 분석 프로 v0.1", layout="wide")
 conn = st.connection("gsheets", type=GSheetsConnection)
@@ -48,6 +48,10 @@ analyze_range = st.sidebar.slider(
     value=25, 
     step=5
 )
+
+# --- 앱 최초 실행 시 구글 시트 'MyPickNums'에서 저장된 조합 불러오기 ---
+if 'backtest_target_results' not in st.session_state:
+    loaded_combination_data_to_gsheet()
 
 # 데이터가 로드될 때 가중치도 함께 세트로 반환받습니다.
 df_raw, current_stats, df_crazy = get_and_compute_weights(conn, SHEET_URL, analyze_range)
