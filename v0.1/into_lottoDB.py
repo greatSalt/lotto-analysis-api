@@ -161,7 +161,7 @@ def get_recent_data(_conn, sheet_url, worksheet, count=0): # conn -> _conn 으�
         # 3. 인자(count)에 따라 데이터 자르기
         if count > 0:
             if worksheet == 'MyPickNums':
-                df = df.tail(count)
+                df = df.head(1)
             else:
                 df = df.head(count) # 최근 count개만 가져옴
             
