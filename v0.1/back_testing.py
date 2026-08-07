@@ -326,7 +326,7 @@ def run_combination_backtest(conn, sheet_url):
     else:
         st.info("먼저 조합 생성 메뉴에서 '100개 조합 생성' 버튼을 눌러주세요.")
 
-def loaded_combination_data_to_gsheet():
+def loaded_combination_data_to_gsheet(conn, SHEET_URL):
     # --- 앱 최초 실행 시 구글 시트 'MyPickNums'의 3행부터 저장된 조합 불러오기 ---
     if 'backtest_target_results' not in st.session_state:
         try:

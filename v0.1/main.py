@@ -51,7 +51,7 @@ analyze_range = st.sidebar.slider(
 
 # --- 앱 최초 실행 시 구글 시트 'MyPickNums'에서 저장된 조합 불러오기 ---
 if 'backtest_target_results' not in st.session_state:
-    loaded_combination_data_to_gsheet()
+    loaded_combination_data_to_gsheet(conn, SHEET_URL)
 
 # 데이터가 로드될 때 가중치도 함께 세트로 반환받습니다.
 df_raw, current_stats, df_crazy = get_and_compute_weights(conn, SHEET_URL, analyze_range)
