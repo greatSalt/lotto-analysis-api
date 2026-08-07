@@ -274,28 +274,54 @@ def run_combination_backtest(conn, sheet_url):
                 st.warning("⚠️ 저장할 조합이 선택되지 않았습니다. 체크박스를 선택해주세요.")
             else:
                 try:
-                    # 구글 시트 연결 (MyPickNums 시트 대상)
-                    sheet = conn.open_by_url(sheet_url)
+                    # 1. 기존 'MyPickNums' 시트 데이터를 읽어옴
                     try:
-                        worksheet = sheet.worksheet("MyPickNums")
+                        existing_df = conn.read(spreadsheet=sheet_url, worksheet="MyPickNums", ttl=0)
                     except:
-                        # 시트가 없으면 생성
-                        worksheet = sheet.add_worksheet(title="MyPickNums", rows="1000", cols="10")
-                        # 첫 행 헤더가 없다면 기본 세팅 (이미 다른 저장 번호가 있다고 하셨으므로 안전하게 구성)
-                        worksheet.append_row(["round", "n1", "n2", "n3", "n4", "n5", "n6", "일치개수"])
+                        existing_df = pd.DataFrame()
 
-                    # 2행부터 데이터 추가 (기존 데이터 유지하며 밑으로 append)
-                    rows_to_append = []
+                    # 2. 기존 데이터에 '일치개수' 컬럼이 없다면 안전하게 추가
+                    if not existing_df.empty:
+                        if "일치개수" not in existing_df.columns:
+                            existing_df["일치개수"] = "" # 기존 데이터는 빈칸으로 채움
+
+                    # 3. 새로 추가할 데이터들을 리스트 형태로 만듦
+                    new_rows = []
                     for combo, m_cnt in to_save_MyPickNums:
-                        rows_to_append.append([int(col_drw), combo[0], combo[1], combo[2], combo[3], combo[4], combo[5], f"{m_cnt}개 일치"])
+                        new_rows.append({
+                            "round": int(col_drw), 
+                            "n1": combo[0], 
+                            "n2": combo[1], 
+                            "n3": combo[2], 
+                            "n4": combo[3], 
+                            "n5": combo[4], 
+                            "n6": combo[5], 
+                            "일치개수": f"{m_cnt}개 일치"
+                        })
                     
-                    # 뱃치 형태로 일괄 추가
-                    worksheet.append_rows(rows_to_append)
-                    st.success(f"✅ 총 {len(rows_to_append)}개의 조합이 'MyPickNums' 시트의 2행 이후에 성공적으로 저장되었습니다!")
+                    new_df = pd.DataFrame(new_rows)
+
+                    # 4. 기존 데이터와 새 데이터를 위아래로 결합
+                    if existing_df.empty:
+                        updated_df = new_df
+                    else:
+                        # 컬럼 순서를 동일하게 맞춰서 결합
+                        updated_df = pd.concat([existing_df, new_df], ignore_index=True)
+
+                    # 5. conn.update로 시트에 통째로 덮어쓰기
+                    conn.update(
+                        spreadsheet=sheet_url,
+                        worksheet="MyPickNums",
+                        data=updated_df
+                    )
+                    
+                    # 6. 캐시 비우기 및 완료 메시지
+                    st.cache_data.clear()
+                    st.success(f"✅ 총 {len(new_rows)}개의 조합이 'MyPickNums' 시트에 안전하게 추가되었습니다!")
                     
                 except Exception as e:
                     st.error(f"❌ 구글 시트 저장 중 오류 발생: {e}")
-                    
+
     else:
         st.info("먼저 조합 생성 메뉴에서 '100개 조합 생성' 버튼을 눌러주세요.")
 
