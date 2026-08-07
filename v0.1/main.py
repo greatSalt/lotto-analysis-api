@@ -49,10 +49,6 @@ analyze_range = st.sidebar.slider(
     step=5
 )
 
-# --- 앱 최초 실행 시 구글 시트 'MyPickNums'에서 저장된 조합 불러오기 ---
-if 'backtest_target_results' not in st.session_state:
-    loaded_combination_data_to_gsheet(conn, SHEET_URL)
-
 # 데이터가 로드될 때 가중치도 함께 세트로 반환받습니다.
 df_raw, current_stats, df_crazy = get_and_compute_weights(conn, SHEET_URL, analyze_range)
 # 모든 메뉴에서 사용할 공통 분석 데이터 (슬라이싱)
@@ -63,6 +59,10 @@ if 'skip_weight_df' not in st.session_state:
 # 1~45번 전체의 실시간 현재스킵을 딕셔너리로 저장 (41번: 0)
 if 'skip_dict' not in st.session_state:
     st.session_state.skip_dict = dict(zip(df_crazy['번호'], df_crazy['현재스킵']))
+# --- 앱 최초 실행 시 구글 시트 'MyPickNums'에서 저장된 조합 불러오기 ---
+# skip_dict가 완벽하게 준비된 이후에 구글 시트 조합을 불러옵니다!
+if 'backtest_target_results' not in st.session_state:
+    loaded_combination_data_to_gsheet(conn, SHEET_URL)
     
     
 # 메뉴가 바뀌었으므로 다음 화면 갱신 때 시트를 강제로 읽으라고 신호를 줌
