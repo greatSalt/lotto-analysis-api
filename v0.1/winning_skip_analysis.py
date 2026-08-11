@@ -82,7 +82,7 @@ def render_skip_group_weight_ui(group_stats, auto_mode=False):
     group_stats: 이미 구간별 평균 비중(확률)이 계산된 데이터프레임
     """
     # [핵심] 확률의 40배를 기본 가중치로 설정
-    group_stats['가중치'] = (group_stats['확률'] * 40).round(2)
+    group_stats['가중치'] = (group_stats['확률'] * 80).round(2)
     
     # 세션 상태 관리
     if 'skip_weight_df' not in st.session_state:
@@ -108,7 +108,7 @@ def render_skip_group_weight_ui(group_stats, auto_mode=False):
             "출현빈도": st.column_config.NumberColumn("추정 빈도수", format="%d회", disabled=True),
             "확률": st.column_config.ProgressColumn("평균 점유율(비중)", format="%.4f", min_value=0, max_value=1),
             "가중치": st.column_config.NumberColumn(
-                "가중치(비중x40)", 
+                "가중치(비중x80)", 
                 min_value=0.0, max_value=10.0, step=0.1, format="%.1f"
             )
         },

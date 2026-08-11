@@ -115,9 +115,9 @@ def generate_strategic_combinations(selected_df, ratio_filters, sum_range, skip_
         try:
             if enable_sakai:
                 # opt=1 => random.chocie fun
-                #sample_nums = user_random_func(sakai_cnt, temp_pool, temp_weights, opt=1)
+                sample_nums = user_random_func(sakai_cnt, temp_pool, temp_weights, opt=1)
                 # opt =>2 random.sample func 
-                sample_nums = user_random_func(sakai_cnt, temp_pool, None, opt=2) 
+                #sample_nums = user_random_func(sakai_cnt, temp_pool, None, opt=2) 
                 
                 temp_pool = list(pool_for_resting)
                 temp_weights = list(rested_pool_weights)
