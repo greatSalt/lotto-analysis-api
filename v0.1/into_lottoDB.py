@@ -91,7 +91,7 @@ def data_input_func(conn, sheet_url, df, analyze_range):
     df_raw = get_recent_data(conn, sheet_url, 'MyPickNums', count=1)
     if not df_raw.empty:
         latest_row = df_raw.iloc[0]
-        picked_nums = [latest_row[f'n{i}'] for i in range(1, 7)]
+        picked_nums = [int(float(latest_row[f'n{i}'])) for i in range(1, 7)]
         status_map, _ = get_detailed_status(-1, df)
         balls_html = render_ball_ui(picked_nums, status_map, size=45)
         #balls_html = render_ball_ui(picked_nums, size=45)
