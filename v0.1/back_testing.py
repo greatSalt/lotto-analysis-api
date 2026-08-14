@@ -162,15 +162,26 @@ def run_bonus_devitation_table(idx, df_raw):
     return devitation_table
 
 def run_combination_backtest(conn, sheet_url):
+    # 비교할 당첨번호 google sheet에서 불러오기
+    df_raw = get_recent_data(conn, sheet_url, 'MyPickNums', count=1)
+    if not df_raw.empty:
+        latest_row = df_raw.iloc[0]
+        try:
+            picked_nums = [int(float(latest_row[f'n{i}'])) for i in range(1, 7)]
+        except (KeyError, ValueError, TypeError):
+            picked_nums = [1, 2, 3, 4, 5, 6] # 데이터 파싱 중 에러 발생 시 기본값
+    else:
+        picked_nums = [1,2,3,4,5,6]
+        
     # 비교할 당첨번호 입력 및 비교 시작 버튼
     col_drw = st.number_input("회차", min_value=1, step=1)
     c = st.columns(6)
-    n1 = c[0].number_input("No1", 1, 45, value=1)
-    n2 = c[1].number_input("No2", 1, 45, value=2)
-    n3 = c[2].number_input("No3", 1, 45, value=3)
-    n4 = c[3].number_input("No4", 1, 45, value=4)
-    n5 = c[4].number_input("No5", 1, 45, value=5)
-    n6 = c[5].number_input("No6", 1, 45, value=6)
+    n1 = c[0].number_input("No1", 1, 45, value=picked_nums[0])
+    n2 = c[1].number_input("No2", 1, 45, value=picked_nums[1])
+    n3 = c[2].number_input("No3", 1, 45, value=picked_nums[2])
+    n4 = c[3].number_input("No4", 1, 45, value=picked_nums[3])
+    n5 = c[4].number_input("No5", 1, 45, value=picked_nums[4])
+    n6 = c[5].number_input("No6", 1, 45, value=picked_nums[5])
     
     winning_nums = set([n1, n2, n3, n4, n5, n6])
     
