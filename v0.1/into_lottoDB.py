@@ -80,7 +80,7 @@ def data_input_func(conn, sheet_url, df, analyze_range):
             "n5": current_nums[4], 
             "n6": current_nums[5], 
         }
-        save_to_gsheet(conn, sheet_url, 'MyPickNums', data_to_save)
+        save_to_gsheet(conn, sheet_url, 'UserPickNums', data_to_save)
         # 기존에 캐싱된 로또 raw 데이터(df_raw 등)를 메모리에서 강제 삭제
         # (이렇게 해야 앱이 다시 켜질 때 구글 시트에서 최신 데이터를 처음부터 새로 긁어옵니다.)
         st.cache_data.clear()
@@ -88,7 +88,7 @@ def data_input_func(conn, sheet_url, df, analyze_range):
         # 저장 직후 앱을 강제로 처음(상단)부터 다시 실행시켜 UI와 사이드바를 즉시 동기화
         #st.rerun()
         
-    df_raw = get_recent_data(conn, sheet_url, 'MyPickNums', count=1)
+    df_raw = get_recent_data(conn, sheet_url, 'UserPickNums', count=1)
     if not df_raw.empty:
         latest_row = df_raw.iloc[0]
         picked_nums = [int(float(latest_row[f'n{i}'])) for i in range(1, 7)]
@@ -109,7 +109,7 @@ def save_to_gsheet(conn, sheet_url, worksheet, new_data):
         # 시트가 비어있을 경우 대비
         df = pd.DataFrame()
 
-    if worksheet == 'MyPickNums':
+    if worksheet == 'UserPickNums':
         if df.empty or new_data['round'] == 1:
             new_data['round'] = 1   # 첫 데이터라면 1회차부터 시작
         else:
@@ -160,7 +160,7 @@ def get_recent_data(_conn, sheet_url, worksheet, count=0): # conn -> _conn 으�
         
         # 3. 인자(count)에 따라 데이터 자르기
         if count > 0:
-            if worksheet == 'MyPickNums':
+            if worksheet == 'UserPickNums':
                 df = df.head(1)
             else:
                 df = df.head(count) # 최근 count개만 가져옴
