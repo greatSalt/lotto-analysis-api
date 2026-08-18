@@ -336,7 +336,7 @@ def run_combination_backtest(conn, sheet_url):
                     st.error(f"❌ 구글 시트 저장 중 오류 발생: {e}")
 
         # 100개 조합 출력 하단에 빈도 분석 함수 호출
-        render_combination_frequency_table(target_100_combos)
+        render_combination_frequency_table(target_100_combos, winning_nums)
     else:
         st.info("먼저 조합 생성 메뉴에서 '100개 조합 생성' 버튼을 눌러주세요.")
 
@@ -351,7 +351,7 @@ def loaded_combination_data_to_gsheet(conn, SHEET_URL):
                 loaded_combos = []
                 
                 # 2행부터 끝까지(100개 조합) 안전하게 순회합니다.
-                for _, row in df_mypick.iloc[1:].iterrows():
+                for _, row in df_mypick.iloc[0:].iterrows():
                     # n1 값이 숫자인지 확인 (NaN이거나 공백이면 데이터가 없는 것으로 간주)
                     try:
                         just_nums = [
@@ -371,9 +371,10 @@ def loaded_combination_data_to_gsheet(conn, SHEET_URL):
         except Exception as e:
             st.session_state.backtest_target_results = []
 
-def render_combination_frequency_table(target_100_combos):
+def render_combination_frequency_table(target_100_combos, winning_nums=None):
     """
-    100개 조합 내 번호별 출현 빈도를 분석하여 내림차순 정렬된 표를 출력
+    100개 조합 내 번호별 출현 빈도를 분석하여 표로 출력하고, 
+    비교할 번호(winning_nums)가 포함된 행은 하이라이트 처리합니다.
     """
     if not target_100_combos:
         st.info("분석할 조합 데이터가 없습니다.")
@@ -383,7 +384,6 @@ def render_combination_frequency_table(target_100_combos):
     all_extracted_nums = []
     for combo_data in target_100_combos:
         for item in combo_data:
-            # item 구조가 [번호, 그룹] 형태인지 정수 형태인지 안전하게 판별
             n = item[0] if isinstance(item, list) else item
             all_extracted_nums.append(int(n))
             
@@ -403,11 +403,21 @@ def render_combination_frequency_table(target_100_combos):
     # 4. 출현 횟수 기준 내림차순 정렬 (횟수가 같으면 번호 오름차순)
     df_freq = df_freq.sort_values(by=['출현 횟수', '번호'], ascending=[False, True]).reset_index(drop=True)
     
-    # 5. UI 출력
+    # 5. 하이라이트 스타일 적용 함수
+    if winning_nums is None:
+        winning_nums = set()
+
+    def highlight_winning_row(row):
+        # '번호' 컬럼 값이 비교 번호 세트에 포함되어 있다면 배경색 강조 (예: 연한 노란색/주황색)
+        if int(row['번호']) in winning_nums:
+            return ['background-color: #FFF2CC; font-weight: bold; color: #D9534F;'] * len(row)
+        return [''] * len(row)
+
+    # 6. UI 출력
     st.divider()
     st.subheader("🔥 100개 조합 번호별 출현 빈도 TOP 45")
-    st.caption("현재 생성된 100개의 조합 안에서 각 번호가 사용된 총 횟수입니다.")
+    st.caption("현재 생성된 100개의 조합 안에서 각 번호가 사용된 총 횟수입니다. (비교 번호는 색상으로 강조됩니다)")
     
-    # 표 출력 (스트림릿 데이터프레임)
-    st.dataframe(df_freq, use_container_width=True, hide_index=True)
-
+    # Styler를 적용하여 데이터프레임 출력
+    styled_df = df_freq.style.apply(highlight_winning_row, axis=1)
+    st.dataframe(styled_df, use_container_width=True, hide_index=True)
