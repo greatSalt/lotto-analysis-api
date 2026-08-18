@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from collections import Counter
 
 from comprehensive_analysis import get_detailed_status
 from into_lottoDB import render_ball_ui, get_recent_data
@@ -334,6 +335,8 @@ def run_combination_backtest(conn, sheet_url):
                 except Exception as e:
                     st.error(f"❌ 구글 시트 저장 중 오류 발생: {e}")
 
+        # 100개 조합 출력 하단에 빈도 분석 함수 호출
+        render_combination_frequency_table(target_100_combos)
     else:
         st.info("먼저 조합 생성 메뉴에서 '100개 조합 생성' 버튼을 눌러주세요.")
 
@@ -367,4 +370,44 @@ def loaded_combination_data_to_gsheet(conn, SHEET_URL):
                 st.session_state.backtest_target_results = []
         except Exception as e:
             st.session_state.backtest_target_results = []
+
+def render_combination_frequency_table(target_100_combos):
+    """
+    100개 조합 내 번호별 출현 빈도를 분석하여 내림차순 정렬된 표를 출력
+    """
+    if not target_100_combos:
+        st.info("분석할 조합 데이터가 없습니다.")
+        return
+
+    # 1. 모든 조합에 포함된 번호들을 하나의 리스트로 추출
+    all_extracted_nums = []
+    for combo_data in target_100_combos:
+        for item in combo_data:
+            # item 구조가 [번호, 그룹] 형태인지 정수 형태인지 안전하게 판별
+            n = item[0] if isinstance(item, list) else item
+            all_extracted_nums.append(int(n))
+            
+    # 2. 번호별 개수 카운트
+    num_counts = Counter(all_extracted_nums)
+    
+    # 3. 1부터 45번까지 누락 없이 데이터프레임 구성
+    freq_data = []
+    for num in range(1, 46):
+        freq_data.append({
+            "번호": num, 
+            "출현 횟수": num_counts.get(num, 0)
+        })
+        
+    df_freq = pd.DataFrame(freq_data)
+    
+    # 4. 출현 횟수 기준 내림차순 정렬 (횟수가 같으면 번호 오름차순)
+    df_freq = df_freq.sort_values(by=['출현 횟수', '번호'], ascending=[False, True]).reset_index(drop=True)
+    
+    # 5. UI 출력
+    st.divider()
+    st.subheader("🔥 100개 조합 번호별 출현 빈도 TOP 45")
+    st.caption("현재 생성된 100개의 조합 안에서 각 번호가 사용된 총 횟수입니다.")
+    
+    # 표 출력 (스트림릿 데이터프레임)
+    st.dataframe(df_freq, use_container_width=True, hide_index=True)
 
