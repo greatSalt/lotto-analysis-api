@@ -314,18 +314,11 @@ def run_combination_backtest(conn, sheet_url):
                     
                     new_df = pd.DataFrame(new_rows)
 
-                    # 4. 기존 데이터와 새 데이터를 위아래로 결합
-                    if existing_df.empty:
-                        updated_df = new_df
-                    else:
-                        # 컬럼 순서를 동일하게 맞춰서 결합
-                        updated_df = pd.concat([existing_df, new_df], ignore_index=True)
-
                     # 5. conn.update로 시트에 통째로 덮어쓰기
                     conn.update(
                         spreadsheet=sheet_url,
                         worksheet="MyPickNums",
-                        data=updated_df
+                        data=new_df
                     )
                     
                     # 6. 캐시 비우기 및 완료 메시지
