@@ -49,7 +49,7 @@ def bt_sel_func():
     st.divider()
     return st.session_state.f_opt
     
-def run_empty_zone_backtest(df_raw, count=25):
+def run_empty_zone_backtest(df_raw, count=50):
     
     # 멸구간 정의 및 컬럼 설정
     zones = {
@@ -89,9 +89,19 @@ def run_empty_zone_backtest(df_raw, count=25):
             status_map, _ = get_detailed_status(idx, df_raw)
             ball_html = render_ball_ui(picked_nums, status_map, size=20)
 
-            # 👇 보너스 번호가 눈에 보이도록 확실하게 HTML에 추가
-            ball_html += f" &nbsp;|&nbsp; <span style='background-color: #f0f2f6; padding: 2px 6px; border-radius: 4px; font-size: 12px;'>보너스: <b>{bonus_num}</b></span>"
-
+            # 동그란 로또 공 모양 HTML 생성 (보너스 표시용)
+            bonus_ball_html = f"""
+                <span style="display:inline-block; width:22px; height:22px; line-height:22px; 
+                             text-align:center; border-radius:50%; background-color:{b_bg}; 
+                             color:{b_color}; font-weight:bold; font-size:11px; margin-left:6px; 
+                             box-shadow: inset -1px -1px 2px rgba(0,0,0,0.3);">
+                    {bonus_num}
+                ></span>
+            """
+            
+            # 당첨 번호 공들 뒤에 깔끔하게 보너스 공 추가 (+ '보너스:' 글자 생략하고 직관적으로 배치)
+            ball_html += f" &nbsp;|&nbsp; <span style='font-size:11px; color:#555;'>보너스:</span> {bonus_ball_html}"
+            
             results.append({
                 "회차": row['round'],
                 "당첨 번호 구성": ball_html, # 여기에 공 UI 삽입
