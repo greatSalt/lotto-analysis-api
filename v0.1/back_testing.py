@@ -103,7 +103,7 @@ def run_empty_zone_backtest(df_raw, count=50):
                              color:{b_color}; font-weight:bold; font-size:11px; margin-left:6px; 
                              box-shadow: inset -1px -1px 2px rgba(0,0,0,0.3);">
                     {bonus_num}
-                ></span>
+                </span>
             """
             
             # 당첨 번호 공들 뒤에 깔끔하게 보너스 공 추가 (+ '보너스:' 글자 생략하고 직관적으로 배치)
