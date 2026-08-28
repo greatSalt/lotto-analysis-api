@@ -16,7 +16,7 @@ def bt_main_func(conn, sheet_url, df_raw):
         pass
     elif selection_menu == "멸구간 예측":
         st.subheader("🧪 멸구간 예측 백테스팅")
-        run_empty_zone_backtest(df_raw, count=25) 
+        run_empty_zone_backtest(df_raw, count=50) 
     elif selection_menu == "보너스 번호의 이월확률":
         run_bonus_carry_backtest(df_raw, count=50)
     elif selection_menu == "조합 시험":
@@ -49,7 +49,7 @@ def bt_sel_func():
     st.divider()
     return st.session_state.f_opt
     
-def run_empty_zone_backtest(df_raw, count=50):
+def run_empty_zone_backtest(df_raw, count=25):
     
     # 멸구간 정의 및 컬럼 설정
     zones = {
