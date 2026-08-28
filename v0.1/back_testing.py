@@ -62,7 +62,8 @@ def run_empty_zone_backtest(df_raw, count=25):
     #num_cols = ['n1', 'n2', 'n3', 'n4', 'n5', 'n6']
     
     results = []
-    all_detected_empty_zones = [] # 통계용 리스트
+    #all_detected_empty_zones = [] # 통계용 리스트
+    empty_patterns = [] # 회차별 멸구간 조합(패턴)을 담을 리스트
     
     if not df_raw.empty:
         target_rows = df_raw.head(count).astype(int)
@@ -78,15 +79,18 @@ def run_empty_zone_backtest(df_raw, count=25):
             check_nums = picked_nums + [bonus_num]
             
             emptyzones = get_empty_finder(check_nums, zones)   # 멸구간 찾기
-            
+
+            # 👇 멸구간 조합 패턴을 튜플로 저장 (순서 상관없이 비교하기 위해 정렬)
+            pattern_tuple = tuple(sorted(emptyzones))
+            empty_patterns.append(pattern_tuple)
             # 👇 [추가] 이번 회차 멸구간들을 통계용 리스트에 누적
-            all_detected_empty_zones.extend(emptyzones)
+            #all_detected_empty_zones.extend(emptyzones)
             
             status_map, _ = get_detailed_status(idx, df_raw)
             ball_html = render_ball_ui(picked_nums, status_map, size=20)
-            
-            # 👇 [추가] 공 UI 옆에 보너스 번호 표시 (원하시면 생략 가능)
-            ball_html += f" <span style='color: gray; font-size: 11px;'>(보너스: <b>{bonus_num}</b>)</span>"
+
+            # 👇 보너스 번호가 눈에 보이도록 확실하게 HTML에 추가
+            ball_html += f" &nbsp;|&nbsp; <span style='background-color: #f0f2f6; padding: 2px 6px; border-radius: 4px; font-size: 12px;'>보너스: <b>{bonus_num}</b></span>"
 
             results.append({
                 "회차": row['round'],
@@ -95,28 +99,32 @@ def run_empty_zone_backtest(df_raw, count=25):
             })
     
         df_result = pd.DataFrame(results)
-        
-         # Streamlit에서 HTML 표 출력 (unsafe_allow_html=True 필수)
-        st.write(df_result.to_html(escape=False, index=False), unsafe_allow_html=True)
 
-        # 👇 [추가] 아래 코드를 기존 코드 맨 밑에 붙여넣어 출현율 표를 출력합니다.
-        st.markdown("---")
-        st.subheader("📈 구간별 멸(Empty) 출현율 통계")
-        
-        zone_names = list(zones.keys())
+        # --- 5. 멸구간 조합(쌍, 단독 등)별 확률 및 빈도 계산 ---
         total_cnt = len(target_rows)
-        freq_stats = []
+        pattern_counts = Counter(empty_patterns)
         
-        for z_name in zone_names:
-            occ_count = all_detected_empty_zones.count(z_name)
-            ratio = (occ_count / total_cnt) * 100 if total_cnt > 0 else 0
-            freq_stats.append({
-                "구간명": z_name,
-                "멸 횟수": f"{occ_count}회",
-                "출현율": f"{ratio:.1f}%"
+        stats_rows = []
+        # 빈도가 높은 순서대로 정렬하여 통계 생성
+        for pattern, freq in pattern_counts.most_common():
+            pattern_name = ", ".join(pattern) if pattern else "멸구간 없음 (완벽 분산)"
+            probability = (freq / total_cnt) * 100 if total_cnt > 0 else 0
+            
+            stats_rows.append({
+                "멸구간 조합 패턴": pattern_name,
+                "발생 횟수": f"{freq}회",
+                "출현 확률": f"{probability:.1f}%"
             })
+            
+        df_stats = pd.DataFrame(stats_rows)
+
+        # --- 6. Streamlit 출력 ---
+        st.subheader(f"📊 최근 {total_cnt}회차 멸구간 백테스트 결과")
+        st.write(df_result.to_html(escape=False, index=False), unsafe_allow_html=True)
         
-        st.dataframe(pd.DataFrame(freq_stats), use_container_width=True)
+        st.markdown("---")
+        st.subheader("📈 멸구간 조합(단독/쌍)별 발생 확률 통계")
+        st.dataframe(df_stats, use_container_width=True)
         
 def run_bonus_carry_backtest(df_raw, count=25):
     
