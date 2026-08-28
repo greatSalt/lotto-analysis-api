@@ -62,15 +62,31 @@ def run_empty_zone_backtest(df_raw, count=25):
     #num_cols = ['n1', 'n2', 'n3', 'n4', 'n5', 'n6']
     
     results = []
+    all_detected_empty_zones = [] # 통계용 리스트
+    
     if not df_raw.empty:
         target_rows = df_raw.head(count).astype(int)
         for idx in range(len(target_rows)):
             row = target_rows.iloc[idx]
             round_num = row['round']
             picked_nums = [row[f'n{i}'] for i in range(1, 7)]
-            emptyzones = get_empty_finder(picked_nums, zones)   # 멸구간 찾기
+            
+            # 👇 [추가] 보너스 번호 가져오기 (컬럼명이 다르면 수정하세요)
+            bonus_num = int(row['bonus']) 
+            
+            # 👇 [수정] 보너스 번호가 포함된 구간은 멸구간에서 제외되도록 합쳐서 검사
+            check_nums = picked_nums + [bonus_num]
+            
+            emptyzones = get_empty_finder(check_nums, zones)   # 멸구간 찾기
+            
+            # 👇 [추가] 이번 회차 멸구간들을 통계용 리스트에 누적
+            all_detected_empty_zones.extend(emptyzones)
+            
             status_map, _ = get_detailed_status(idx, df_raw)
             ball_html = render_ball_ui(picked_nums, status_map, size=20)
+            
+            # 👇 [추가] 공 UI 옆에 보너스 번호 표시 (원하시면 생략 가능)
+            ball_html += f" <span style='color: gray; font-size: 11px;'>(보너스: <b>{bonus_num}</b>)</span>"
 
             results.append({
                 "회차": row['round'],
@@ -82,6 +98,25 @@ def run_empty_zone_backtest(df_raw, count=25):
         
          # Streamlit에서 HTML 표 출력 (unsafe_allow_html=True 필수)
         st.write(df_result.to_html(escape=False, index=False), unsafe_allow_html=True)
+
+        # 👇 [추가] 아래 코드를 기존 코드 맨 밑에 붙여넣어 출현율 표를 출력합니다.
+        st.markdown("---")
+        st.subheader("📈 구간별 멸(Empty) 출현율 통계")
+        
+        zone_names = list(zones.keys())
+        total_cnt = len(target_rows)
+        freq_stats = []
+        
+        for z_name in zone_names:
+            occ_count = all_detected_empty_zones.count(z_name)
+            ratio = (occ_count / total_cnt) * 100 if total_cnt > 0 else 0
+            freq_stats.append({
+                "구간명": z_name,
+                "멸 횟수": f"{occ_count}회",
+                "출현율": f"{ratio:.1f}%"
+            })
+        
+        st.dataframe(pd.DataFrame(freq_stats), use_container_width=True)
         
 def run_bonus_carry_backtest(df_raw, count=25):
     
