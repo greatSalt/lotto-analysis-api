@@ -97,14 +97,7 @@ def run_empty_zone_backtest(df_raw, count=50):
             else: b_bg = "#b0d840"; b_color = "#000"
 
             # 동그란 로또 공 모양 HTML 생성 (보너스 표시용)
-            bonus_ball_html = f"""
-                <span style="display:inline-block; width:22px; height:22px; line-height:22px; 
-                             text-align:center; border-radius:50%; background-color:{b_bg}; 
-                             color:{b_color}; font-weight:bold; font-size:11px; margin-left:6px; 
-                             box-shadow: inset -1px -1px 2px rgba(0,0,0,0.3);">
-                    {bonus_num}
-                </span>
-            """
+            bonus_ball_html = f'<span style="display:inline-block; width:22px; height:22px; line-height:22px; text-align:center; border-radius:50%; background-color:{b_bg}; color:{b_color}; font-weight:bold; font-size:11px; margin-left:6px; box-shadow: inset -1px -1px 2px rgba(0,0,0,0.3);">{bonus_num}</span>'
             
             # 당첨 번호 공들 뒤에 깔끔하게 보너스 공 추가 (+ '보너스:' 글자 생략하고 직관적으로 배치)
             ball_html += f" &nbsp;|&nbsp; <span style='font-size:11px; color:#555;'>보너스:</span> {bonus_ball_html}"
