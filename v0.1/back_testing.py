@@ -16,7 +16,7 @@ def bt_main_func(conn, sheet_url, df_raw):
         pass
     elif selection_menu == "멸구간 예측":
         st.subheader("🧪 멸구간 예측 백테스팅")
-        run_empty_zone_backtest(df_raw, count=50) 
+        run_empty_zone_backtest(df_raw, count=25) 
     elif selection_menu == "보너스 번호의 이월확률":
         run_bonus_carry_backtest(df_raw, count=50)
     elif selection_menu == "조합 시험":
