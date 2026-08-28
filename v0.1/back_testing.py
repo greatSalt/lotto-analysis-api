@@ -89,6 +89,13 @@ def run_empty_zone_backtest(df_raw, count=50):
             status_map, _ = get_detailed_status(idx, df_raw)
             ball_html = render_ball_ui(picked_nums, status_map, size=20)
 
+            # 보너스 번호 공 색상 판별 로직 (로또 번호 색상 규칙 적용)
+            if bonus_num <= 10: b_bg = "#fbc400"; b_color = "#000"
+            elif bonus_num <= 20: b_bg = "#69c2ff"; b_color = "#000"
+            elif bonus_num <= 30: b_bg = "#ff7272"; b_color = "#fff"
+            elif bonus_num <= 40: b_bg = "#aaaaaa"; b_color = "#fff"
+            else: b_bg = "#b0d840"; b_color = "#000"
+
             # 동그란 로또 공 모양 HTML 생성 (보너스 표시용)
             bonus_ball_html = f"""
                 <span style="display:inline-block; width:22px; height:22px; line-height:22px; 
